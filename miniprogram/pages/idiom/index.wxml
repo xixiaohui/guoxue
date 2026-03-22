@@ -1,6 +1,6 @@
-<!-- pages/idiom/index.wxml - 成语故事页 -->
+<!-- pages/idiom/index.wxml - 成语故事页（生产级） -->
 <view class="container idiom-page">
-  
+
   <!-- 顶部搜索 -->
   <view class="idiom-header">
     <view class="header-bg"></view>
@@ -9,7 +9,7 @@
       <text class="header-subtitle">字里乾坤，典故传承</text>
     </view>
     <view class="search-wrap">
-      <input 
+      <input
         class="idiom-search"
         placeholder="输入成语进行查询..."
         placeholder-class="search-ph"
@@ -26,27 +26,55 @@
   <view class="daily-idiom">
     <view class="daily-idiom-header">
       <text class="daily-label">📖 每日一成语</text>
-      <text class="change-idiom" bindtap="changeDailyIdiom">换一个</text>
+      <text class="change-idiom" bindtap="changeDailyIdiom">{{dailyIdiomLoading ? '加载中...' : '换一个'}}</text>
     </view>
-    <view class="daily-idiom-card" bindtap="lookupIdiom" data-idiom="{{dailyIdiom.word}}">
-      <text class="idiom-word">{{dailyIdiom.word}}</text>
-      <text class="idiom-pinyin">{{dailyIdiom.pinyin}}</text>
+
+    <!-- 骨架屏 -->
+    <view class="daily-idiom-skeleton" wx:if="{{dailyIdiomLoading}}">
+      <view class="sk-word"></view>
+      <view class="sk-pinyin"></view>
+      <view class="sk-brief"></view>
+    </view>
+
+    <!-- AI生成的每日成语 -->
+    <view class="daily-idiom-card" wx:else bindtap="lookupDailyIdiom">
+      <view class="idiom-card-top">
+        <view class="idiom-word-block">
+          <text class="idiom-word">{{dailyIdiom.word}}</text>
+          <text class="idiom-pinyin">{{dailyIdiom.pinyin}}</text>
+        </view>
+        <view class="idiom-origin-tag" wx:if="{{dailyIdiom.origin}}">
+          <text class="origin-text">{{dailyIdiom.origin}}</text>
+        </view>
+      </view>
       <text class="idiom-brief">{{dailyIdiom.brief}}</text>
+      <view class="idiom-story-box" wx:if="{{dailyIdiom.story}}">
+        <text class="story-label">典故</text>
+        <text class="story-text">{{dailyIdiom.story}}</text>
+      </view>
+      <view class="idiom-extra-row" wx:if="{{dailyIdiom.synonym || dailyIdiom.antonym}}">
+        <text class="extra-item" wx:if="{{dailyIdiom.synonym}}">近义：{{dailyIdiom.synonym}}</text>
+        <text class="extra-item" wx:if="{{dailyIdiom.antonym}}">反义：{{dailyIdiom.antonym}}</text>
+      </view>
       <view class="tap-hint">点击查看详解 →</view>
     </view>
   </view>
 
-  <!-- 结果展示 -->
+  <!-- 查询结果 -->
   <view class="result-section" wx:if="{{result || isLoading}}">
     <view class="result-card">
       <view class="result-word-header">
         <text class="result-word">{{currentIdiom}}</text>
         <view class="action-row">
+          <view class="icon-btn {{isFavorited ? 'icon-btn-active' : ''}}" bindtap="toggleFavorite">
+            {{isFavorited ? '❤️' : '🤍'}}
+          </view>
           <view class="icon-btn" bindtap="copyResult">📋</view>
           <view class="icon-btn" bindtap="chatAboutIdiom">💬</view>
         </view>
       </view>
-      
+
+      <!-- 加载中 -->
       <view class="ai-loading" wx:if="{{isLoading}}">
         <view class="loading-dots">
           <view class="dot"></view>
@@ -55,7 +83,19 @@
         </view>
         <text class="loading-text">正在查询成语...</text>
       </view>
-      
+
+      <!-- 分段展示 -->
+      <view class="result-sections" wx:elif="{{resultSections.length > 0}}">
+        <view class="result-seg" wx:for="{{resultSections}}" wx:key="label">
+          <view class="seg-label-row">
+            <view class="seg-dot"></view>
+            <text class="seg-label">{{item.label}}</text>
+          </view>
+          <text class="seg-content" selectable>{{item.content}}</text>
+        </view>
+      </view>
+
+      <!-- 纯文本降级 -->
       <text class="result-content-text fade-in" selectable wx:elif="{{result}}">{{result}}</text>
     </view>
   </view>
@@ -64,7 +104,7 @@
   <view class="categories-section">
     <text class="section-title">成语分类</text>
     <view class="cat-grid">
-      <view 
+      <view
         class="cat-item"
         wx:for="{{idiomCategories}}"
         wx:key="id"
@@ -83,7 +123,7 @@
   <view class="featured-idioms">
     <text class="section-title">精选成语</text>
     <view class="idioms-list">
-      <view 
+      <view
         class="idiom-item"
         wx:for="{{featuredIdioms}}"
         wx:key="id"
@@ -101,6 +141,6 @@
       </view>
     </view>
   </view>
-  
+
   <view class="safe-bottom"></view>
 </view>

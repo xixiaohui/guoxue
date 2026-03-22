@@ -1,11 +1,11 @@
-<!-- pages/classics/index.wxml - 诗词典籍页 -->
+<!-- pages/classics/index.wxml - 诗词典籍页（生产级） -->
 <view class="container classics-page">
-  
+
   <!-- 顶部搜索栏 -->
   <view class="search-header">
     <view class="search-bar">
-      <text class="search-icon">🔍</text>
-      <input 
+      <text class="search-icon-text">🔍</text>
+      <input
         class="search-input"
         placeholder="搜索诗词、典籍、作者..."
         placeholder-class="search-ph"
@@ -14,14 +14,14 @@
         bindconfirm="doSearch"
         confirm-type="search"
       />
-      <text class="search-btn" bindtap="doSearch" wx:if="{{searchText}}">搜索</text>
+      <view class="search-btn-txt" bindtap="doSearch" wx:if="{{searchText}}">搜索</view>
     </view>
   </view>
 
   <!-- 分类标签 -->
   <scroll-view scroll-x class="category-tabs">
     <view class="tab-list">
-      <view 
+      <view
         class="tab-item {{activeTab === item.id ? 'active' : ''}}"
         wx:for="{{tabs}}"
         wx:key="id"
@@ -34,53 +34,66 @@
   <!-- 搜索结果 -->
   <view class="search-result-section" wx:if="{{searchResult || isSearching}}">
     <view class="result-header-bar">
-      <text class="result-title">AI解析结果</text>
+      <text class="result-title-txt">AI解析：{{searchText}}</text>
       <text class="close-search" bindtap="closeSearch">✕</text>
     </view>
-    
+
     <view class="ai-loading" wx:if="{{isSearching}}">
       <view class="loading-dots">
         <view class="dot"></view>
         <view class="dot"></view>
         <view class="dot"></view>
       </view>
-      <text>正在检索分析中...</text>
+      <text class="loading-hint-txt">正在检索分析中...</text>
     </view>
-    
-    <view class="ai-result" wx:elif="{{searchResult}}">
-      <text class="ai-result-text" selectable>{{searchResult}}</text>
+
+    <view class="ai-result-wrap" wx:elif="{{searchResult}}">
+      <!-- 分段显示 -->
+      <view class="result-sections" wx:if="{{searchSections.length > 0}}">
+        <view class="result-seg" wx:for="{{searchSections}}" wx:key="label">
+          <view class="seg-label-row">
+            <view class="seg-dot"></view>
+            <text class="seg-label">{{item.label}}</text>
+          </view>
+          <text class="seg-content" selectable>{{item.content}}</text>
+        </view>
+      </view>
+      <!-- 降级纯文本 -->
+      <text class="ai-result-text" selectable wx:else>{{searchResult}}</text>
+
       <view class="result-actions-row">
         <view class="action-chip" bindtap="continueInChat">
-          <text>💬 在问答中继续探讨</text>
+          <text>💬 继续探讨</text>
         </view>
         <view class="action-chip" bindtap="copySearchResult">
-          <text>📋 复制内容</text>
+          <text>📋 复制</text>
         </view>
       </view>
     </view>
   </view>
 
   <!-- 内容区 -->
-  <scroll-view scroll-y class="content-scroll" wx:if="{{!searchResult && !isSearching}}">
-    
+  <view wx:if="{{!searchResult && !isSearching}}">
+
     <!-- 精选推荐 -->
     <view class="featured-section">
       <text class="section-title">精选推荐</text>
-      <scroll-view scroll-x>
+      <scroll-view scroll-x class="featured-scroll">
         <view class="featured-list">
-          <view 
+          <view
             class="featured-card"
             wx:for="{{featuredPoems}}"
             wx:key="id"
             bindtap="openPoem"
             data-poem="{{item}}"
           >
-            <view class="card-bg" style="background: {{item.color}}"></view>
+            <view class="card-bg" style="background: {{item.color}}">
+              <view class="card-deco">{{item.dynasty}}</view>
+            </view>
             <view class="card-content">
               <text class="poem-title">{{item.title}}</text>
               <text class="poem-author">{{item.author}}</text>
               <text class="poem-preview">{{item.preview}}</text>
-              <view class="poem-tag">{{item.dynasty}}</view>
             </view>
           </view>
         </view>
@@ -88,10 +101,10 @@
     </view>
 
     <!-- 诗词列表 -->
-    <view class="poems-section" wx:if="{{activeTab === 'poem'}}">
+    <view class="poems-section" wx:if="{{activeTab !== 'classics'}}">
       <text class="section-title">经典诗词</text>
       <view class="poem-list">
-        <view 
+        <view
           class="poem-item"
           wx:for="{{poems}}"
           wx:key="id"
@@ -115,7 +128,7 @@
     <view class="classics-section" wx:if="{{activeTab === 'classics'}}">
       <text class="section-title">经典典籍</text>
       <view class="classics-grid">
-        <view 
+        <view
           class="classic-card"
           wx:for="{{classicBooks}}"
           wx:key="id"
@@ -132,24 +145,31 @@
       </view>
     </view>
 
-  </scroll-view>
+  </view>
 
   <!-- 诗词详情弹窗 -->
   <view class="poem-modal" wx:if="{{showModal}}" bindtap="closeModal">
     <view class="modal-content" catchtap="stopProp">
       <view class="modal-header">
-        <text class="modal-title">{{currentPoem.title}}</text>
-        <text class="modal-subtitle">{{currentPoem.author}} · {{currentPoem.dynasty}}</text>
-        <text class="modal-close" bindtap="closeModal">✕</text>
+        <view class="modal-title-area">
+          <text class="modal-title">{{currentPoem.title}}</text>
+          <text class="modal-subtitle">{{currentPoem.author}} · {{currentPoem.dynasty}}</text>
+        </view>
+        <view class="modal-header-btns">
+          <view class="modal-fav-btn" bindtap="toggleFavoritePoem">
+            {{isFavorited ? '❤️' : '🤍'}}
+          </view>
+          <text class="modal-close" bindtap="closeModal">✕</text>
+        </view>
       </view>
-      
+
       <scroll-view scroll-y class="modal-body">
         <!-- 原文 -->
         <view class="poem-original">
-          <text class="section-label">原文</text>
+          <text class="section-label-sm">原文</text>
           <text class="poem-full-text" selectable>{{currentPoem.content}}</text>
         </view>
-        
+
         <!-- AI解析中 -->
         <view class="poem-loading" wx:if="{{poemLoading}}">
           <view class="loading-dots">
@@ -157,18 +177,18 @@
             <view class="dot"></view>
             <view class="dot"></view>
           </view>
-          <text class="loading-hint">正在获取AI解析...</text>
+          <text class="loading-hint-txt">正在获取AI赏析...</text>
         </view>
-        
-        <!-- AI解析 -->
+
+        <!-- AI解析结果 -->
         <view class="poem-analysis" wx:elif="{{currentPoem.analysis}}">
-          <text class="section-label">AI赏析</text>
+          <text class="section-label-sm">AI赏析</text>
           <text class="analysis-text" selectable>{{currentPoem.analysis}}</text>
         </view>
-        
+
         <view class="modal-actions">
-          <view class="modal-action-btn" bindtap="analyzePoem">
-            <text>🤖 深度解析</text>
+          <view class="modal-action-btn {{poemLoading ? 'btn-loading' : ''}}" bindtap="analyzePoem">
+            <text>🤖 AI深度赏析</text>
           </view>
           <view class="modal-action-btn" bindtap="askAboutPoem">
             <text>💬 继续探讨</text>
@@ -177,6 +197,6 @@
       </scroll-view>
     </view>
   </view>
-  
+
   <view class="safe-bottom"></view>
 </view>

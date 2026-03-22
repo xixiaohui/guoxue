@@ -1,0 +1,121 @@
+/* pages/vip/index.wxss */
+page { background: #FDF6E3; }
+
+.vip-page { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ── 顶部横幅 ── */
+.vip-header {
+  background: linear-gradient(160deg, #5A0A00, #8B2500 50%, #C4882E);
+  padding: 60rpx 40rpx 50rpx;
+  display: flex; flex-direction: column; align-items: center;
+  color: #FFF8E7;
+}
+.vip-crown { font-size: 72rpx; margin-bottom: 16rpx; }
+.vip-title { font-size: 40rpx; font-weight: bold; letter-spacing: 2rpx; }
+.vip-subtitle { font-size: 26rpx; opacity: .8; margin-top: 8rpx; }
+
+.vip-status-card {
+  margin-top: 30rpx; background: rgba(255,255,255,.15);
+  border-radius: 20rpx; padding: 24rpx 40rpx;
+  display: flex; flex-direction: column; align-items: center;
+  width: 100%; box-sizing: border-box;
+}
+.loading-placeholder { height: 100rpx; }
+.status-icon { font-size: 44rpx; }
+.status-text { font-size: 30rpx; font-weight: bold; margin-top: 8rpx; }
+.status-sub { font-size: 24rpx; opacity: .8; margin-top: 6rpx; }
+
+/* ── 区块 ── */
+.section { margin: 30rpx 30rpx 0; }
+.section-title {
+  font-size: 30rpx; font-weight: bold; color: #5A0A00;
+  margin-bottom: 20rpx; padding-left: 14rpx;
+  border-left: 6rpx solid #C4882E;
+}
+
+/* ── 权益格 ── */
+.benefits-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20rpx;
+}
+.benefit-item {
+  background: #FFFBF0; border-radius: 16rpx; padding: 24rpx 12rpx;
+  display: flex; flex-direction: column; align-items: center;
+  box-shadow: 0 2rpx 12rpx rgba(139,37,0,.07);
+}
+.benefit-icon { font-size: 44rpx; }
+.benefit-title { font-size: 24rpx; font-weight: bold; color: #2C1810; margin-top: 10rpx; text-align: center; }
+.benefit-desc { font-size: 20rpx; color: #6B5B45; margin-top: 6rpx; text-align: center; }
+
+/* ── 套餐 ── */
+.product-list { display: flex; gap: 20rpx; }
+.product-item {
+  flex: 1; background: #FFFBF0; border-radius: 20rpx; padding: 24rpx 16rpx;
+  display: flex; flex-direction: column; align-items: center; position: relative;
+  border: 3rpx solid #E8D5A3;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,.05);
+  transition: all .2s;
+}
+.product-item.selected {
+  border-color: #8B2500; background: #FFF5EC;
+  box-shadow: 0 4rpx 20rpx rgba(139,37,0,.2);
+}
+.product-tag {
+  position: absolute; top: -14rpx; right: 10rpx;
+  background: linear-gradient(90deg, #C4882E, #8B2500);
+  color: #fff; font-size: 20rpx; padding: 4rpx 14rpx; border-radius: 20rpx;
+}
+.product-name { font-size: 26rpx; font-weight: bold; color: #2C1810; }
+.product-price { margin-top: 12rpx; display: flex; align-items: flex-end; }
+.price-num { font-size: 52rpx; font-weight: bold; color: #8B2500; line-height: 1; }
+.price-unit { font-size: 22rpx; color: #6B5B45; margin-bottom: 8rpx; margin-left: 4rpx; }
+.product-desc { font-size: 22rpx; color: #6B5B45; margin-top: 8rpx; }
+.product-check {
+  position: absolute; bottom: 14rpx; right: 14rpx;
+  width: 36rpx; height: 36rpx; border-radius: 50%;
+  background: #8B2500; color: #fff; font-size: 22rpx;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── 操作区 ── */
+.action-section { padding: 30rpx 30rpx 0; }
+.btn-purchase {
+  width: 100%; height: 96rpx; line-height: 96rpx;
+  background: linear-gradient(90deg, #8B2500, #C4882E);
+  color: #FFF8E7; font-size: 34rpx; font-weight: bold;
+  border-radius: 48rpx; text-align: center;
+  box-shadow: 0 8rpx 24rpx rgba(139,37,0,.35);
+  border: none;
+}
+.btn-purchase.loading { opacity: .7; }
+.btn-purchase::after { border: none; }
+
+.divider-or {
+  display: flex; align-items: center; margin: 24rpx 0;
+  gap: 16rpx;
+}
+.divider-line { flex: 1; height: 1rpx; background: #E8D5A3; }
+.divider-text { font-size: 24rpx; color: #6B5B45; white-space: nowrap; }
+
+.btn-ad {
+  width: 100%; height: 88rpx; line-height: 88rpx;
+  background: #FFFBF0; border: 2rpx solid #C4882E;
+  color: #8B2500; font-size: 30rpx; border-radius: 44rpx; text-align: center;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,.05);
+}
+.btn-ad::after { border: none; }
+.ad-hint { font-size: 22rpx; color: #6B5B45; text-align: center; margin-top: 12rpx; }
+
+.btn-continue {
+  width: 100%; height: 88rpx; line-height: 88rpx;
+  background: linear-gradient(90deg, #1A6A30, #2EAA52);
+  color: #fff; font-size: 32rpx; border-radius: 44rpx; text-align: center; border: none;
+}
+.btn-continue::after { border: none; }
+.vip-renew-tip { font-size: 24rpx; color: #6B5B45; text-align: center; margin-top: 14rpx; }
+
+/* ── 说明 ── */
+.footnote {
+  margin: 30rpx 30rpx 0; padding: 24rpx; background: #FFFBF0;
+  border-radius: 16rpx; font-size: 22rpx; color: #6B5B45; line-height: 1.8;
+}
+.safe-bottom { height: 40rpx; }

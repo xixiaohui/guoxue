@@ -6,7 +6,8 @@
     "pages/classics/index",
     "pages/idiom/index",
     "pages/history/index",
-    "pages/detail/index"
+    "pages/detail/index",
+    "pages/vip/index"
   ],
   "window": {
     "backgroundColor": "#F5EDD6",
@@ -55,5 +56,7 @@
   },
   "sitemapLocation": "sitemap.json",
   "style": "v2",
-  "lazyCodeLoading": "requiredComponents"
+  "lazyCodeLoading": "requiredComponents",
+  "requiredPrivateInfos": [],
+  "permission": {}
 }

@@ -1,0 +1,125 @@
+<!-- pages/vip/index.wxml - 会员中心 -->
+<view class="vip-page">
+
+  <!-- 顶部会员横幅 -->
+  <view class="vip-header">
+    <view class="vip-crown">👑</view>
+    <view class="vip-title">国学AI助手 · 会员中心</view>
+    <view class="vip-subtitle">开启无限国学之旅</view>
+
+    <!-- 当前状态 -->
+    <view wx:if="{{!loading}}" class="vip-status-card">
+      <block wx:if="{{quotaStatus && quotaStatus.isVip}}">
+        <view class="status-icon">✅</view>
+        <view class="status-text">您已是尊贵会员</view>
+        <view class="status-sub">会员到期：{{quotaStatus.vipExpire > 0 ? '' : '永久'}}</view>
+      </block>
+      <block wx:elif="{{quotaStatus && quotaStatus.hasAdBonus}}">
+        <view class="status-icon">🎁</view>
+        <view class="status-text">今日广告奖励已激活</view>
+        <view class="status-sub">今日无限次使用中</view>
+      </block>
+      <block wx:else>
+        <view class="status-icon">⚡</view>
+        <view class="status-text">免费用户</view>
+        <view class="status-sub">
+          今日剩余 {{quotaStatus ? quotaStatus.remaining : 5}} / 5 次
+        </view>
+      </block>
+    </view>
+    <view wx:else class="vip-status-card loading-placeholder"></view>
+  </view>
+
+  <!-- 会员权益 -->
+  <view class="section">
+    <view class="section-title">会员专属权益</view>
+    <view class="benefits-grid">
+      <view class="benefit-item" wx:for="{{benefits}}" wx:key="title">
+        <view class="benefit-icon">{{item.icon}}</view>
+        <view class="benefit-title">{{item.title}}</view>
+        <view class="benefit-desc">{{item.desc}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 套餐选择 -->
+  <view class="section">
+    <view class="section-title">选择套餐</view>
+    <view class="product-list">
+      <view
+        class="product-item {{selectedProduct === item.id ? 'selected' : ''}}"
+        wx:for="{{productList}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="selectProduct"
+      >
+        <view wx:if="{{item.tag}}" class="product-tag">{{item.tag}}</view>
+        <view class="product-name">{{item.name}}</view>
+        <view class="product-price">
+          <text class="price-num">{{item.price}}</text>
+          <text class="price-unit">{{item.unit}}</text>
+        </view>
+        <view class="product-desc">{{item.desc}}</view>
+        <view wx:if="{{selectedProduct === item.id}}" class="product-check">✓</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 购买按钮 -->
+  <view wx:if="{{!(quotaStatus && quotaStatus.isVip)}}" class="action-section">
+    <button
+      class="btn-purchase {{purchasing ? 'loading' : ''}}"
+      bindtap="purchaseVip"
+      disabled="{{purchasing}}"
+    >
+      <text wx:if="{{!purchasing}}">立即开通会员</text>
+      <text wx:else>处理中…</text>
+    </button>
+
+    <view class="divider-or">
+      <view class="divider-line"></view>
+      <text class="divider-text">或者</text>
+      <view class="divider-line"></view>
+    </view>
+
+    <!-- 免费广告解锁 -->
+    <button class="btn-ad" bindtap="watchAd">
+      📺 观看广告 · 解锁今日无限
+    </button>
+    <view class="ad-hint">观看约15秒广告，今天无限次使用AI功能</view>
+  </view>
+
+  <!-- 已是会员 -->
+  <view wx:else class="action-section">
+    <button class="btn-continue" bindtap="goBack">继续使用</button>
+    <view class="vip-renew-tip">续费请重新选择套餐</view>
+    <view class="product-list" style="margin-top:20rpx">
+      <view
+        class="product-item {{selectedProduct === item.id ? 'selected' : ''}}"
+        wx:for="{{productList}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="selectProduct"
+      >
+        <view wx:if="{{item.tag}}" class="product-tag">{{item.tag}}</view>
+        <view class="product-name">{{item.name}}</view>
+        <view class="product-price">
+          <text class="price-num">{{item.price}}</text>
+          <text class="price-unit">{{item.unit}}</text>
+        </view>
+      </view>
+    </view>
+    <button class="btn-purchase" bindtap="purchaseVip" style="margin-top:20rpx">
+      续费会员
+    </button>
+  </view>
+
+  <!-- 说明 -->
+  <view class="footnote">
+    <view>· 购买后立即生效，到期自动关闭无限权限</view>
+    <view>· 如有问题请联系客服</view>
+    <view>· 广告收益用于维持服务运营，感谢支持</view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

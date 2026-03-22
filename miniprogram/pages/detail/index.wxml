@@ -1,11 +1,78 @@
-<!-- pages/detail/index.wxml -->
+<!-- pages/detail/index.wxml - 通用详情页（生产级） -->
 <view class="container detail-page">
+  
+  <!-- 标题区 -->
   <view class="detail-header">
     <text class="detail-title">{{title}}</text>
   </view>
+
   <scroll-view scroll-y class="detail-scroll">
-    <view class="detail-content">
+    
+    <!-- 原文内容 -->
+    <view class="detail-original" wx:if="{{content}}">
+      <view class="section-bar">
+        <view class="bar-line"></view>
+        <text class="bar-label">原文</text>
+      </view>
       <text class="detail-text" selectable>{{content}}</text>
     </view>
+
+    <!-- AI 加载中 -->
+    <view class="ai-loading-block" wx:if="{{isLoading}}">
+      <view class="loading-dots">
+        <view class="dot"></view>
+        <view class="dot"></view>
+        <view class="dot"></view>
+      </view>
+      <text class="loading-hint">文渊先生正在分析...</text>
+    </view>
+
+    <!-- AI 解析分段 -->
+    <view class="ai-result-block" wx:elif="{{aiSections.length > 0}}">
+      <view class="section-bar">
+        <view class="bar-line"></view>
+        <text class="bar-label">AI深度解读</text>
+      </view>
+      <view class="result-seg" wx:for="{{aiSections}}" wx:key="label">
+        <view class="seg-label-row">
+          <view class="seg-dot"></view>
+          <text class="seg-label-txt">{{item.label}}</text>
+        </view>
+        <text class="seg-content-txt" selectable>{{item.content}}</text>
+      </view>
+    </view>
+
+    <!-- 纯文本 AI 内容（降级） -->
+    <view class="ai-result-block" wx:elif="{{aiContent}}">
+      <view class="section-bar">
+        <view class="bar-line"></view>
+        <text class="bar-label">AI深度解读</text>
+      </view>
+      <text class="detail-ai-text" selectable>{{aiContent}}</text>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="detail-actions" wx:if="{{!isLoading}}">
+      <view class="action-btn-row">
+        <view class="detail-btn" bindtap="continueInChat">
+          <text class="btn-emoji">💬</text>
+          <text class="btn-label">与AI继续探讨</text>
+        </view>
+        <view class="detail-btn detail-btn-outline" bindtap="copyContent">
+          <text class="btn-emoji">📋</text>
+          <text class="btn-label">复制内容</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 详情页原生广告 -->
+    <ad
+      unit-id="adunit-513a37c7d48cdf7f"
+      ad-type="native"
+      native-ad-template="large"
+      class="detail-ad"
+    ></ad>
+
+    <view class="safe-bottom"></view>
   </scroll-view>
 </view>

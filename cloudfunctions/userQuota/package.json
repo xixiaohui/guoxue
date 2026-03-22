@@ -1,0 +1,9 @@
+{
+  "name": "userQuota",
+  "version": "1.0.0",
+  "description": "国学AI助手 - 用户配额与会员管理云函数",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}
