@@ -1,0 +1,312 @@
+/* pages/idiom/index.wxss - 成语故事页样式 */
+
+.idiom-page {
+  background: #FDF6E3;
+}
+
+/* 头部 */
+.idiom-header {
+  background: linear-gradient(160deg, #6B1A00, #8B2500, #A83200);
+  padding: 24rpx 24rpx 32rpx;
+  position: relative;
+}
+
+.header-content {
+  text-align: center;
+  padding: 8rpx 0 20rpx;
+}
+
+.header-title {
+  display: block;
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #FFF8E7;
+  letter-spacing: 8rpx;
+}
+
+.header-subtitle {
+  display: block;
+  font-size: 22rpx;
+  color: rgba(255, 248, 231, 0.65);
+  margin-top: 8rpx;
+  letter-spacing: 4rpx;
+}
+
+.search-wrap {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 248, 231, 0.12);
+  border: 1rpx solid rgba(255, 248, 231, 0.25);
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+
+.idiom-search {
+  flex: 1;
+  padding: 16rpx 24rpx;
+  font-size: 30rpx;
+  color: #FFF8E7;
+  min-height: 80rpx;
+}
+
+.search-ph {
+  color: rgba(255, 248, 231, 0.5);
+}
+
+.search-action {
+  background: #C4882E;
+  color: #FFF8E7;
+  font-size: 36rpx;
+  font-weight: bold;
+  padding: 0 28rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 2rpx;
+}
+
+/* 每日成语 */
+.daily-idiom {
+  margin: 24rpx 24rpx 0;
+}
+
+.daily-idiom-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.daily-label {
+  font-size: 28rpx;
+  color: #8B2500;
+  font-weight: 600;
+}
+
+.change-idiom {
+  font-size: 24rpx;
+  color: #C4882E;
+  border: 1rpx solid #C4882E;
+  border-radius: 20rpx;
+  padding: 4rpx 16rpx;
+}
+
+.daily-idiom-card {
+  background: linear-gradient(135deg, #FFFBF0, #FFF5D6);
+  border-radius: 16rpx;
+  padding: 30rpx;
+  border: 1rpx solid #EDD9A3;
+  box-shadow: 0 4rpx 16rpx rgba(139, 37, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.daily-idiom-card::before {
+  content: '成';
+  position: absolute;
+  right: -20rpx;
+  bottom: -30rpx;
+  font-size: 180rpx;
+  color: rgba(196, 136, 46, 0.06);
+  font-weight: bold;
+  line-height: 1;
+}
+
+.idiom-word {
+  display: block;
+  font-size: 52rpx;
+  font-weight: bold;
+  color: #8B2500;
+  letter-spacing: 12rpx;
+  margin-bottom: 8rpx;
+}
+
+.idiom-pinyin {
+  display: block;
+  font-size: 24rpx;
+  color: #C4882E;
+  letter-spacing: 4rpx;
+  margin-bottom: 16rpx;
+}
+
+.idiom-brief {
+  display: block;
+  font-size: 28rpx;
+  color: #5A4030;
+  line-height: 1.7;
+}
+
+.tap-hint {
+  font-size: 22rpx;
+  color: #C4882E;
+  margin-top: 16rpx;
+  text-align: right;
+}
+
+/* 结果区域 */
+.result-section {
+  margin: 24rpx 24rpx 0;
+}
+
+.result-card {
+  background: #FFFBF0;
+  border-radius: 16rpx;
+  border: 1rpx solid #EDD9A3;
+  overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(139, 37, 0, 0.08);
+}
+
+.result-word-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 24rpx;
+  background: rgba(139, 37, 0, 0.06);
+  border-bottom: 1rpx solid #EDD9A3;
+}
+
+.result-word {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #8B2500;
+  letter-spacing: 8rpx;
+}
+
+.action-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.icon-btn {
+  font-size: 32rpx;
+  padding: 8rpx;
+}
+
+.ai-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40rpx;
+  gap: 16rpx;
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: #8C7B61;
+}
+
+.result-content-text {
+  display: block;
+  padding: 24rpx;
+  font-size: 28rpx;
+  color: #2C1810;
+  line-height: 1.9;
+  white-space: pre-wrap;
+}
+
+/* 分类网格 */
+.categories-section {
+  margin-top: 32rpx;
+}
+
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+  padding: 8rpx 24rpx;
+}
+
+.cat-item {
+  border-radius: 16rpx;
+  padding: 24rpx 16rpx;
+  text-align: center;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
+}
+
+.cat-item:active {
+  opacity: 0.85;
+}
+
+.cat-emoji {
+  display: block;
+  font-size: 40rpx;
+  margin-bottom: 8rpx;
+}
+
+.cat-name {
+  display: block;
+  font-size: 26rpx;
+  color: #fff;
+  font-weight: 500;
+}
+
+.cat-count {
+  display: block;
+  font-size: 22rpx;
+  color: rgba(255,255,255,0.75);
+  margin-top: 4rpx;
+}
+
+/* 精选成语 */
+.featured-idioms {
+  margin-top: 32rpx;
+  padding-bottom: 40rpx;
+}
+
+.idioms-list {
+  padding: 8rpx 24rpx;
+}
+
+.idiom-item {
+  background: #FFFBF0;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  border: 1rpx solid #EDD9A3;
+  box-shadow: 0 2rpx 8rpx rgba(139, 37, 0, 0.04);
+}
+
+.idiom-item:active {
+  background: #FFF5DC;
+}
+
+.idiom-word-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 16rpx;
+  margin-bottom: 12rpx;
+}
+
+.featured-word {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #8B2500;
+  letter-spacing: 8rpx;
+}
+
+.featured-pinyin {
+  font-size: 22rpx;
+  color: #C4882E;
+}
+
+.featured-brief {
+  display: block;
+  font-size: 26rpx;
+  color: #5A4030;
+  line-height: 1.6;
+  margin-bottom: 12rpx;
+}
+
+.idiom-tags {
+  display: flex;
+}
+
+.idiom-cat-tag {
+  background: #FFF3DC;
+  color: #8B2500;
+  border: 1rpx solid #E8C88A;
+  border-radius: 16rpx;
+  padding: 4rpx 16rpx;
+  font-size: 22rpx;
+}

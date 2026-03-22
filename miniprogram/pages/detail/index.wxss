@@ -1,0 +1,6 @@
+.detail-page { background: #FDF6E3; }
+.detail-header { background: #8B2500; padding: 20rpx 30rpx; }
+.detail-title { color: #FFF8E7; font-size: 36rpx; font-weight: bold; }
+.detail-scroll { flex: 1; }
+.detail-content { padding: 30rpx; }
+.detail-text { font-size: 30rpx; color: #2C1810; line-height: 1.9; white-space: pre-wrap; }

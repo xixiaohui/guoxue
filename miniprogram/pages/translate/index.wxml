@@ -1,0 +1,129 @@
+<!-- pages/translate/index.wxml - 古文翻译页 -->
+<view class="container translate-page">
+  
+  <!-- 标题 -->
+  <view class="page-header">
+    <text class="page-title">古文翻译</text>
+    <text class="page-subtitle">文言白话 · 双向互译</text>
+  </view>
+
+  <!-- 翻译模式切换 -->
+  <view class="mode-switch">
+    <view 
+      class="mode-item {{mode === 'ancient_to_modern' ? 'active' : ''}}"
+      bindtap="switchMode"
+      data-mode="ancient_to_modern"
+    >
+      <text class="mode-icon">📖</text>
+      <text class="mode-text">文言→白话</text>
+    </view>
+    <view class="mode-divider">
+      <text class="switch-icon">⇌</text>
+    </view>
+    <view 
+      class="mode-item {{mode === 'modern_to_ancient' ? 'active' : ''}}"
+      bindtap="switchMode"
+      data-mode="modern_to_ancient"
+    >
+      <text class="mode-icon">✍️</text>
+      <text class="mode-text">白话→文言</text>
+    </view>
+  </view>
+
+  <!-- 输入区域 -->
+  <view class="input-section">
+    <view class="input-header">
+      <text class="input-label">{{mode === 'ancient_to_modern' ? '请输入文言文' : '请输入现代白话文'}}</text>
+      <text class="clear-text" bindtap="clearInput" wx:if="{{inputText}}">清空</text>
+    </view>
+    <textarea 
+      class="translate-input"
+      value="{{inputText}}"
+      placeholder="{{mode === 'ancient_to_modern' ? '例如：学而时习之，不亦说乎...' : '例如：学习了然后经常复习，很快乐...' }}"
+      placeholder-class="input-ph"
+      bindinput="onInput"
+      maxlength="1000"
+      auto-height
+    />
+    <text class="char-count">{{inputText.length}}/1000</text>
+  </view>
+
+  <!-- 快捷示例 -->
+  <view class="examples-section">
+    <text class="example-label">快捷示例：</text>
+    <scroll-view scroll-x>
+      <view class="example-list">
+        <view 
+          class="example-item"
+          wx:for="{{examples[mode]}}"
+          wx:key="index"
+          bindtap="useExample"
+          data-text="{{item}}"
+        >{{item}}</view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 翻译按钮 -->
+  <view class="translate-btn-wrap">
+    <button 
+      class="translate-btn {{isLoading ? 'loading' : ''}}"
+      bindtap="doTranslate"
+      disabled="{{isLoading || !inputText.trim()}}"
+    >
+      <text wx:if="{{isLoading}}" class="btn-loading-text">正在翻译...</text>
+      <text wx:else class="btn-text">开始翻译</text>
+    </button>
+  </view>
+
+  <!-- 翻译结果 -->
+  <view class="result-section" wx:if="{{result || isLoading}}">
+    <view class="result-header">
+      <text class="result-title">翻译结果</text>
+      <view class="result-actions" wx:if="{{result}}">
+        <text class="action-btn" bindtap="copyResult">复制</text>
+        <text class="action-btn" bindtap="shareResult">分享</text>
+      </view>
+    </view>
+    
+    <!-- 加载中 -->
+    <view class="result-loading" wx:if="{{isLoading}}">
+      <view class="loading-dots">
+        <view class="dot"></view>
+        <view class="dot"></view>
+        <view class="dot"></view>
+      </view>
+      <text class="loading-hint">文渊先生正在翻译中...</text>
+    </view>
+    
+    <!-- 结果内容 -->
+    <view class="result-content fade-in" wx:elif="{{result}}">
+      <text class="result-text" selectable>{{result}}</text>
+    </view>
+  </view>
+
+  <!-- 历史记录 -->
+  <view class="history-section" wx:if="{{history.length > 0}}">
+    <view class="history-header">
+      <text class="section-title">翻译记录</text>
+      <text class="clear-history" bindtap="clearHistory">清除</text>
+    </view>
+    <view class="history-list">
+      <view 
+        class="history-item"
+        wx:for="{{history}}"
+        wx:key="id"
+        bindtap="loadHistory"
+        data-item="{{item}}"
+      >
+        <view class="history-meta">
+          <text class="history-mode">{{item.mode === 'ancient_to_modern' ? '文言→白话' : '白话→文言'}}</text>
+          <text class="history-time">{{item.time}}</text>
+        </view>
+        <text class="history-preview">{{item.input}}</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="safe-bottom"></view>
+</view>

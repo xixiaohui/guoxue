@@ -1,0 +1,157 @@
+<!-- pages/home/index.wxml - 国学AI助手首页 -->
+<view class="container home-page">
+  
+  <!-- 顶部Banner -->
+  <view class="hero-banner">
+    <view class="hero-bg texture-bg"></view>
+    <view class="hero-content">
+      <view class="hero-logo">
+        <text class="logo-char">文</text>
+      </view>
+      <view class="hero-text">
+        <text class="hero-title">国学AI助手</text>
+        <text class="hero-subtitle">传承千年智慧，探索文化精髓</text>
+      </view>
+    </view>
+    <view class="hero-decoration">
+      <text class="deco-text">道可道，非常道</text>
+    </view>
+  </view>
+
+  <!-- 每日经典 -->
+  <view class="daily-section">
+    <view class="section-header">
+      <text class="section-title">今日经典</text>
+      <text class="refresh-btn" bindtap="refreshDaily">换一换</text>
+    </view>
+    
+    <view class="daily-card {{dailyLoading ? 'loading-state' : ''}}" bindtap="goToChat">
+      <view wx:if="{{dailyLoading}}" class="daily-loading">
+        <view class="loading-dots">
+          <view class="dot"></view>
+          <view class="dot"></view>
+          <view class="dot"></view>
+        </view>
+        <text class="loading-text">正在获取今日经典...</text>
+      </view>
+      
+      <view wx:else class="daily-content fade-in">
+        <view class="daily-quote-wrap">
+          <text class="quote-mark left-quote">「</text>
+          <text class="daily-quote">{{dailyClassic.quote}}</text>
+          <text class="quote-mark right-quote">」</text>
+        </view>
+        <text class="daily-author">—— {{dailyClassic.author}}</text>
+        <view class="daily-divider"></view>
+        <text class="daily-analysis">{{dailyClassic.analysis}}</text>
+        <view class="daily-insight-wrap">
+          <text class="insight-label">今日启示</text>
+          <text class="daily-insight">{{dailyClassic.insight}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷功能入口 -->
+  <view class="features-section">
+    <text class="section-title">功能导航</text>
+    <view class="features-grid">
+      <view class="feature-item" bindtap="goPage" data-url="/pages/chat/index">
+        <view class="feature-icon ai-icon">
+          <text class="icon-text">問</text>
+        </view>
+        <text class="feature-name">AI问答</text>
+        <text class="feature-desc">智能国学问答</text>
+      </view>
+      
+      <view class="feature-item" bindtap="goPage" data-url="/pages/translate/index">
+        <view class="feature-icon trans-icon">
+          <text class="icon-text">譯</text>
+        </view>
+        <text class="feature-name">古文翻译</text>
+        <text class="feature-desc">文言白话互译</text>
+      </view>
+      
+      <view class="feature-item" bindtap="goPage" data-url="/pages/classics/index">
+        <view class="feature-icon poem-icon">
+          <text class="icon-text">詩</text>
+        </view>
+        <text class="feature-name">诗词典籍</text>
+        <text class="feature-desc">千年经典传承</text>
+      </view>
+      
+      <view class="feature-item" bindtap="goPage" data-url="/pages/idiom/index">
+        <view class="feature-icon idiom-icon">
+          <text class="icon-text">成</text>
+        </view>
+        <text class="feature-name">成语故事</text>
+        <text class="feature-desc">词语背后典故</text>
+      </view>
+      
+      <view class="feature-item" bindtap="goPage" data-url="/pages/history/index">
+        <view class="feature-icon hist-icon">
+          <text class="icon-text">史</text>
+        </view>
+        <text class="feature-name">历史探秘</text>
+        <text class="feature-desc">千古人物事件</text>
+      </view>
+      
+      <view class="feature-item" bindtap="goQuickChat" data-topic="今日学习推荐">
+        <view class="feature-icon learn-icon">
+          <text class="icon-text">學</text>
+        </view>
+        <text class="feature-name">每日学习</text>
+        <text class="feature-desc">个性化推荐</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 热门话题 -->
+  <view class="hot-section">
+    <text class="section-title">热门话题</text>
+    <scroll-view scroll-x class="hot-scroll">
+      <view class="hot-list">
+        <view 
+          class="hot-tag" 
+          wx:for="{{hotTopics}}" 
+          wx:key="index"
+          bindtap="goQuickChat"
+          data-topic="{{item}}"
+        >
+          <text class="hot-icon">🔥</text>
+          <text>{{item}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 国学分类导览 -->
+  <view class="category-section">
+    <text class="section-title">国学分类</text>
+    <view class="category-list">
+      <view 
+        class="category-item"
+        wx:for="{{categories}}"
+        wx:key="id"
+        bindtap="goCategory"
+        data-category="{{item}}"
+      >
+        <view class="cat-icon-wrap" style="background: {{item.bg}}">
+          <text class="cat-icon">{{item.icon}}</text>
+        </view>
+        <view class="cat-info">
+          <text class="cat-name">{{item.name}}</text>
+          <text class="cat-desc">{{item.desc}}</text>
+        </view>
+        <text class="cat-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部装饰 -->
+  <view class="footer">
+    <text class="footer-text">传承国学精髓 · AI助力学习</text>
+  </view>
+  
+  <view class="safe-bottom"></view>
+</view>
