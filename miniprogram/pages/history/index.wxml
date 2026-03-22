@@ -1,0 +1,139 @@
+<!-- pages/history/index.wxml - 历史知识页 -->
+<view class="container history-page">
+  
+  <!-- 顶部 -->
+  <view class="history-header">
+    <text class="header-title">历史探秘</text>
+    <text class="header-sub">千古风云，人文荟萃</text>
+    <view class="search-row">
+      <input 
+        class="hist-search"
+        placeholder="搜索历史人物、事件、朝代..."
+        placeholder-class="hist-ph"
+        value="{{searchText}}"
+        bindinput="onSearch"
+        bindconfirm="doSearch"
+      />
+      <view class="hist-search-btn" bindtap="doSearch">
+        <text>🔍</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 朝代导航 -->
+  <scroll-view scroll-x class="dynasty-nav">
+    <view class="dynasty-list">
+      <view 
+        class="dynasty-item {{activeDynasty === item.id ? 'active' : ''}}"
+        wx:for="{{dynasties}}"
+        wx:key="id"
+        bindtap="selectDynasty"
+        data-id="{{item.id}}"
+        data-name="{{item.name}}"
+      >
+        <text class="dynasty-name">{{item.name}}</text>
+        <text class="dynasty-years">{{item.years}}</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- AI搜索结果 -->
+  <view class="ai-result-section" wx:if="{{aiResult || isLoading}}">
+    <view class="ai-result-header">
+      <text class="ai-label">🤖 AI历史解读</text>
+      <text class="close-result" bindtap="closeResult">✕</text>
+    </view>
+    
+    <view class="result-loading" wx:if="{{isLoading}}">
+      <view class="loading-dots">
+        <view class="dot"></view>
+        <view class="dot"></view>
+        <view class="dot"></view>
+      </view>
+      <text class="loading-hint">正在为您解读历史...</text>
+    </view>
+    
+    <view class="ai-result-content" wx:elif="{{aiResult}}">
+      <text class="ai-result-text" selectable>{{aiResult}}</text>
+      <view class="result-btn-row">
+        <view class="result-action-btn" bindtap="deepExplore">
+          <text>💬 深度探讨</text>
+        </view>
+        <view class="result-action-btn" bindtap="copyAiResult">
+          <text>📋 复制</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 历史时间轴 -->
+  <view class="timeline-section" wx:if="{{!aiResult && !isLoading}}">
+    <text class="section-title">{{activeTitle}}重要事件</text>
+    <view class="timeline">
+      <view 
+        class="timeline-item"
+        wx:for="{{timelineEvents}}"
+        wx:key="id"
+        bindtap="exploreEvent"
+        data-event="{{item}}"
+      >
+        <view class="timeline-left">
+          <view class="time-dot" style="background: {{item.color}}"></view>
+          <view class="time-line" wx:if="{{index < timelineEvents.length - 1}}"></view>
+        </view>
+        <view class="timeline-content">
+          <text class="event-year">{{item.year}}</text>
+          <text class="event-name">{{item.name}}</text>
+          <text class="event-desc">{{item.desc}}</text>
+          <view class="event-figures" wx:if="{{item.figures}}">
+            <text class="figure-tag" wx:for="{{item.figures}}" wx:key="*this" wx:for-item="fig">{{fig}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 名人殿堂 -->
+  <view class="figures-section" wx:if="{{!aiResult && !isLoading}}">
+    <text class="section-title">名人殿堂</text>
+    <view class="figures-grid">
+      <view 
+        class="figure-card"
+        wx:for="{{famousFigures}}"
+        wx:key="id"
+        bindtap="exploreFigure"
+        data-figure="{{item}}"
+      >
+        <view class="figure-avatar" style="background: {{item.color}}">
+          <text class="figure-emoji">{{item.emoji}}</text>
+        </view>
+        <text class="figure-name">{{item.name}}</text>
+        <text class="figure-dynasty">{{item.dynasty}}</text>
+        <text class="figure-role">{{item.role}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 历史趣闻 -->
+  <view class="trivia-section" wx:if="{{!aiResult && !isLoading}}">
+    <text class="section-title">历史趣闻</text>
+    <view class="trivia-list">
+      <view 
+        class="trivia-item"
+        wx:for="{{trivias}}"
+        wx:key="id"
+        bindtap="exploreTrivia"
+        data-trivia="{{item}}"
+      >
+        <text class="trivia-icon">{{item.icon}}</text>
+        <view class="trivia-info">
+          <text class="trivia-title">{{item.title}}</text>
+          <text class="trivia-hint">{{item.hint}}</text>
+        </view>
+        <text class="trivia-arrow">›</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="safe-bottom"></view>
+</view>

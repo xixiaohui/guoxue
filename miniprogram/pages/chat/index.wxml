@@ -1,0 +1,137 @@
+<!-- pages/chat/index.wxml - AI问答页 -->
+<view class="container chat-page">
+  
+  <!-- 顶部工具栏 -->
+  <view class="chat-toolbar">
+    <view class="toolbar-left">
+      <view class="ai-avatar">
+        <text class="avatar-char">文</text>
+      </view>
+      <view class="ai-info">
+        <text class="ai-name">文渊先生</text>
+        <text class="ai-status {{isTyping ? 'typing' : 'online'}}">
+          {{isTyping ? '正在思考...' : '国学AI助手'}}
+        </text>
+      </view>
+    </view>
+    <view class="toolbar-right">
+      <view class="clear-btn" bindtap="clearChat">
+        <text class="clear-icon">🗑</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷话题 -->
+  <scroll-view scroll-x class="quick-topics" wx:if="{{messages.length === 0}}">
+    <view class="topic-list">
+      <view 
+        class="topic-item"
+        wx:for="{{quickTopics}}"
+        wx:key="index"
+        bindtap="sendQuickTopic"
+        data-topic="{{item}}"
+      >{{item}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- 消息列表 -->
+  <scroll-view 
+    class="messages-scroll"
+    scroll-y
+    scroll-into-view="{{scrollToId}}"
+    scroll-with-animation
+  >
+    <!-- 欢迎消息 -->
+    <view class="welcome-wrap" wx:if="{{messages.length === 0}}">
+      <view class="welcome-card">
+        <view class="welcome-avatar">
+          <text class="welcome-avatar-char">文</text>
+        </view>
+        <text class="welcome-title">文渊先生，您好！</text>
+        <text class="welcome-desc">我是您的国学AI助手，精通诗词、典籍、成语与历史。无论您想了解唐诗宋词、文言文解读，还是探讨历史人物，我都能为您娓娓道来。</text>
+        <view class="welcome-tips">
+          <text class="tip-item">💡 您可以直接提问</text>
+          <text class="tip-item">📜 输入诗词获取赏析</text>
+          <text class="tip-item">🔍 查询成语典故</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 消息列表 -->
+    <view class="messages-list">
+      <view 
+        class="message-wrap {{item.role === 'user' ? 'user-wrap' : 'ai-wrap'}}"
+        wx:for="{{messages}}"
+        wx:key="id"
+        id="msg-{{item.id}}"
+      >
+        <!-- AI头像 -->
+        <view class="msg-avatar" wx:if="{{item.role === 'assistant'}}">
+          <text class="msg-avatar-char">文</text>
+        </view>
+        
+        <!-- 消息气泡 -->
+        <view class="msg-bubble {{item.role === 'user' ? 'user-bubble' : 'ai-bubble'}}">
+          <!-- AI思考中动画 -->
+          <view class="typing-indicator" wx:if="{{item.isTyping}}">
+            <view class="dot"></view>
+            <view class="dot"></view>
+            <view class="dot"></view>
+          </view>
+          
+          <!-- 消息内容 -->
+          <text wx:else class="msg-text" selectable>{{item.content}}</text>
+          
+          <!-- 消息时间 -->
+          <text class="msg-time" wx:if="{{!item.isTyping}}">{{item.time}}</text>
+        </view>
+        
+        <!-- 用户头像 -->
+        <view class="msg-avatar user-avatar" wx:if="{{item.role === 'user'}}">
+          <text class="user-avatar-char">我</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 滚动锚点 -->
+    <view id="bottom-anchor"></view>
+  </scroll-view>
+
+  <!-- 推荐问题 -->
+  <view class="suggestions" wx:if="{{suggestions.length > 0 && !isTyping}}">
+    <scroll-view scroll-x>
+      <view class="sug-list">
+        <view 
+          class="sug-item"
+          wx:for="{{suggestions}}"
+          wx:key="index"
+          bindtap="sendSuggestion"
+          data-text="{{item}}"
+        >{{item}}</view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 输入区域 -->
+  <view class="input-area">
+    <view class="input-wrap">
+      <textarea 
+        class="message-input"
+        value="{{inputText}}"
+        placeholder="请输入您的国学问题..."
+        placeholder-class="input-placeholder"
+        bindinput="onInput"
+        bindconfirm="sendMessage"
+        auto-height
+        maxlength="500"
+        cursor-spacing="20"
+        fixed="true"
+      />
+    </view>
+    <view class="send-btn {{inputText.trim() ? 'active' : 'disabled'}}" bindtap="sendMessage">
+      <text class="send-icon">{{isTyping ? '⏹' : '▶'}}</text>
+    </view>
+  </view>
+  
+  <view class="safe-bottom"></view>
+</view>

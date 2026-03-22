@@ -1,0 +1,106 @@
+<!-- pages/idiom/index.wxml - 成语故事页 -->
+<view class="container idiom-page">
+  
+  <!-- 顶部搜索 -->
+  <view class="idiom-header">
+    <view class="header-bg"></view>
+    <view class="header-content">
+      <text class="header-title">成语故事</text>
+      <text class="header-subtitle">字里乾坤，典故传承</text>
+    </view>
+    <view class="search-wrap">
+      <input 
+        class="idiom-search"
+        placeholder="输入成语进行查询..."
+        placeholder-class="search-ph"
+        value="{{searchText}}"
+        bindinput="onSearchInput"
+        bindconfirm="searchIdiom"
+        confirm-type="search"
+      />
+      <view class="search-action" bindtap="searchIdiom">查</view>
+    </view>
+  </view>
+
+  <!-- 每日成语 -->
+  <view class="daily-idiom">
+    <view class="daily-idiom-header">
+      <text class="daily-label">📖 每日一成语</text>
+      <text class="change-idiom" bindtap="changeDailyIdiom">换一个</text>
+    </view>
+    <view class="daily-idiom-card" bindtap="lookupIdiom" data-idiom="{{dailyIdiom.word}}">
+      <text class="idiom-word">{{dailyIdiom.word}}</text>
+      <text class="idiom-pinyin">{{dailyIdiom.pinyin}}</text>
+      <text class="idiom-brief">{{dailyIdiom.brief}}</text>
+      <view class="tap-hint">点击查看详解 →</view>
+    </view>
+  </view>
+
+  <!-- 结果展示 -->
+  <view class="result-section" wx:if="{{result || isLoading}}">
+    <view class="result-card">
+      <view class="result-word-header">
+        <text class="result-word">{{currentIdiom}}</text>
+        <view class="action-row">
+          <view class="icon-btn" bindtap="copyResult">📋</view>
+          <view class="icon-btn" bindtap="chatAboutIdiom">💬</view>
+        </view>
+      </view>
+      
+      <view class="ai-loading" wx:if="{{isLoading}}">
+        <view class="loading-dots">
+          <view class="dot"></view>
+          <view class="dot"></view>
+          <view class="dot"></view>
+        </view>
+        <text class="loading-text">正在查询成语...</text>
+      </view>
+      
+      <text class="result-content-text fade-in" selectable wx:elif="{{result}}">{{result}}</text>
+    </view>
+  </view>
+
+  <!-- 成语分类 -->
+  <view class="categories-section">
+    <text class="section-title">成语分类</text>
+    <view class="cat-grid">
+      <view 
+        class="cat-item"
+        wx:for="{{idiomCategories}}"
+        wx:key="id"
+        bindtap="exploreCat"
+        data-cat="{{item}}"
+        style="background: {{item.bg}}"
+      >
+        <text class="cat-emoji">{{item.icon}}</text>
+        <text class="cat-name">{{item.name}}</text>
+        <text class="cat-count">{{item.count}}个</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 精选成语 -->
+  <view class="featured-idioms">
+    <text class="section-title">精选成语</text>
+    <view class="idioms-list">
+      <view 
+        class="idiom-item"
+        wx:for="{{featuredIdioms}}"
+        wx:key="id"
+        bindtap="lookupIdiom"
+        data-idiom="{{item.word}}"
+      >
+        <view class="idiom-word-wrap">
+          <text class="featured-word">{{item.word}}</text>
+          <text class="featured-pinyin">{{item.pinyin}}</text>
+        </view>
+        <text class="featured-brief">{{item.brief}}</text>
+        <view class="idiom-tags">
+          <text class="idiom-cat-tag">{{item.category}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <view class="safe-bottom"></view>
+</view>
