@@ -3,7 +3,7 @@ App({
   onLaunch: function () {
     this.globalData = {
       // 请填入您的云开发环境ID
-      env: "",
+      env: "guoxue-9gszzase2c934dcd",
       userInfo: null,
       // 主题色配置
       theme: {
