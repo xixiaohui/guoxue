@@ -1,312 +1,302 @@
-// 国学AI助手云函数 - 调用微信云开发AI能力
+/**
+ * 国学AI助手 - 云函数 guoxueAI
+ * 使用最新 wx.cloud.extend.AI streamText 流式 API
+ * 模型：hunyuan-turbos-latest
+ * 配额：云数据库 user_quota 集合（免费5次/天，VIP/广告奖励无限）
+ */
+
 const cloud = require('wx-server-sdk');
+cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
+const db = cloud.database();
+const _ = db.command;
 
-cloud.init({
-  env: cloud.DYNAMIC_CURRENT_ENV
-});
+// ─── 系统人设 ────────────────────────────────────────────────
+const SYSTEM_PROMPT = `你是"文渊先生"，一位精通中国传统文化的国学大师与AI助手。
+你的知识涵盖：诗词歌赋、经史子集、成语典故、历史人物与朝代、诸子百家、汉字文化。
 
-// 系统提示词 - 国学AI助手角色
-const SYSTEM_PROMPT = `你是一位博学多才的国学大师，精通中国传统文化。你的名字叫"文渊先生"。
-你的专长包括：
-1. 诗词鉴赏：能赏析唐诗宋词元曲，解读意境与典故
-2. 古文翻译：能将文言文翻译成现代白话文，并解释语法结构
-3. 成语释义：能讲解成语出处、故事与用法
-4. 历史知识：能讲解历史人物、朝代更迭、重大事件
-5. 典籍解读：能讲解四书五经、诸子百家等经典著作
-6. 汉字文化：能讲解汉字的演变、结构与文化内涵
+【回答准则】
+1. 语言：简洁精炼，深入浅出，适合手机阅读
+2. 格式：适当使用【标题】分段，关键词加粗（**词**），引用原文用「」
+3. 态度：博学而亲切，传统而不古板
+4. 长度：根据问题复杂度控制，一般不超过600字
+5. 原文：引用诗词典籍时，提供原文+白话双语
 
-回答风格：
-- 学识渊博但语言平易近人
-- 适当引用经典原文，并给出翻译
-- 善于用现代视角诠释传统文化
-- 回答要有深度但通俗易懂
-- 适当使用小故事和典故来说明问题
-- 回答长度适中，重点突出
+请始终用中文回答。`;
 
-请用中文回答，融入传统文化的智慧，帮助用户领略国学之美。`;
+const FREE_DAILY_LIMIT = 5;
+const QUOTA_COLLECTION = 'user_quota';
+const MODEL_NAME = 'hunyuan-turbos-latest';
 
+// ─── 入口 ────────────────────────────────────────────────
 exports.main = async (event, context) => {
-  const { type, messages, text, mode } = event;
-  
+  const { OPENID } = cloud.getWXContext();
+  const { type } = event;
+
+  // daily / daily_idiom 不计入每日配额（缓存型内容）
+  const quotaFree = ['daily', 'daily_idiom'].includes(type);
+
   try {
-    // AI对话
-    if (type === 'chat') {
-      return await handleChat(messages);
-    }
-    
-    // 古文翻译
-    if (type === 'translate') {
-      return await handleTranslate(text, mode);
-    }
-    
-    // 每日经典推荐
-    if (type === 'daily') {
-      return await handleDailyClassic();
-    }
-    
-    // 诗词解析
-    if (type === 'poem') {
-      return await handlePoemAnalysis(text);
-    }
-    
-    // 成语解释
-    if (type === 'idiom') {
-      return await handleIdiomExplain(text);
-    }
-    
-    // 历史知识
-    if (type === 'history') {
-      return await handleHistory(text);
+    // ── 配额检查 ──────────────────────────────
+    if (!quotaFree && OPENID) {
+      const quota = await _checkAndConsumeQuota(OPENID);
+      if (!quota.canUse) {
+        return {
+          success: false,
+          quota_exceeded: true,
+          remaining: 0,
+          error: '今日免费次数已用完，请观看视频广告或升级会员继续使用',
+          isVip: quota.isVip,
+          hasAdBonus: quota.hasAdBonus
+        };
+      }
     }
 
-    // 流式对话
-    if (type === 'stream') {
-      return await handleStreamChat(messages);
+    // ── 路由到各业务处理器 ──────────────────────────────
+    switch (type) {
+      case 'chat':        return await handleChat(event.messages);
+      case 'translate':   return await handleTranslate(event.text, event.mode);
+      case 'daily':       return await handleDailyClassic();
+      case 'daily_idiom': return await handleDailyIdiom();
+      case 'poem':        return await handlePoemAnalysis(event.text);
+      case 'idiom':       return await handleIdiomExplain(event.text);
+      case 'history':     return await handleHistory(event.text);
+      case 'search':      return await handleSearch(event.text);
+      default:            return err('未知请求类型: ' + type);
     }
-    
-    return { success: false, error: '未知请求类型' };
-  } catch (error) {
-    console.error('云函数错误:', error);
-    return { 
-      success: false, 
-      error: error.message || '服务暂时不可用，请稍后重试' 
-    };
+  } catch (e) {
+    console.error(`[guoxueAI][${type}]`, e);
+    return err(friendlyError(e));
   }
 };
 
-// 处理AI对话
-async function handleChat(messages) {
-  const formattedMessages = [
-    { role: 'system', content: SYSTEM_PROMPT },
-    ...messages.map(msg => ({
-      role: msg.role,
-      content: msg.content
-    }))
-  ];
-  
-  const result = await cloud.ai.inference.completions({
-    model: 'hunyuan-turbos-latest',
-    messages: formattedMessages,
-    temperature: 0.8,
-    max_tokens: 2000
-  });
-  
-  const reply = result.choices[0].message.content;
-  return { success: true, reply };
-}
+// ─── 核心：调用 AI 模型（流式收集完整文本）──────────────────────────────────
+/**
+ * 使用最新 wx.cloud.extend.AI streamText API
+ * 收集全部 stream 事件后拼接返回完整字符串
+ */
+async function callModel(messages, opts = {}) {
+  const model = cloud.extend.AI.createModel(MODEL_NAME);
 
-// 处理古文翻译
-async function handleTranslate(text, mode) {
-  let prompt = '';
-  if (mode === 'ancient_to_modern') {
-    prompt = `请将以下文言文翻译成现代白话文，并进行详细注释：
-    
-文言文：${text}
-
-请按以下格式回答：
-【现代白话文】
-[翻译内容]
-
-【重点词汇注释】
-[关键字词解释]
-
-【文化背景】
-[相关历史文化背景简介]`;
-  } else {
-    prompt = `请将以下现代白话文改写成古典文言文风格，并解释用词：
-
-现代文：${text}
-
-请按以下格式回答：
-【文言文版本】
-[文言文内容]
-
-【用词说明】
-[主要文言词汇解释]`;
-  }
-  
-  const result = await cloud.ai.inference.completions({
-    model: 'hunyuan-turbos-latest',
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: prompt }
-    ],
-    temperature: 0.5,
-    max_tokens: 2000
-  });
-  
-  return { 
-    success: true, 
-    result: result.choices[0].message.content 
-  };
-}
-
-// 每日经典推荐
-async function handleDailyClassic() {
-  const today = new Date();
-  const dateStr = `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日`;
-  
-  const prompt = `今天是${dateStr}，请为我推荐一首适合今日的经典诗词或名言警句。
-
-请按以下格式回答：
-【今日经典】
-[经典原文]
-
-【作者朝代】
-[作者名 · 朝代]
-
-【白话赏析】
-[用简洁的现代文解释诗词含义和意境，100字以内]
-
-【今日启示】
-[结合现代生活给出简短的人生感悟，50字以内]`;
-
-  const result = await cloud.ai.inference.completions({
-    model: 'hunyuan-turbos-latest',
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: prompt }
-    ],
-    temperature: 0.9,
-    max_tokens: 1000
-  });
-  
-  return { 
-    success: true, 
-    daily: result.choices[0].message.content 
-  };
-}
-
-// 诗词解析
-async function handlePoemAnalysis(text) {
-  const prompt = `请对以下诗词进行深度赏析：
-
-${text}
-
-请按以下格式回答：
-【作品信息】
-[朝代、作者、创作背景]
-
-【全文注释】
-[逐句注释，解释难懂的字词]
-
-【意境赏析】
-[分析诗词的意境、情感与艺术手法]
-
-【文化价值】
-[说明这首诗词在中国文学史上的地位与影响]`;
-
-  const result = await cloud.ai.inference.completions({
-    model: 'hunyuan-turbos-latest',
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: prompt }
-    ],
-    temperature: 0.7,
-    max_tokens: 2000
-  });
-  
-  return { 
-    success: true, 
-    analysis: result.choices[0].message.content 
-  };
-}
-
-// 成语解释
-async function handleIdiomExplain(idiom) {
-  const prompt = `请详细解释成语"${idiom}"：
-
-请按以下格式回答：
-【成语释义】
-[简洁的成语含义]
-
-【出处典故】
-[成语的来源和历史故事]
-
-【原文引用】
-[出处原文（如有）]
-
-【用法示例】
-[给出2个现代用法例句]
-
-【近义词·反义词】
-近义词：[列出]
-反义词：[列出]`;
-
-  const result = await cloud.ai.inference.completions({
-    model: 'hunyuan-turbos-latest',
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: prompt }
-    ],
-    temperature: 0.5,
-    max_tokens: 1500
-  });
-  
-  return { 
-    success: true, 
-    explanation: result.choices[0].message.content 
-  };
-}
-
-// 历史知识
-async function handleHistory(query) {
-  const prompt = `请介绍关于"${query}"的历史知识：
-
-请按以下格式回答：
-【历史概述】
-[简要介绍]
-
-【重要细节】
-[详细历史内容]
-
-【历史影响】
-[对后世的影响与意义]
-
-【文化延伸】
-[相关文学、艺术作品或典故]`;
-
-  const result = await cloud.ai.inference.completions({
-    model: 'hunyuan-turbos-latest',
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: prompt }
-    ],
-    temperature: 0.6,
-    max_tokens: 2000
-  });
-  
-  return { 
-    success: true, 
-    content: result.choices[0].message.content 
-  };
-}
-
-// 流式对话（用于实时显示）
-async function handleStreamChat(messages) {
-  const formattedMessages = [
-    { role: 'system', content: SYSTEM_PROMPT },
-    ...messages.map(msg => ({
-      role: msg.role,
-      content: msg.content
-    }))
-  ];
-  
-  // 使用流式API
-  const stream = await cloud.ai.inference.completions({
-    model: 'hunyuan-turbos-latest',
-    messages: formattedMessages,
-    temperature: 0.8,
-    max_tokens: 2000,
-    stream: true
-  });
-
-  let fullContent = '';
-  for await (const chunk of stream) {
-    if (chunk.choices[0]?.delta?.content) {
-      fullContent += chunk.choices[0].delta.content;
+  const res = await model.streamText({
+    data: {
+      model: MODEL_NAME,
+      messages,
+      temperature: opts.temperature ?? 0.7,
+      max_tokens: opts.maxTokens || 2000,
+      top_p: opts.topP ?? 0.9
     }
+  });
+
+  let fullText = '';
+  let thinkText = '';  // deepseek-r1 思维链（hunyuan 通常无此字段）
+
+  for await (const event of res.eventStream) {
+    // 流结束标志
+    if (event.data === '[DONE]') break;
+
+    let data;
+    try {
+      data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+    } catch (e) {
+      continue; // 跳过非 JSON 行
+    }
+
+    // 思维链（reasoning_content，部分模型返回）
+    const think = data?.choices?.[0]?.delta?.reasoning_content;
+    if (think) thinkText += think;
+
+    // 正文内容
+    const text = data?.choices?.[0]?.delta?.content;
+    if (text) fullText += text;
   }
-  
-  return { success: true, reply: fullContent };
+
+  if (!fullText && !thinkText) throw new Error('AI 返回内容为空');
+  return fullText || thinkText;
+}
+
+// ─── 多轮对话 ────────────────────────────────────────────────
+async function handleChat(messages) {
+  if (!Array.isArray(messages) || messages.length === 0) return err('消息列表不能为空');
+  const trimmed = messages.slice(-12);
+  const reply = await callModel(
+    [{ role: 'system', content: SYSTEM_PROMPT }, ...trimmed],
+    { temperature: 0.75, maxTokens: 1500 }
+  );
+  return ok({ reply });
+}
+
+// ─── 古文翻译 ────────────────────────────────────────────────
+async function handleTranslate(text, mode) {
+  if (!text?.trim()) return err('请输入需要翻译的文本');
+  const isAncient = mode !== 'modern_to_ancient';
+  const prompt = isAncient
+    ? `请将下列文言文翻译成现代白话文，并进行注释。\n\n【原文】\n${text}\n\n请严格按以下结构输出：\n【译文】\n（现代白话文翻译）\n\n【注释】\n（逐一解释关键字词或典故）\n\n【背景】\n（简述作品或句子的历史文化背景，2-3句）`
+    : `请将下列现代白话文改写成古雅的文言文风格。\n\n【原文】\n${text}\n\n请严格按以下结构输出：\n【文言文】\n（文言文改写版本）\n\n【用词说明】\n（解释所用的关键文言词汇及语法）`;
+
+  const result = await callModel(
+    [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
+    { temperature: 0.4, maxTokens: 1500 }
+  );
+  return ok({ result });
+}
+
+// ─── 每日经典 ────────────────────────────────────────────────
+async function handleDailyClassic() {
+  const today = _formatDate(new Date());
+  const prompt = `今天是${today}，请推荐一条适合今天的经典名句（诗词、典籍、名言皆可）。\n\n请严格按以下JSON格式返回（不要有多余文字）：\n{\n  "quote": "经典原文（完整句子）",\n  "author": "作者 · 朝代 · 出处",\n  "translation": "白话文解释（30字以内）",\n  "analysis": "意境赏析（60字以内）",\n  "insight": "今日启示（30字以内）"\n}`;
+
+  const raw = await callModel(
+    [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
+    { temperature: 0.85, maxTokens: 500 }
+  );
+
+  let daily;
+  try {
+    const jsonStr = raw.match(/\{[\s\S]*\}/)?.[0] || raw;
+    daily = JSON.parse(jsonStr);
+  } catch (e) {
+    daily = { quote: raw.substring(0, 200), author: '', translation: '', analysis: '', insight: '' };
+  }
+  return ok({ daily });
+}
+
+// ─── 每日成语 ────────────────────────────────────────────────
+async function handleDailyIdiom() {
+  const today = _formatDate(new Date());
+  const prompt = `今天是${today}，请随机推荐一个有趣的四字成语。\n\n请严格按以下JSON格式返回（不要有多余文字）：\n{\n  "word": "成语",\n  "pinyin": "pīn yīn",\n  "brief": "一句话释义（20字以内）",\n  "origin": "出处典籍或历史故事名称",\n  "story": "典故故事（80字以内）",\n  "example": "一个现代用法例句",\n  "antonym": "反义词（1-2个）",\n  "synonym": "近义词（1-2个）"\n}`;
+
+  const raw = await callModel(
+    [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
+    { temperature: 0.9, maxTokens: 600 }
+  );
+
+  let idiom;
+  try {
+    const jsonStr = raw.match(/\{[\s\S]*\}/)?.[0] || raw;
+    idiom = JSON.parse(jsonStr);
+  } catch (e) {
+    idiom = {
+      word: '一鸣惊人', pinyin: 'yī míng jīng rén',
+      brief: '平时没有表现，突然做出惊人成绩',
+      origin: '《史记》', story: '', example: '', antonym: '', synonym: ''
+    };
+  }
+  return ok({ idiom });
+}
+
+// ─── 诗词赏析 ────────────────────────────────────────────────
+async function handlePoemAnalysis(text) {
+  if (!text?.trim()) return err('请输入诗词内容');
+  const prompt = `请对以下诗词进行专业赏析：\n\n${text}\n\n请按以下结构输出（每部分控制在100字以内）：\n【作品信息】\n（朝代、作者、创作背景）\n\n【逐句注释】\n（关键字词解释，古汉语语法说明）\n\n【意境赏析】\n（分析意象、情感基调、艺术手法）\n\n【文学地位】\n（在中国文学史上的价值与影响）`;
+
+  const analysis = await callModel(
+    [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
+    { temperature: 0.6, maxTokens: 1800 }
+  );
+  return ok({ analysis });
+}
+
+// ─── 成语解释 ────────────────────────────────────────────────
+async function handleIdiomExplain(word) {
+  if (!word?.trim()) return err('请输入成语');
+  const prompt = `请详细解释成语「${word}」。\n\n请按以下结构输出：\n【成语释义】\n（简明释义，20字以内）\n\n【出处典故】\n（来源文献及历史故事）\n\n【原文引用】\n（出处原文，如无则说明）\n\n【用法示例】\n例句1：（现代语境例句）\n例句2：（另一语境例句）\n\n【近义词】（列出2-3个）\n【反义词】（列出2-3个）`;
+
+  const explanation = await callModel(
+    [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
+    { temperature: 0.4, maxTokens: 1200 }
+  );
+  return ok({ explanation });
+}
+
+// ─── 历史知识 ────────────────────────────────────────────────
+async function handleHistory(query) {
+  if (!query?.trim()) return err('请输入查询内容');
+  const prompt = `请介绍关于「${query}」的历史知识。\n\n请按以下结构输出（每部分控制在120字以内）：\n【历史概述】\n（时间、地点、主要人物简介）\n\n【重要内容】\n（详细历史事件、过程或人物生平）\n\n【深远影响】\n（对后世政治、文化、社会的影响）\n\n【文化印记】\n（相关诗词、典故、成语或艺术作品）`;
+
+  const content = await callModel(
+    [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
+    { temperature: 0.5, maxTokens: 1800 }
+  );
+  return ok({ content });
+}
+
+// ─── 智能搜索 ────────────────────────────────────────────────
+async function handleSearch(text) {
+  if (!text?.trim()) return err('请输入搜索内容');
+  const reply = await callModel(
+    [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: `请从国学角度介绍：${text}` }],
+    { temperature: 0.65, maxTokens: 1500 }
+  );
+  return ok({ reply });
+}
+
+// ─── 配额检查并消费 ────────────────────────────────────────────────
+async function _checkAndConsumeQuota(openid) {
+  try {
+    const now = Date.now();
+    const today = _today();
+
+    let doc;
+    try {
+      const res = await db.collection(QUOTA_COLLECTION).doc(openid).get();
+      doc = res.data;
+    } catch (e) {
+      doc = {
+        _id: openid, openid,
+        date: today, used: 0,
+        vip_expire: 0, ad_bonus_expire: 0,
+        total_used: 0, created_at: now, updated_at: now
+      };
+      await db.collection(QUOTA_COLLECTION).add({ data: doc });
+    }
+
+    const isVip = (doc.vip_expire || 0) > now;
+    const hasAdBonus = (doc.ad_bonus_expire || 0) > now;
+
+    // 会员/激励广告不限量
+    if (isVip || hasAdBonus) {
+      await db.collection(QUOTA_COLLECTION).doc(openid).update({
+        data: { total_used: _.inc(1), updated_at: now }
+      });
+      return { canUse: true, isVip, hasAdBonus, remaining: 999 };
+    }
+
+    // 跨日重置
+    const used = (doc.date === today) ? (doc.used || 0) : 0;
+    if (used >= FREE_DAILY_LIMIT) {
+      return { canUse: false, isVip: false, hasAdBonus: false, remaining: 0 };
+    }
+
+    await db.collection(QUOTA_COLLECTION).doc(openid).update({
+      data: { date: today, used: used + 1, total_used: _.inc(1), updated_at: now }
+    });
+
+    return { canUse: true, isVip: false, hasAdBonus: false, remaining: FREE_DAILY_LIMIT - used - 1 };
+  } catch (e) {
+    console.warn('[quota] check failed, allowing request:', e.message);
+    // 配额检查失败降级放行，不影响用户
+    return { canUse: true, isVip: false, hasAdBonus: false, remaining: 1 };
+  }
+}
+
+// ─── 工具函数 ────────────────────────────────────────────────
+function ok(data)  { return { success: true,  ...data }; }
+function err(msg)  { return { success: false, error: msg }; }
+
+function _formatDate(d) {
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
+function _today() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function friendlyError(e) {
+  const msg = e?.message || String(e);
+  if (msg.includes('quota') || msg.includes('limit'))  return 'AI调用次数达到上限，请稍后再试';
+  if (msg.includes('timeout'))                          return '请求超时，请检查网络后重试';
+  if (msg.includes('token'))                            return '输入内容过长，请缩短后重试';
+  if (msg.includes('createModel') || msg.includes('AI')) return 'AI模型暂时不可用，请稍后再试';
+  return 'AI服务暂时繁忙，请稍后重试';
 }

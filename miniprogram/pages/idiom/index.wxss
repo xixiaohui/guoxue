@@ -1,4 +1,4 @@
-/* pages/idiom/index.wxss - 成语故事页样式 */
+/* pages/idiom/index.wxss - 成语故事页样式（生产级） */
 
 .idiom-page {
   background: #FDF6E3;
@@ -49,9 +49,7 @@
   min-height: 80rpx;
 }
 
-.search-ph {
-  color: rgba(255, 248, 231, 0.5);
-}
+.search-ph { color: rgba(255, 248, 231, 0.5); }
 
 .search-action {
   background: #C4882E;
@@ -66,10 +64,8 @@
   letter-spacing: 2rpx;
 }
 
-/* 每日成语 */
-.daily-idiom {
-  margin: 24rpx 24rpx 0;
-}
+/* ── 每日成语 ─────────────────────────────── */
+.daily-idiom { margin: 24rpx 24rpx 0; }
 
 .daily-idiom-header {
   display: flex;
@@ -78,11 +74,7 @@
   margin-bottom: 12rpx;
 }
 
-.daily-label {
-  font-size: 28rpx;
-  color: #8B2500;
-  font-weight: 600;
-}
+.daily-label { font-size: 28rpx; color: #8B2500; font-weight: 600; }
 
 .change-idiom {
   font-size: 24rpx;
@@ -92,6 +84,43 @@
   padding: 4rpx 16rpx;
 }
 
+/* 骨架屏 */
+.daily-idiom-skeleton {
+  background: #FFFBF0;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  border: 1rpx solid #EDD9A3;
+  animation: shimmer 1.5s infinite;
+}
+
+.sk-word {
+  height: 52rpx;
+  width: 200rpx;
+  background: #EDD9A3;
+  border-radius: 8rpx;
+  margin-bottom: 12rpx;
+}
+
+.sk-pinyin {
+  height: 24rpx;
+  width: 280rpx;
+  background: #EDD9A3;
+  border-radius: 6rpx;
+  margin-bottom: 16rpx;
+}
+
+.sk-brief {
+  height: 22rpx;
+  width: 90%;
+  background: #EDD9A3;
+  border-radius: 6rpx;
+}
+
+@keyframes shimmer {
+  0% { opacity: 1; } 50% { opacity: .55; } 100% { opacity: 1; }
+}
+
+/* 成语卡片 */
 .daily-idiom-card {
   background: linear-gradient(135deg, #FFFBF0, #FFF5D6);
   border-radius: 16rpx;
@@ -104,14 +133,21 @@
 
 .daily-idiom-card::before {
   content: '成';
-  position: absolute;
-  right: -20rpx;
-  bottom: -30rpx;
-  font-size: 180rpx;
-  color: rgba(196, 136, 46, 0.06);
-  font-weight: bold;
-  line-height: 1;
+  position: absolute; right: -20rpx; bottom: -30rpx;
+  font-size: 180rpx; color: rgba(196, 136, 46, 0.06);
+  font-weight: bold; line-height: 1; pointer-events: none;
 }
+
+.daily-idiom-card:active { background: linear-gradient(135deg, #FFF5D6, #FFEDB8); }
+
+.idiom-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16rpx;
+}
+
+.idiom-word-block { flex: 1; }
 
 .idiom-word {
   display: block;
@@ -127,7 +163,20 @@
   font-size: 24rpx;
   color: #C4882E;
   letter-spacing: 4rpx;
-  margin-bottom: 16rpx;
+}
+
+.idiom-origin-tag {
+  background: rgba(196, 136, 46, 0.12);
+  border: 1rpx solid rgba(196, 136, 46, 0.3);
+  border-radius: 10rpx;
+  padding: 6rpx 14rpx;
+  flex-shrink: 0;
+  max-width: 200rpx;
+}
+
+.origin-text {
+  font-size: 20rpx;
+  color: #8B2500;
 }
 
 .idiom-brief {
@@ -135,19 +184,53 @@
   font-size: 28rpx;
   color: #5A4030;
   line-height: 1.7;
+  margin-bottom: 16rpx;
+}
+
+.idiom-story-box {
+  background: rgba(196, 136, 46, 0.06);
+  border-left: 4rpx solid #C4882E;
+  border-radius: 0 10rpx 10rpx 0;
+  padding: 14rpx 18rpx;
+  margin-bottom: 14rpx;
+  display: flex;
+  gap: 10rpx;
+  align-items: flex-start;
+}
+
+.story-label {
+  font-size: 22rpx;
+  color: #C4882E;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-top: 2rpx;
+}
+
+.story-text {
+  font-size: 26rpx;
+  color: #5A4030;
+  line-height: 1.7;
+}
+
+.idiom-extra-row {
+  display: flex;
+  gap: 24rpx;
+  margin-bottom: 10rpx;
+}
+
+.extra-item {
+  font-size: 22rpx;
+  color: #8C7B61;
 }
 
 .tap-hint {
   font-size: 22rpx;
   color: #C4882E;
-  margin-top: 16rpx;
   text-align: right;
 }
 
-/* 结果区域 */
-.result-section {
-  margin: 24rpx 24rpx 0;
-}
+/* ── 查询结果 ─────────────────────────────── */
+.result-section { margin: 24rpx 24rpx 0; }
 
 .result-card {
   background: #FFFBF0;
@@ -173,15 +256,11 @@
   letter-spacing: 8rpx;
 }
 
-.action-row {
-  display: flex;
-  gap: 16rpx;
-}
+.action-row { display: flex; gap: 16rpx; }
 
-.icon-btn {
-  font-size: 32rpx;
-  padding: 8rpx;
-}
+.icon-btn { font-size: 32rpx; padding: 8rpx; }
+.icon-btn:active { opacity: 0.7; }
+.icon-btn-active { }
 
 .ai-loading {
   display: flex;
@@ -191,9 +270,42 @@
   gap: 16rpx;
 }
 
-.loading-text {
+.loading-text { font-size: 26rpx; color: #8C7B61; }
+
+/* 分段展示 */
+.result-sections { padding: 16rpx 24rpx 24rpx; }
+
+.result-seg {
+  margin-bottom: 20rpx;
+}
+
+.seg-label-row {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 8rpx;
+}
+
+.seg-dot {
+  width: 8rpx;
+  height: 28rpx;
+  background: linear-gradient(180deg, #C4882E, #8B2500);
+  border-radius: 4rpx;
+  flex-shrink: 0;
+}
+
+.seg-label {
   font-size: 26rpx;
-  color: #8C7B61;
+  font-weight: 600;
+  color: #8B2500;
+}
+
+.seg-content {
+  font-size: 28rpx;
+  color: #2C1810;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  padding-left: 18rpx;
 }
 
 .result-content-text {
@@ -205,10 +317,8 @@
   white-space: pre-wrap;
 }
 
-/* 分类网格 */
-.categories-section {
-  margin-top: 32rpx;
-}
+/* ── 分类网格 ─────────────────────────────── */
+.categories-section { margin-top: 32rpx; }
 
 .cat-grid {
   display: grid;
@@ -224,39 +334,16 @@
   box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
 }
 
-.cat-item:active {
-  opacity: 0.85;
-}
+.cat-item:active { opacity: 0.85; }
 
-.cat-emoji {
-  display: block;
-  font-size: 40rpx;
-  margin-bottom: 8rpx;
-}
+.cat-emoji { display: block; font-size: 40rpx; margin-bottom: 8rpx; }
+.cat-name { display: block; font-size: 26rpx; color: #fff; font-weight: 500; }
+.cat-count { display: block; font-size: 22rpx; color: rgba(255,255,255,0.75); margin-top: 4rpx; }
 
-.cat-name {
-  display: block;
-  font-size: 26rpx;
-  color: #fff;
-  font-weight: 500;
-}
+/* ── 精选成语 ─────────────────────────────── */
+.featured-idioms { margin-top: 32rpx; padding-bottom: 40rpx; }
 
-.cat-count {
-  display: block;
-  font-size: 22rpx;
-  color: rgba(255,255,255,0.75);
-  margin-top: 4rpx;
-}
-
-/* 精选成语 */
-.featured-idioms {
-  margin-top: 32rpx;
-  padding-bottom: 40rpx;
-}
-
-.idioms-list {
-  padding: 8rpx 24rpx;
-}
+.idioms-list { padding: 8rpx 24rpx; }
 
 .idiom-item {
   background: #FFFBF0;
@@ -267,9 +354,7 @@
   box-shadow: 0 2rpx 8rpx rgba(139, 37, 0, 0.04);
 }
 
-.idiom-item:active {
-  background: #FFF5DC;
-}
+.idiom-item:active { background: #FFF5DC; }
 
 .idiom-word-wrap {
   display: flex;
@@ -285,10 +370,7 @@
   letter-spacing: 8rpx;
 }
 
-.featured-pinyin {
-  font-size: 22rpx;
-  color: #C4882E;
-}
+.featured-pinyin { font-size: 22rpx; color: #C4882E; }
 
 .featured-brief {
   display: block;
@@ -298,9 +380,7 @@
   margin-bottom: 12rpx;
 }
 
-.idiom-tags {
-  display: flex;
-}
+.idiom-tags { display: flex; }
 
 .idiom-cat-tag {
   background: #FFF3DC;
@@ -310,3 +390,5 @@
   padding: 4rpx 16rpx;
   font-size: 22rpx;
 }
+
+.safe-bottom { height: env(safe-area-inset-bottom); }

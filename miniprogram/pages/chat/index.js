@@ -1,5 +1,7 @@
-// pages/chat/index.js - AI问答页
-const app = getApp();
+// pages/chat/index.js - 生产级AI问答（含完整变现闭环）
+const api = require('../../utils/api');
+const storage = require('../../utils/storage');
+const monetize = require('../../utils/monetize');
 
 Page({
   data: {
@@ -7,181 +9,311 @@ Page({
     inputText: '',
     isTyping: false,
     scrollToId: '',
-    messageId: 0,
     suggestions: [],
+    showHistory: false,
+    historyList: [],
+
+    // ── 配额与会员状态 ──────────────────────────────
+    quotaStatus: null,     // { isVip, hasAdBonus, remaining, canUse, ... }
+    quotaBadge: '',        // 顶部配额徽章文字
+    showQuotaBar: false,   // 配额提示条是否展示
+
+    // ── 会员语音（占位，需TTS能力） ──────────────────────────────
+    speaking: false,
+    speakMsgId: null,
+
     quickTopics: [
-      '李白最著名的十首诗',
-      '论语中的人生智慧',
-      '孙子兵法核心思想',
-      '唐宋八大家是谁',
-      '道德经的核心理念',
-      '科举制度的历史',
-      '儒释道三家区别',
-      '中国古代四大发明'
-    ]
+      '李白与杜甫的诗风有何不同？',
+      '论语中最值得背诵的10句',
+      '孙子兵法如何指导现代生活？',
+      '道可道，非常道 是什么意思？',
+      '唐宋八大家各有何代表作？',
+      '科举制度是怎么运作的？',
+      '四书五经分别是哪些书？',
+      '孔子一生经历了哪些磨难？'
+    ],
+    _msgCounter: 0
   },
 
-  onLoad: function (options) {
-    // 如果有预设话题，直接发送
+  onLoad(options) {
+    // 预加载激励广告
+    monetize.preloadRewardedAd();
+
     if (options.topic) {
       const topic = decodeURIComponent(options.topic);
-      this.setData({ inputText: topic });
       setTimeout(() => {
+        this.setData({ inputText: topic });
         this.sendMessage();
-      }, 500);
+      }, 300);
     }
   },
 
-  onInput: function (e) {
+  onShow() {
+    this._refreshQuotaStatus();
+  },
+
+  onUnload() {
+    const { messages } = this.data;
+    if (messages.length >= 2) {
+      storage.saveChatSession(messages);
+    }
+  },
+
+  // ── 刷新配额状态（onShow时调用，不阻塞UI）──────────────────────────────
+  async _refreshQuotaStatus() {
+    try {
+      const status = await monetize.getQuotaStatus();
+      const badge = monetize.getQuotaBadgeText(status);
+      this.setData({
+        quotaStatus: status,
+        quotaBadge: badge,
+        showQuotaBar: !status.isVip // VIP不显示配额条
+      });
+    } catch (e) {
+      // 网络异常，不影响使用
+    }
+  },
+
+  onInput(e) {
     this.setData({ inputText: e.detail.value });
   },
 
-  // 发送快捷话题
-  sendQuickTopic: function (e) {
+  // ── 快捷话题 ──────────────────────────────
+  onQuickTopic(e) {
     const topic = e.currentTarget.dataset.topic;
     this.setData({ inputText: topic });
     this.sendMessage();
   },
 
-  // 发送推荐问题
-  sendSuggestion: function (e) {
+  onSuggestion(e) {
     const text = e.currentTarget.dataset.text;
     this.setData({ inputText: text, suggestions: [] });
     this.sendMessage();
   },
 
-  // 发送消息
-  sendMessage: function () {
+  // ── 核心：发送消息（含配额检查）──────────────────────────────
+  async sendMessage() {
     const text = this.data.inputText.trim();
     if (!text || this.data.isTyping) return;
 
-    const msgId = ++this.data.messageId;
+    // ① 消费配额（云函数）
+    let quotaResult;
+    try {
+      quotaResult = await monetize.consumeQuota();
+    } catch (e) {
+      // 网络异常降级允许
+      quotaResult = { allowed: true, reason: 'fallback' };
+    }
+
+    if (!quotaResult.allowed) {
+      // 配额超限 → 弹出变现弹窗
+      const unlocked = await monetize.handleQuotaExceeded({
+        onContinue: () => this._doSendMessage(text)
+      });
+      if (!unlocked) return;
+      // 用户解锁后直接发送
+      this._doSendMessage(text);
+      return;
+    }
+
+    // 配额够用，直接发
+    this._doSendMessage(text);
+
+    // 刷新配额显示
+    this._refreshQuotaStatus();
+  },
+
+  // ── 实际发送（配额已消费或豁免后调用）──────────────────────────────
+  _doSendMessage(text) {
+    const userMsgId = ++this.data._msgCounter;
     const userMsg = {
-      id: msgId,
+      id: userMsgId,
       role: 'user',
       content: text,
-      time: this.getTime()
+      time: this._getTime(),
+      error: false
     };
 
-    // 添加用户消息
-    const messages = [...this.data.messages, userMsg];
-    
-    // 添加AI思考中占位
-    const aiMsgId = ++this.data.messageId;
-    const thinkingMsg = {
+    const aiMsgId = ++this.data._msgCounter;
+    const aiPlaceholder = {
       id: aiMsgId,
       role: 'assistant',
       content: '',
       isTyping: true,
+      error: false,
       time: ''
     };
-    messages.push(thinkingMsg);
 
+    const messages = [...this.data.messages, userMsg, aiPlaceholder];
     this.setData({
       messages,
       inputText: '',
       isTyping: true,
       suggestions: [],
-      scrollToId: `msg-${aiMsgId}`
+      scrollToId: 'msg-' + aiMsgId
     });
 
-    // 调用AI云函数
-    const chatMessages = this.data.messages
-      .filter(m => !m.isTyping && m.id !== aiMsgId)
-      .concat([userMsg])
+    const chatHistory = messages
+      .filter(m => !m.isTyping && !m.error)
       .map(m => ({ role: m.role, content: m.content }));
 
-    wx.cloud.callFunction({
-      name: 'guoxueAI',
-      data: {
-        type: 'chat',
-        messages: chatMessages
-      }
-    }).then(res => {
-      if (res.result && res.result.success) {
-        this.updateAIMessage(aiMsgId, res.result.reply);
-      } else {
-        this.updateAIMessage(aiMsgId, '抱歉，我暂时无法回答，请稍后再试。');
-      }
-    }).catch(err => {
-      console.error('AI对话错误:', err);
-      this.updateAIMessage(aiMsgId, '网络连接出现问题，请检查网络后重试。');
-    });
+    api.chat(chatHistory)
+      .then(res => this._onAIReply(aiMsgId, res.reply))
+      .catch(e => this._onAIError(aiMsgId, e.message));
   },
 
-  // 更新AI消息
-  updateAIMessage: function (msgId, content) {
-    const messages = this.data.messages.map(m => {
-      if (m.id === msgId) {
-        return {
-          ...m,
-          content,
-          isTyping: false,
-          time: this.getTime()
-        };
-      }
-      return m;
-    });
+  // ── AI 回复：打字机效果 ──────────────────────────────
+  _onAIReply(msgId, fullText) {
+    this._updateMsg(msgId, { isTyping: false, content: '', time: this._getTime() });
 
-    this.setData({
-      messages,
+    const CHUNK = 4;
+    let idx = 0;
+    const tick = () => {
+      if (idx >= fullText.length) {
+        this.setData({ isTyping: false });
+        this._generateSuggestions(fullText);
+        return;
+      }
+      const slice = fullText.substring(0, idx + CHUNK);
+      idx = Math.min(idx + CHUNK, fullText.length);
+      this._updateMsg(msgId, { content: slice });
+      setTimeout(tick, 18);
+    };
+    tick();
+  },
+
+  _onAIError(msgId, errMsg) {
+    this._updateMsg(msgId, {
       isTyping: false,
-      scrollToId: `msg-${msgId}`
+      content: errMsg || '回复失败，请重试',
+      error: true,
+      time: this._getTime()
     });
-
-    // 生成相关推荐问题
-    this.generateSuggestions(content);
+    this.setData({ isTyping: false });
   },
 
-  // 生成相关推荐问题
-  generateSuggestions: function (aiResponse) {
-    const suggestions = [];
-    
-    // 根据回复内容智能推荐
-    if (aiResponse.includes('诗') || aiResponse.includes('词')) {
-      suggestions.push('这首诗的创作背景是什么？');
-      suggestions.push('作者还有哪些著名作品？');
-    }
-    if (aiResponse.includes('成语')) {
-      suggestions.push('这个成语的近义词有哪些？');
-      suggestions.push('如何在句子中运用这个成语？');
-    }
-    if (aiResponse.includes('历史') || aiResponse.includes('朝代')) {
-      suggestions.push('这段历史对后世有何影响？');
-      suggestions.push('同时期还有哪些重要事件？');
-    }
-    
-    // 通用推荐
-    if (suggestions.length < 2) {
-      suggestions.push('能举个具体例子吗？');
-      suggestions.push('还有哪些相关内容值得了解？');
-    }
-
-    this.setData({ suggestions: suggestions.slice(0, 3) });
+  _updateMsg(msgId, patch) {
+    const messages = this.data.messages.map(m =>
+      m.id !== msgId ? m : { ...m, ...patch }
+    );
+    this.setData({ messages, scrollToId: 'msg-' + msgId });
   },
 
-  // 清除对话
-  clearChat: function () {
+  // ── 智能追问推荐 ──────────────────────────────
+  _generateSuggestions(text) {
+    const sugs = [];
+    if (text.includes('诗') || text.includes('词') || text.includes('赋')) {
+      sugs.push('作者还有哪些经典作品？');
+      sugs.push('这首诗的写作背景是什么？');
+    }
+    if (text.includes('成语')) {
+      sugs.push('这个成语有哪些近义词？');
+      sugs.push('能再举一个类似的成语吗？');
+    }
+    if (text.includes('历史') || text.includes('朝代') || text.includes('皇')) {
+      sugs.push('这段历史对后世有何影响？');
+      sugs.push('同时期有哪些著名人物？');
+    }
+    if (sugs.length < 2) {
+      sugs.push('能详细举例说明吗？');
+      sugs.push('与现代生活有何联系？');
+    }
+    this.setData({ suggestions: sugs.slice(0, 3) });
+  },
+
+  // ── 重试失败消息 ──────────────────────────────
+  retryMsg(e) {
+    const msgId = e.currentTarget.dataset.id;
+    const msgs = this.data.messages;
+    const aiIdx = msgs.findIndex(m => m.id === msgId);
+    if (aiIdx < 0) return;
+
+    this._updateMsg(msgId, { isTyping: true, error: false, content: '' });
+    this.setData({ isTyping: true });
+
+    const chatHistory = msgs
+      .slice(0, aiIdx)
+      .filter(m => !m.error)
+      .map(m => ({ role: m.role, content: m.content }));
+
+    api.chat(chatHistory)
+      .then(res => this._onAIReply(msgId, res.reply))
+      .catch(e => this._onAIError(msgId, e.message));
+  },
+
+  // ── 复制消息 ──────────────────────────────
+  copyMsg(e) {
+    const content = e.currentTarget.dataset.content;
+    wx.setClipboardData({
+      data: content,
+      success: () => wx.showToast({ title: '已复制', icon: 'success', duration: 1200 })
+    });
+  },
+
+  // ── 语音朗读（VIP专属）──────────────────────────────
+  speakMsg(e) {
+    const { quotaStatus } = this.data;
+    if (!quotaStatus || !quotaStatus.isVip) {
+      wx.showModal({
+        title: '👑 VIP专属功能',
+        content: '语音朗读是会员专属功能\n\n开通9.9元/月会员，享受AI语音朗读国学经典',
+        confirmText: '开通会员',
+        cancelText: '取消',
+        confirmColor: '#8B2500',
+        success: res => {
+          if (res.confirm) wx.navigateTo({ url: '/pages/vip/index' });
+        }
+      });
+      return;
+    }
+    // VIP才可使用TTS（调用微信TTS或第三方）
+    const content = e.currentTarget.dataset.content;
+    if (!content) return;
+    this.setData({ speaking: true, speakMsgId: e.currentTarget.dataset.id });
+    // 微信小程序语音合成（需使用插件或innerAudioContext方案）
+    wx.showToast({ title: '语音功能即将上线', icon: 'none', duration: 2000 });
+    setTimeout(() => this.setData({ speaking: false, speakMsgId: null }), 2000);
+  },
+
+  // ── 清空对话 ──────────────────────────────
+  clearChat() {
+    if (this.data.messages.length === 0) return;
     wx.showModal({
-      title: '清除对话',
-      content: '确定要清除所有对话记录吗？',
-      success: (res) => {
+      title: '清空对话',
+      content: '当前对话记录将被清除，确定吗？',
+      confirmText: '清空',
+      confirmColor: '#8B2500',
+      success: res => {
         if (res.confirm) {
-          this.setData({
-            messages: [],
-            suggestions: [],
-            inputText: ''
-          });
+          this.setData({ messages: [], suggestions: [], isTyping: false });
         }
       }
     });
   },
 
-  // 获取时间
-  getTime: function () {
-    const now = new Date();
-    const h = now.getHours().toString().padStart(2, '0');
-    const m = now.getMinutes().toString().padStart(2, '0');
-    return `${h}:${m}`;
+  // ── 历史会话 ──────────────────────────────
+  showHistoryPanel() {
+    const historyList = storage.getChatHistory();
+    this.setData({ showHistory: true, historyList });
+  },
+
+  closeHistory() {
+    this.setData({ showHistory: false });
+  },
+
+  loadHistorySession(e) {
+    const session = e.currentTarget.dataset.session;
+    this.setData({ messages: session.messages || [], showHistory: false, suggestions: [] });
+  },
+
+  // ── 跳转会员页 ──────────────────────────────
+  goVip() {
+    wx.navigateTo({ url: '/pages/vip/index' });
+  },
+
+  // ── 工具 ──────────────────────────────
+  _getTime() {
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   }
 });
