@@ -1,8 +1,8 @@
 /**
- * utils/monetize.js - 前端变现逻辑核心模块
+ * utils/monetize.js - 前端变现逻辑核心模块 v3.2
  *
  * 封装三层变现闭环：
- *   1. 免费层   每日 5 次 AI 调用（云数据库计数）
+ *   1. 免费层   每日 10 次 AI 调用（云数据库计数）
  *   2. 广告层   超额后弹出激励视频，看完 +1 天无限
  *   3. 付费层   9.9 元/月会员，去广告 + 无限调用 + 语音朗读
  *
@@ -236,7 +236,7 @@ async function handleQuotaExceeded(options = {}) {
   return new Promise((resolve) => {
     wx.showModal({
       title: '✨ 今日免费次数已用完',
-      content: '每天免费使用5次\n\n观看短视频广告（约15秒）获得今日无限使用\n或升级会员享永久无限 + 专属功能',
+      content: '每天免费使用10次\n\n观看短视频广告（约15秒）获得今日无限使用\n或升级会员享永久无限 + 专属功能',
       confirmText: '看广告继续',
       cancelText: '升级会员',
       confirmColor: '#8B2500',

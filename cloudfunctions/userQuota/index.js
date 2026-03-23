@@ -1,7 +1,7 @@
 /**
  * userQuota 云函数 - 用户配额与会员管理
  *
- * 免费层：每天 FREE_DAILY_LIMIT 次 AI 调用（按自然日重置）
+ * 免费层：每天 FREE_DAILY_LIMIT 次 AI 调用（按自然日重置，当前10次）
  * 广告层：看完激励视频 +1 天无限次（ad_bonus_expire 字段）
  * 会员层：9.9元/月，vip_expire 字段控制到期时间
  *
@@ -26,7 +26,7 @@ const db = cloud.database();
 const _ = db.command;
 
 const COLLECTION = 'user_quota';
-const FREE_DAILY_LIMIT = 5;       // 免费每日配额
+const FREE_DAILY_LIMIT = 10;      // 免费每日配额（10次/天）
 const VIP_MONTHLY_PRICE = 9.9;    // 会员月费（元）
 
 // ─── 入口 ────────────────────────────────────────────────
@@ -56,6 +56,7 @@ async function getStatus(openid) {
   const doc = await _getOrCreate(openid);
   const today = _today();
   const now = Date.now();
+  console.log(`[userQuota] getStatus openid=${openid.slice(0,8)} date=${doc.date} today=${today} used=${doc.used}`);
 
   // 超过自然日重置当日计数
   const used = (doc.date === today) ? (doc.used || 0) : 0;
@@ -85,6 +86,7 @@ async function consumeQuota(openid) {
   const doc = await _getOrCreate(openid);
   const today = _today();
   const now = Date.now();
+  console.log(`[userQuota] consume openid=${openid.slice(0,8)} vip_expire=${doc.vip_expire} ad_bonus=${doc.ad_bonus_expire}`);
 
   const isVip = doc.vip_expire > now;
   const hasAdBonus = doc.ad_bonus_expire > now;
@@ -140,7 +142,13 @@ async function grantAdBonus(openid) {
 }
 
 // ─── 激活会员 ────────────────────────────────────────────────
+/**
+ * @param {string} openid
+ * @param {number} months  续费月数（1/3/12）
+ * @param {string} tradeNo 支付订单号
+ */
 async function activateVip(openid, months, tradeNo) {
+  if (!months || months <= 0) months = 1;
   const now = Date.now();
   const doc = await _getOrCreate(openid);
 
@@ -180,7 +188,7 @@ async function _getOrCreate(openid) {
     const res = await db.collection(COLLECTION).doc(openid).get();
     return res.data;
   } catch (e) {
-    // 文档不存在，创建
+    // 文档不存在，创建新用户记录
     const now = Date.now();
     const newDoc = {
       _id: openid,
@@ -193,7 +201,19 @@ async function _getOrCreate(openid) {
       created_at: now,
       updated_at: now
     };
-    await db.collection(COLLECTION).add({ data: newDoc });
+    try {
+      await db.collection(COLLECTION).add({ data: newDoc });
+      console.log(`[userQuota] created new user doc for ${openid.slice(0,8)}`);
+    } catch (addErr) {
+      // 并发创建时可能冲突，忽略并重新读取
+      console.warn('[userQuota] add conflict, re-fetching:', addErr.message);
+      try {
+        const retry = await db.collection(COLLECTION).doc(openid).get();
+        return retry.data;
+      } catch (retryErr) {
+        return newDoc; // 最终降级返回内存中的默认对象
+      }
+    }
     return newDoc;
   }
 }
