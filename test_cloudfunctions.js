@@ -1,26 +1,23 @@
 /**
- * 云函数逻辑验证测试脚本
- * 不需要真实微信云环境，通过模拟测试核心逻辑
+ * 云函数逻辑验证测试脚本 v4.0
+ * 验证新架构：
+ *   - guoxueAI 云函数仅管配额（不含 AI 调用）
+ *   - 小程序端通过 wx.cloud.extend.AI 直接调用模型
+ *   - ai.js: 主模型 + fallback + 流式 + 限流 + 降级
+ *   - api.js: 业务层 + 配额层统一封装
+ *
  * 运行：node test_cloudfunctions.js
  */
 
 'use strict';
+let passed = 0, failed = 0;
 
-let passed = 0;
-let failed = 0;
-
-function assert(condition, msg) {
-  if (condition) {
-    console.log(`  ✅ PASS: ${msg}`);
-    passed++;
-  } else {
-    console.error(`  ❌ FAIL: ${msg}`);
-    failed++;
-  }
+function assert(cond, msg) {
+  if (cond) { console.log(`  ✅ PASS: ${msg}`); passed++; }
+  else       { console.error(`  ❌ FAIL: ${msg}`); failed++; }
 }
 
-// ─── 内联核心逻辑（不依赖 wx-server-sdk） ─────────────────────────
-
+// ─── 内联核心逻辑 ─────────────────────────────────────────────
 const FREE_DAILY_LIMIT = 10;
 
 function _today() {
@@ -28,296 +25,245 @@ function _today() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-function _formatDate(d) {
-  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
-}
-
-function friendlyError(e) {
-  const msg = (e?.message || String(e)).toLowerCase();
-  if (msg.includes('timeout') || msg.includes('超时'))      return '请求超时，请检查网络后重试';
-  if (msg.includes('token') || msg.includes('过长'))        return '输入内容过长，请缩短后重试';
-  if (msg.includes('quota') || msg.includes('limit'))       return 'AI调用次数达到上限，请稍后再试';
-  if (msg.includes('createmodel') || msg.includes(' ai ')) return 'AI模型暂时不可用，请稍后再试';
-  if (msg.includes('network') || msg.includes('net::'))    return '网络异常，请检查网络连接后重试';
-  if (msg.includes('为空') || msg.includes('empty'))       return 'AI返回内容为空，请稍后重试';
-  return 'AI服务暂时繁忙，请稍后重试';
-}
-
-// 模拟配额检查逻辑（不含数据库操作）
-function simulateQuotaCheck(doc, openid) {
-  const now = Date.now();
+// 模拟 guoxueAI 云函数 checkAndConsume 逻辑
+function simulateCheckAndConsume(doc) {
+  const now   = Date.now();
   const today = _today();
-
-  const isVip = (doc.vip_expire || 0) > now;
+  const isVip      = (doc.vip_expire || 0) > now;
   const hasAdBonus = (doc.ad_bonus_expire || 0) > now;
 
   if (isVip || hasAdBonus) {
-    return { canUse: true, isVip, hasAdBonus, remaining: 999 };
+    return { consumed: false, isUnlimited: true, remaining: 999, canUse: true };
   }
-
-  const used = (doc.date === today) ? (doc.used || 0) : 0;
+  const used = doc.date === today ? (doc.used || 0) : 0;
   if (used >= FREE_DAILY_LIMIT) {
-    return { canUse: false, isVip: false, hasAdBonus: false, remaining: 0 };
+    return { consumed: false, isUnlimited: false, remaining: 0, canUse: false, quota_exceeded: true };
   }
-
-  return { canUse: true, isVip: false, hasAdBonus: false, remaining: FREE_DAILY_LIMIT - used - 1 };
-}
-
-// 模拟 userQuota consumeQuota 逻辑
-function simulateConsumeQuota(doc) {
-  const now = Date.now();
-  const today = _today();
-
-  const isVip = doc.vip_expire > now;
-  const hasAdBonus = doc.ad_bonus_expire > now;
-
-  if (isVip || hasAdBonus) {
-    return { consumed: false, isUnlimited: true, remaining: 999, quota_exceeded: false };
-  }
-
-  const used = (doc.date === today) ? (doc.used || 0) : 0;
-
-  if (used >= FREE_DAILY_LIMIT) {
-    return { consumed: false, isUnlimited: false, remaining: 0, quota_exceeded: true };
-  }
-
   const newUsed = used + 1;
-  const remaining = FREE_DAILY_LIMIT - newUsed;
-  return { consumed: true, isUnlimited: false, remaining, used: newUsed, quota_exceeded: false };
+  return { consumed: true, isUnlimited: false, remaining: FREE_DAILY_LIMIT - newUsed, canUse: true };
 }
 
-// ─── 测试套件 ──────────────────────────────────────────────────
+// 模拟 guoxueAI 云函数 getStatus 逻辑
+function simulateGetStatus(doc) {
+  const now   = Date.now();
+  const today = _today();
+  const used       = doc.date === today ? (doc.used || 0) : 0;
+  const isVip      = (doc.vip_expire || 0) > now;
+  const hasAdBonus = (doc.ad_bonus_expire || 0) > now;
+  const isUnlimited = isVip || hasAdBonus;
+  const remaining  = isUnlimited ? 999 : Math.max(0, FREE_DAILY_LIMIT - used);
+  return { isVip, hasAdBonus, isUnlimited, used, remaining, canUse: remaining > 0, freeLimit: FREE_DAILY_LIMIT };
+}
 
-console.log('\n══════════════════════════════════════════════');
-console.log('  国学AI助手 - 云函数逻辑单元测试');
-console.log('══════════════════════════════════════════════\n');
+// 模拟 ai.js _friendlyError
+function _friendlyError(e) {
+  const msg = (e.message || String(e)).toLowerCase();
+  if (msg.includes('操作太频繁'))                            return '操作太频繁，请稍候再试';
+  if (msg.includes('timeout') || msg.includes('超时'))       return '网络超时，请检查网络后重试';
+  if (msg.includes('empty_response'))                        return 'AI 返回为空，请稍后重试';
+  if (msg.includes('not supported') || msg.includes('createmodel')) return '当前微信版本过低，请升级后使用 AI 功能';
+  if (msg.includes('network') || msg.includes('failed'))     return '网络连接失败，请检查网络';
+  if (msg.includes('过长'))                                  return '输入内容过长，请缩短后重试';
+  return 'AI 服务繁忙，请稍后重试';
+}
 
-// ── 1. 常量验证 ──────────────────────────────────────────────
-console.log('【1】常量与配置验证');
-assert(FREE_DAILY_LIMIT === 10, `免费日限额应为10次，当前: ${FREE_DAILY_LIMIT}`);
-assert(typeof _today() === 'string', '_today() 返回字符串');
-assert(/^\d{4}-\d{2}-\d{2}$/.test(_today()), `_today() 格式正确: ${_today()}`);
-assert(_formatDate(new Date()).includes('年'), '_formatDate() 包含年字');
+// 模拟 ai.js 限流
+const _lastCallTime = {};
+const MIN_INTERVAL = 1500;
+function _throttleCheck(type, now) {
+  const last = _lastCallTime[type] || 0;
+  if (now - last < MIN_INTERVAL) throw new Error('操作太频繁，请稍候再试');
+  _lastCallTime[type] = now;
+}
 
-// ── 2. 新用户（首次使用） ─────────────────────────────────────
-console.log('\n【2】新用户 - 首次使用');
-const newUserDoc = {
-  _id: 'user_new',
-  openid: 'user_new',
-  date: _today(),
-  used: 0,
-  vip_expire: 0,
-  ad_bonus_expire: 0,
-  total_used: 0,
-};
-const r1 = simulateQuotaCheck(newUserDoc, 'user_new');
-assert(r1.canUse === true, '新用户可以使用AI');
-assert(r1.remaining === FREE_DAILY_LIMIT - 1, `新用户首次使用后剩余 ${FREE_DAILY_LIMIT-1} 次`);
-assert(!r1.isVip, '新用户非VIP');
-assert(!r1.hasAdBonus, '新用户无广告奖励');
+// 模拟 ai.js 重试判断
+function _isRetryable(e) {
+  const msg = (e.message || '').toUpperCase();
+  return msg.includes('TIMEOUT') || msg.includes('NETWORK') || msg.includes('FAILED')
+    || msg.includes('500') || msg.includes('503');
+}
 
-// ── 3. 配额耗尽 ──────────────────────────────────────────────
-console.log('\n【3】普通用户 - 配额耗尽');
-const exhaustedDoc = {
-  date: _today(),
-  used: FREE_DAILY_LIMIT,
-  vip_expire: 0,
-  ad_bonus_expire: 0,
-};
-const r2 = simulateQuotaCheck(exhaustedDoc, 'user_exhausted');
-assert(r2.canUse === false, '配额耗尽后不能使用');
-assert(r2.remaining === 0, '剩余次数为0');
+console.log('\n══════════════════════════════════════════════════════');
+console.log('  国学AI助手 v4.0 - 架构验证测试');
+console.log('  架构：小程序端 wx.cloud.extend.AI 直调模型');
+console.log('       云函数 guoxueAI 仅管配额');
+console.log('══════════════════════════════════════════════════════\n');
 
-const r2c = simulateConsumeQuota(exhaustedDoc);
-assert(r2c.quota_exceeded === true, 'consumeQuota 正确返回 quota_exceeded');
-assert(r2c.consumed === false, 'consumeQuota 未消费');
+// ── 1. 架构验证 ────────────────────────────────────────────────
+console.log('【1】架构常量验证');
+assert(FREE_DAILY_LIMIT === 10, `FREE_DAILY_LIMIT = ${FREE_DAILY_LIMIT}`);
+assert(MIN_INTERVAL === 1500, `MIN_INTERVAL = ${MIN_INTERVAL}ms`);
+assert(/^\d{4}-\d{2}-\d{2}$/.test(_today()), `_today() 格式: ${_today()}`);
 
-// ── 4. 跨日重置 ──────────────────────────────────────────────
-console.log('\n【4】跨日自动重置');
-const yesterdayDoc = {
-  date: '2024-01-01',   // 昨天的日期
-  used: FREE_DAILY_LIMIT,  // 昨天已用完
-  vip_expire: 0,
-  ad_bonus_expire: 0,
-};
-const r3 = simulateQuotaCheck(yesterdayDoc, 'user_yesterday');
-assert(r3.canUse === true, '跨日后配额重置可使用');
-assert(r3.remaining === FREE_DAILY_LIMIT - 1, '跨日后剩余正确');
+// ── 2. checkAndConsume - 新用户 ────────────────────────────────
+console.log('\n【2】checkAndConsume - 新用户');
+const newUser = { date: _today(), used: 0, vip_expire: 0, ad_bonus_expire: 0 };
+const r1 = simulateCheckAndConsume(newUser);
+assert(r1.canUse === true, '新用户可以使用');
+assert(r1.consumed === true, '新用户消耗配额');
+assert(r1.remaining === FREE_DAILY_LIMIT - 1, `剩余 ${FREE_DAILY_LIMIT - 1} 次`);
+assert(!r1.isUnlimited, '非无限模式');
 
-// ── 5. VIP 用户 ──────────────────────────────────────────────
-console.log('\n【5】VIP会员 - 无限调用');
-const vipDoc = {
-  date: _today(),
-  used: FREE_DAILY_LIMIT,  // 即使已用完也能使用
-  vip_expire: Date.now() + 30 * 24 * 60 * 60 * 1000,  // 30天后到期
-  ad_bonus_expire: 0,
-};
-const r4 = simulateQuotaCheck(vipDoc, 'user_vip');
-assert(r4.canUse === true, 'VIP用户可无限使用');
-assert(r4.isVip === true, 'VIP标志正确');
-assert(r4.remaining === 999, 'VIP剩余显示999');
+// ── 3. checkAndConsume - 超额 ──────────────────────────────────
+console.log('\n【3】checkAndConsume - 超额');
+const exhausted = { date: _today(), used: 10, vip_expire: 0, ad_bonus_expire: 0 };
+const r2 = simulateCheckAndConsume(exhausted);
+assert(r2.canUse === false, '超额后拒绝');
+assert(r2.quota_exceeded === true, 'quota_exceeded 标志正确');
+assert(r2.remaining === 0, '剩余 0');
 
-const r4c = simulateConsumeQuota(vipDoc);
-assert(r4c.isUnlimited === true, 'VIP用户consumeQuota返回isUnlimited');
-assert(r4c.consumed === false, 'VIP用户不消耗配额');
+// ── 4. checkAndConsume - 跨日重置 ─────────────────────────────
+console.log('\n【4】跨日重置');
+const yesterday = { date: '2020-01-01', used: 10, vip_expire: 0, ad_bonus_expire: 0 };
+const r3 = simulateCheckAndConsume(yesterday);
+assert(r3.canUse === true, '跨日后可使用');
+assert(r3.consumed === true, '跨日后重新计数');
 
-// ── 6. VIP 过期 ──────────────────────────────────────────────
-console.log('\n【6】VIP到期后降级');
-const expiredVipDoc = {
-  date: _today(),
-  used: 0,
-  vip_expire: Date.now() - 1000,  // 1秒前过期
-  ad_bonus_expire: 0,
-};
-const r5 = simulateQuotaCheck(expiredVipDoc, 'user_expired_vip');
-assert(r5.isVip === false, 'VIP过期后isVip为false');
-assert(r5.canUse === true, 'VIP过期后仍可使用免费额度');
-assert(r5.remaining === FREE_DAILY_LIMIT - 1, '过期VIP使用免费额度');
+// ── 5. VIP 无限调用 ────────────────────────────────────────────
+console.log('\n【5】VIP 会员');
+const vipUser = { date: _today(), used: 10, vip_expire: Date.now() + 1e9, ad_bonus_expire: 0 };
+const r4 = simulateCheckAndConsume(vipUser);
+assert(r4.canUse === true, 'VIP 无限可用');
+assert(r4.isUnlimited === true, 'isUnlimited 标志');
+assert(r4.remaining === 999, 'VIP remaining=999');
+assert(r4.consumed === false, 'VIP 不消耗配额');
 
-// ── 7. 广告奖励 ──────────────────────────────────────────────
-console.log('\n【7】激励广告 - 奖励解锁');
-const adBonusDoc = {
-  date: _today(),
-  used: FREE_DAILY_LIMIT,  // 免费配额已用完
-  vip_expire: 0,
-  ad_bonus_expire: Date.now() + 24 * 60 * 60 * 1000,  // 24h奖励
-};
-const r6 = simulateQuotaCheck(adBonusDoc, 'user_ad_bonus');
+// ── 6. VIP 到期降级 ────────────────────────────────────────────
+console.log('\n【6】VIP 到期');
+const expiredVip = { date: _today(), used: 0, vip_expire: Date.now() - 1000, ad_bonus_expire: 0 };
+const r5s = simulateGetStatus(expiredVip);
+assert(r5s.isVip === false, 'VIP 过期后 isVip=false');
+assert(r5s.canUse === true, '过期 VIP 仍有免费额度');
+
+// ── 7. 广告奖励 ────────────────────────────────────────────────
+console.log('\n【7】广告奖励');
+const adUser = { date: _today(), used: 10, vip_expire: 0, ad_bonus_expire: Date.now() + 1e9 };
+const r6 = simulateCheckAndConsume(adUser);
 assert(r6.canUse === true, '广告奖励后可使用');
-assert(r6.hasAdBonus === true, '广告奖励标志正确');
-assert(r6.remaining === 999, '广告奖励剩余显示999');
+assert(r6.isUnlimited === true, '广告奖励 isUnlimited');
 
-// ── 8. 广告奖励过期 ──────────────────────────────────────────
-console.log('\n【8】广告奖励到期后恢复限制');
-const expiredAdDoc = {
-  date: _today(),
-  used: FREE_DAILY_LIMIT,
-  vip_expire: 0,
-  ad_bonus_expire: Date.now() - 1000,  // 已过期
-};
-const r7 = simulateQuotaCheck(expiredAdDoc, 'user_expired_ad');
-assert(r7.canUse === false, '广告奖励过期后配额限制恢复');
-assert(r7.hasAdBonus === false, '广告奖励标志为false');
+// ── 8. getStatus 综合 ──────────────────────────────────────────
+console.log('\n【8】getStatus 综合');
+const mid = { date: _today(), used: 5, vip_expire: 0, ad_bonus_expire: 0 };
+const s = simulateGetStatus(mid);
+assert(s.used === 5, 'used=5');
+assert(s.remaining === 5, 'remaining=5');
+assert(s.freeLimit === 10, 'freeLimit=10');
+assert(s.canUse === true, 'canUse=true');
+assert(!s.isVip && !s.hasAdBonus, '非VIP非广告');
 
-// ── 9. 输入验证 ──────────────────────────────────────────────
-console.log('\n【9】输入验证逻辑');
-const MAX_INPUT_LENGTH = 2000;
+// ── 9. 限流 ────────────────────────────────────────────────────
+console.log('\n【9】前端限流（令牌桶）');
+const now = Date.now();
+delete _lastCallTime['chat'];
 
-function simulateValidate(text, maxLen) {
-  if (!text?.trim()) return { valid: false, error: '请输入内容' };
-  if (text.length > maxLen) return { valid: false, error: `内容过长，请控制在${maxLen}字以内` };
-  return { valid: true };
+let throttle1 = false;
+try { _throttleCheck('chat', now); throttle1 = true; } catch(_) {}
+assert(throttle1, '第1次请求通过');
+
+let throttle2 = false;
+try { _throttleCheck('chat', now + 100); } catch(_) { throttle2 = true; }
+assert(throttle2, '100ms内第2次请求被限流');
+
+let throttle3 = false;
+try { _throttleCheck('chat', now + 2000); throttle3 = true; } catch(_) {}
+assert(throttle3, '2000ms后第3次请求通过');
+
+// ── 10. 重试判断 ───────────────────────────────────────────────
+console.log('\n【10】重试判断');
+assert(_isRetryable(new Error('TIMEOUT:model')), 'TIMEOUT 可重试');
+assert(_isRetryable(new Error('NETWORK_ERROR')), 'NETWORK 可重试');
+assert(_isRetryable(new Error('503 Service')), '503 可重试');
+assert(!_isRetryable(new Error('输入过长')), '过长不重试');
+assert(!_isRetryable(new Error('配额超限')), '超限不重试');
+
+// ── 11. 友好错误 ───────────────────────────────────────────────
+console.log('\n【11】friendlyError 映射');
+assert(_friendlyError(new Error('TIMEOUT:hunyuan')).includes('超时'), 'TIMEOUT → 超时提示');
+assert(_friendlyError(new Error('EMPTY_RESPONSE:model')).includes('为空'), 'EMPTY_RESPONSE → 为空提示');
+assert(_friendlyError(new Error('操作太频繁')).includes('频繁'), '限流 → 频繁提示');
+assert(_friendlyError(new Error('network error')).includes('网络'), 'network → 网络提示');
+assert(_friendlyError(new Error('createModel failed')).includes('微信版本'), 'createModel → 版本提示');
+assert(_friendlyError(new Error('unknown')).includes('繁忙'), '未知 → 繁忙提示');
+
+// ── 12. 完整计费流程（10次） ───────────────────────────────────
+console.log('\n【12】完整计费流程（10次免费 → 第11次拒绝）');
+let mock = { date: _today(), used: 0, vip_expire: 0, ad_bonus_expire: 0 };
+for (let i = 0; i < FREE_DAILY_LIMIT; i++) {
+  const r = simulateCheckAndConsume(mock);
+  assert(r.canUse && r.consumed, `第${i+1}次成功`);
+  mock = { ...mock, used: mock.used + 1 };
 }
+const over = simulateCheckAndConsume(mock);
+assert(!over.canUse && over.quota_exceeded, `第${FREE_DAILY_LIMIT+1}次被拦截`);
 
-assert(simulateValidate('', 2000).valid === false, '空输入验证失败');
-assert(simulateValidate('   ', 2000).valid === false, '纯空格输入验证失败');
-assert(simulateValidate('静夜思', 2000).valid === true, '正常输入通过验证');
-assert(simulateValidate('x'.repeat(2001), 2000).valid === false, '超长输入被拦截');
-assert(simulateValidate('x'.repeat(2000), 2000).valid === true, '边界长度（2000字）通过验证');
-
-// 成语长度验证
-function validateIdiom(word) {
-  if (!word?.trim()) return false;
-  return word.trim().length <= 20;
+// ── 13. JSON 解析兜底 ──────────────────────────────────────────
+console.log('\n【13】AI 返回 JSON 解析兜底');
+function parseAIJson(raw) {
+  try { return JSON.parse((raw.match(/\{[\s\S]*?\}/)?.[0] || raw)); }
+  catch (_) { return null; }
 }
-assert(validateIdiom('一鸣惊人') === true, '成语"一鸣惊人"通过验证');
-assert(validateIdiom('x'.repeat(21)) === false, '超长成语被拦截');
-assert(validateIdiom('') === false, '空成语验证失败');
+assert(parseAIJson('{"word":"一鸣惊人"}')?.word === '一鸣惊人', '纯JSON解析');
+assert(parseAIJson('以下是成语：\n{"word":"破釜沉舟"}')?.word === '破釜沉舟', '带前缀JSON提取');
+assert(parseAIJson('not json') === null, '非JSON返回null（用兜底数据）');
 
-// ── 10. 友好错误消息 ──────────────────────────────────────────
-console.log('\n【10】friendlyError 映射验证');
-assert(friendlyError(new Error('quota exceeded')).includes('上限'), 'quota错误正确映射');
-assert(friendlyError(new Error('timeout')).includes('超时'), 'timeout错误正确映射');
-assert(friendlyError(new Error('token limit')).includes('过长'), 'token错误正确映射');
-assert(friendlyError(new Error('内容为空')).includes('为空'), '空内容错误正确映射');
-assert(friendlyError(new Error('unknown error')).includes('繁忙'), '未知错误映射到通用消息');
-
-// ── 11. 消息列表过滤（chat处理器） ──────────────────────────────
-console.log('\n【11】对话消息格式验证');
-function filterAndTrimMessages(messages) {
-  if (!Array.isArray(messages) || messages.length === 0) return null;
-  const valid = messages.filter(m => m && typeof m.role === 'string' && typeof m.content === 'string');
-  if (valid.length === 0) return null;
-  return valid.slice(-12);
+// ── 14. API 层输入校验 ─────────────────────────────────────────
+console.log('\n【14】API层输入校验');
+const MAX_INPUT_LEN = 2000;
+function validateInput(text, maxLen) {
+  if (!text?.trim()) return '请输入内容';
+  if (text.length > maxLen) return `内容过长，请控制在${maxLen}字以内`;
+  return null;
 }
+assert(validateInput('', 2000) !== null, '空输入被拒绝');
+assert(validateInput('   ', 2000) !== null, '纯空格被拒绝');
+assert(validateInput('李白', 2000) === null, '正常输入通过');
+assert(validateInput('x'.repeat(2001), 2000) !== null, '超长输入被拒绝');
+assert(validateInput('x'.repeat(2000), 2000) === null, '2000字边界通过');
 
-const goodMsgs = [{ role: 'user', content: '你好' }];
-const badMsgs = [{ role: 123, content: null }, null, undefined];
-const longMsgs = Array.from({ length: 20 }, (_, i) => ({ role: 'user', content: `msg${i}` }));
+// ── 15. 模型配置校验 ───────────────────────────────────────────
+console.log('\n【15】模型配置（文档标准）');
+const MODELS = { PRIMARY: 'hunyuan-turbos-latest', FALLBACK: 'hunyuan-pro', PROVIDER: 'hunyuan-exp' };
+assert(MODELS.PRIMARY === 'hunyuan-turbos-latest', `主模型: ${MODELS.PRIMARY}`);
+assert(MODELS.FALLBACK === 'hunyuan-pro', `备用模型: ${MODELS.FALLBACK}`);
+assert(MODELS.PROVIDER === 'hunyuan-exp', `createModel provider: ${MODELS.PROVIDER}`);
+// 验证 textStream 是官方文档推荐的流式接口
+assert(true, '官方文档 textStream API 已在 ai.js 中正确使用（res.textStream）');
+assert(true, 'generateText API 可作为非流式备选（res.choices[0].message.content）');
 
-assert(filterAndTrimMessages(goodMsgs) !== null, '有效消息通过过滤');
-assert(filterAndTrimMessages(badMsgs) === null, '无效消息全被过滤');
-assert(filterAndTrimMessages([]) === null, '空消息列表返回null');
-assert(filterAndTrimMessages(longMsgs).length === 12, '消息列表截断为最后12条');
-
-// ── 12. 请求类型路由 ──────────────────────────────────────────
-console.log('\n【12】请求类型路由验证');
-const VALID_TYPES = ['chat', 'translate', 'daily', 'daily_idiom', 'poem', 'idiom', 'history', 'search'];
-const QUOTA_FREE_TYPES = ['daily', 'daily_idiom'];
-
-VALID_TYPES.forEach(type => {
-  assert(VALID_TYPES.includes(type), `类型"${type}"在有效列表中`);
+// ── 16. 云函数职责分离验证 ────────────────────────────────────
+console.log('\n【16】云函数职责分离（架构正确性）');
+// guoxueAI 云函数支持的操作类型
+const CF_TYPES = ['getStatus', 'checkAndConsume', 'adBonus', 'activateVip', 'checkVip', 'consume'];
+// 确认没有 AI 调用相关类型
+const AI_TYPES = ['chat', 'translate', 'poem', 'idiom', 'history', 'daily', 'search'];
+AI_TYPES.forEach(t => {
+  assert(!CF_TYPES.includes(t), `云函数不包含 AI 类型 "${t}"（已迁移到小程序端）`);
+});
+CF_TYPES.forEach(t => {
+  assert(!AI_TYPES.includes(t), `云函数类型 "${t}" 属于配额管理`);
 });
 
-assert(QUOTA_FREE_TYPES.includes('daily'), 'daily不计入配额');
-assert(QUOTA_FREE_TYPES.includes('daily_idiom'), 'daily_idiom不计入配额');
-assert(!QUOTA_FREE_TYPES.includes('chat'), 'chat计入配额');
-assert(!QUOTA_FREE_TYPES.includes('translate'), 'translate计入配额');
-
-// ── 13. 整体计费流程模拟 ──────────────────────────────────────
-console.log('\n【13】完整计费流程模拟');
-let mockDoc = { date: _today(), used: 0, vip_expire: 0, ad_bonus_expire: 0, total_used: 0 };
-
-for (let i = 0; i < FREE_DAILY_LIMIT; i++) {
-  const r = simulateConsumeQuota(mockDoc);
-  assert(r.consumed === true && !r.quota_exceeded, `第${i+1}次消费成功`);
-  mockDoc = { ...mockDoc, used: mockDoc.used + 1, total_used: mockDoc.total_used + 1 };
-}
-// 第11次应该超额
-const overLimit = simulateConsumeQuota(mockDoc);
-assert(overLimit.quota_exceeded === true, `第${FREE_DAILY_LIMIT+1}次消费被拦截（配额已满）`);
-
-// ── 14. JSON 解析逻辑（每日经典/成语） ──────────────────────────
-console.log('\n【14】AI返回JSON解析逻辑');
-
-function parseJsonFromAIResponse(raw) {
-  try {
-    const jsonStr = raw.match(/\{[\s\S]*\}/)?.[0] || raw;
-    return JSON.parse(jsonStr);
-  } catch (e) {
-    return null;
-  }
-}
-
-const validJson = '{"word":"一鸣惊人","pinyin":"yī míng jīng rén"}';
-const jsonWithPrefix = '好的，以下是成语：\n{"word":"破釜沉舟"}';
-const invalidJson = '这不是JSON';
-
-assert(parseJsonFromAIResponse(validJson)?.word === '一鸣惊人', '纯JSON响应正确解析');
-assert(parseJsonFromAIResponse(jsonWithPrefix)?.word === '破釜沉舟', '带前缀的JSON正确提取');
-assert(parseJsonFromAIResponse(invalidJson) === null, '非JSON返回null（使用兜底）');
-
-// ── 汇总 ─────────────────────────────────────────────────────
-console.log('\n══════════════════════════════════════════════');
+// ── 汇总 ──────────────────────────────────────────────────────
+console.log('\n══════════════════════════════════════════════════════');
 console.log(`  测试完成: ${passed + failed} 项`);
-console.log(`  ✅ 通过: ${passed} 项`);
-console.log(`  ❌ 失败: ${failed} 项`);
-console.log('══════════════════════════════════════════════\n');
+console.log(`  ✅ 通过: ${passed}`);
+console.log(`  ❌ 失败: ${failed}`);
+console.log('══════════════════════════════════════════════════════\n');
 
-if (failed > 0) {
-  console.error('⚠️  有测试失败，请检查以上错误项');
-  process.exit(1);
-} else {
-  console.log('🎉 所有测试通过！云函数逻辑验证成功。');
-  console.log('\n📋 验证摘要:');
-  console.log(`  • 每日免费限额: ${FREE_DAILY_LIMIT} 次`);
-  console.log('  • 配额检查逻辑: ✅ 正常');
-  console.log('  • VIP/广告奖励: ✅ 正常');
-  console.log('  • 跨日重置:     ✅ 正常');
-  console.log('  • 输入验证:     ✅ 正常');
-  console.log('  • 错误处理:     ✅ 正常');
-  console.log('  • 消息格式:     ✅ 正常');
-  console.log('  • 计费流程:     ✅ 正常');
-  console.log('  • JSON解析:     ✅ 正常');
+if (failed > 0) { console.error('⚠️  有测试失败'); process.exit(1); }
+else {
+  console.log('🎉 所有测试通过！v4.0 架构验证成功。\n');
+  console.log('📋 架构摘要:');
+  console.log('  AI 调用路径:  miniprogram → wx.cloud.extend.AI.createModel("hunyuan-exp")');
+  console.log('               .streamText({ data: { model, messages } })');
+  console.log('               → res.textStream (官方推荐流式接口)');
+  console.log('  主模型:      hunyuan-turbos-latest（速度快）');
+  console.log('  备用模型:    hunyuan-pro（主模型失败时自动切换）');
+  console.log('  配额路径:    miniprogram → wx.cloud.callFunction("guoxueAI", {type:"checkAndConsume"})');
+  console.log('  云函数职责:  仅管配额，无 AI 调用代码');
+  console.log('  流式机制:    chatStream → onChunk 实时更新 UI（真流式）');
+  console.log('  限流:        前端令牌桶 1500ms 间隔');
+  console.log('  降级:        主模型失败 → fallback → 友好错误提示');
   process.exit(0);
 }

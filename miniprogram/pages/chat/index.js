@@ -1,4 +1,4 @@
-// pages/chat/index.js - 生产级AI问答（含完整变现闭环）
+// pages/chat/index.js - 生产级AI问答 v4.0（流式直调 wx.cloud.extend.AI）
 const api = require('../../utils/api');
 const storage = require('../../utils/storage');
 const monetize = require('../../utils/monetize');
@@ -95,91 +95,88 @@ Page({
   async sendMessage() {
     const text = this.data.inputText.trim();
     if (!text || this.data.isTyping) return;
-
-    // ① 消费配额（云函数）
-    let quotaResult;
-    try {
-      quotaResult = await monetize.consumeQuota();
-    } catch (e) {
-      // 网络异常降级允许
-      quotaResult = { allowed: true, reason: 'fallback' };
-    }
-
-    if (!quotaResult.allowed) {
-      // 配额超限 → 弹出变现弹窗
-      const unlocked = await monetize.handleQuotaExceeded({
-        onContinue: () => this._doSendMessage(text)
-      });
-      if (!unlocked) return;
-      // 用户解锁后直接发送
-      this._doSendMessage(text);
-      return;
-    }
-
-    // 配额够用，直接发
     this._doSendMessage(text);
-
-    // 刷新配额显示
-    this._refreshQuotaStatus();
   },
 
-  // ── 实际发送（配额已消费或豁免后调用）──────────────────────────────
+  // ── 实际发送：流式直调 wx.cloud.extend.AI ─────────────────────
   _doSendMessage(text) {
     const userMsgId = ++this.data._msgCounter;
     const userMsg = {
-      id: userMsgId,
-      role: 'user',
+      id:    userMsgId,
+      role:  'user',
       content: text,
-      time: this._getTime(),
+      time:  this._getTime(),
       error: false
     };
 
     const aiMsgId = ++this.data._msgCounter;
     const aiPlaceholder = {
-      id: aiMsgId,
-      role: 'assistant',
-      content: '',
+      id:       aiMsgId,
+      role:     'assistant',
+      content:  '',
       isTyping: true,
-      error: false,
-      time: ''
+      error:    false,
+      time:     ''
     };
 
     const messages = [...this.data.messages, userMsg, aiPlaceholder];
     this.setData({
       messages,
-      inputText: '',
-      isTyping: true,
+      inputText:   '',
+      isTyping:    true,
       suggestions: [],
-      scrollToId: 'msg-' + aiMsgId
+      scrollToId:  'msg-' + aiMsgId
     });
 
+    // 构建历史（过滤占位/错误消息）
     const chatHistory = messages
-      .filter(m => !m.isTyping && !m.error)
+      .filter(m => !m.isTyping && !m.error && m.content)
       .map(m => ({ role: m.role, content: m.content }));
 
-    api.chat(chatHistory)
-      .then(res => this._onAIReply(aiMsgId, res.reply))
-      .catch(e => this._onAIError(aiMsgId, e.message));
-  },
-
-  // ── AI 回复：打字机效果 ──────────────────────────────
-  _onAIReply(msgId, fullText) {
-    this._updateMsg(msgId, { isTyping: false, content: '', time: this._getTime() });
-
-    const CHUNK = 4;
-    let idx = 0;
-    const tick = () => {
-      if (idx >= fullText.length) {
+    // 使用流式 API（配额在 chatStream 内部消费）
+    api.chatStream(
+      chatHistory,
+      // onChunk：实时更新 AI 气泡（真流式）
+      (chunk) => {
+        const idx = this.data.messages.findIndex(m => m.id === aiMsgId);
+        if (idx === -1) return;
+        const updated = [...this.data.messages];
+        updated[idx] = {
+          ...updated[idx],
+          isTyping: false,
+          content: (updated[idx].content || '') + chunk,
+          time: this._getTime()
+        };
+        this.setData({ messages: updated, scrollToId: 'msg-' + aiMsgId });
+      },
+      // onDone
+      (fullText) => {
         this.setData({ isTyping: false });
         this._generateSuggestions(fullText);
-        return;
+        this._refreshQuotaStatus();
+      },
+      // onError
+      (err) => {
+        // 配额超限单独处理
+        if (err.code === 'QUOTA_EXCEEDED') {
+          // 移除 AI 占位消息
+          const msgs = this.data.messages.filter(m => m.id !== aiMsgId);
+          this.setData({ messages: msgs, isTyping: false, inputText: text });
+          monetize.handleQuotaExceeded({
+            onContinue: () => this._doSendMessage(text)
+          });
+          return;
+        }
+        this._onAIError(aiMsgId, err.message);
       }
-      const slice = fullText.substring(0, idx + CHUNK);
-      idx = Math.min(idx + CHUNK, fullText.length);
-      this._updateMsg(msgId, { content: slice });
-      setTimeout(tick, 18);
-    };
-    tick();
+    );
+  },
+
+  // ── AI 回复（非流式兜底，不再主路径使用）──────────────────────
+  _onAIReply(msgId, fullText) {
+    this._updateMsg(msgId, { isTyping: false, content: fullText, time: this._getTime() });
+    this.setData({ isTyping: false });
+    this._generateSuggestions(fullText);
   },
 
   _onAIError(msgId, errMsg) {
