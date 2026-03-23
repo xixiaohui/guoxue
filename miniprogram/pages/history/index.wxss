@@ -383,3 +383,34 @@
   font-size: 40rpx;
   color: #C4882E;
 }
+
+/* ── Hover 状态 & 新增 ─────────────────────────────── */
+.section-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #2C1810;
+  padding: 16rpx 24rpx 8rpx;
+}
+.dynasty-hover { background: #FFF5DC !important; }
+.timeline-hover .timeline-content { background: #FFF5DC !important; }
+.figure-hover { background: #FFF5DC !important; }
+.trivia-hover { background: #FFF5DC !important; }
+.action-hover { background: rgba(139,37,0,.1) !important; }
+.search-btn-hover { background: rgba(196,136,46,.5) !important; }
+.close-hover { opacity: 0.7; }
+
+/* 加载点 */
+.loading-dots { display: flex; gap: 10rpx; }
+.dot {
+  width: 14rpx; height: 14rpx;
+  background: #C4882E; border-radius: 50%;
+  animation: dotBounce 1.4s infinite ease-in-out;
+}
+.dot:nth-child(1) { animation-delay: -.32s; }
+.dot:nth-child(2) { animation-delay: -.16s; }
+@keyframes dotBounce {
+  0%,80%,100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+.safe-bottom { height: env(safe-area-inset-bottom); }

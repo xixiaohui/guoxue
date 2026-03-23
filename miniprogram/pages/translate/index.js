@@ -193,5 +193,17 @@ Page({
         }
       }
     });
+  },
+
+  // ── 跳转聊天页深入探讨 ────────────────────────────────────────
+  chatAboutTranslation() {
+    const { inputText, mode } = this.data;
+    if (!inputText) return;
+    const topic = mode === 'ancient_to_modern'
+      ? `请帮我深入理解这段文言文的文化内涵：${inputText}`
+      : `我把这段现代文改写成了文言文风格，请帮我点评和改进`;
+    wx.navigateTo({
+      url: `/pages/chat/index?topic=${encodeURIComponent(topic)}`
+    });
   }
 });

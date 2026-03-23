@@ -1,4 +1,4 @@
-<!-- pages/chat/index.wxml - 生产级AI问答（含变现闭环） -->
+<!-- pages/chat/index.wxml - 生产级AI问答 v5.0（双模型切换） -->
 <view class="chat-page">
 
   <!-- 顶部栏 -->
@@ -13,6 +13,11 @@
       </view>
     </view>
     <view class="nav-actions">
+      <!-- 模型切换按钮 -->
+      <view class="model-btn" bindtap="openModelPicker">
+        <text class="model-btn-icon">{{currentModel === 'deepseek' ? '🧠' : '🔥'}}</text>
+        <text class="model-btn-label">{{currentModel === 'deepseek' ? 'DeepSeek' : '混元'}}</text>
+      </view>
       <!-- 配额/会员徽章 -->
       <view
         class="quota-badge {{quotaStatus && quotaStatus.isVip ? 'badge-vip' : (quotaStatus && quotaStatus.hasAdBonus ? 'badge-bonus' : 'badge-free')}}"
@@ -42,14 +47,15 @@
     <text class="quota-bar-arrow">›</text>
   </view>
 
-  <!-- 消息区 -->
+  <!-- 消息区（使用 scroll-view 实现平滑滚动） -->
   <scroll-view
     class="msg-scroll"
-    scroll-y
+    scroll-y="{{true}}"
     scroll-into-view="{{scrollToId}}"
-    scroll-with-animation
-    enhanced
+    scroll-with-animation="{{true}}"
+    enable-passive="{{true}}"
     show-scrollbar="{{false}}"
+    enhanced="{{true}}"
   >
     <!-- 空状态：欢迎屏 -->
     <view class="welcome-screen" wx:if="{{messages.length === 0}}">
@@ -80,6 +86,8 @@
           wx:key="index"
           bindtap="onQuickTopic"
           data-topic="{{item}}"
+          hover-class="quick-item-hover"
+          hover-stay-time="100"
         >
           <text class="quick-text">{{item}}</text>
         </view>
@@ -101,33 +109,40 @@
           <!-- 气泡 -->
           <view class="bubble {{item.role === 'user' ? 'bubble-user' : 'bubble-ai'}} {{item.error ? 'bubble-error' : ''}}">
             <!-- 打字动画 -->
-            <view class="typing-dots" wx:if="{{item.isTyping}}">
+            <view class="typing-dots" wx:if="{{item.isTyping && !item.content}}">
               <view class="typing-dot"></view>
               <view class="typing-dot"></view>
               <view class="typing-dot"></view>
             </view>
-            <!-- 正常内容 -->
-            <text class="bubble-text" wx:elif="{{!item.error}}" selectable space="nbsp">{{item.content}}</text>
+            <!-- 流式内容（边生成边显示）-->
+            <text
+              class="bubble-text"
+              wx:elif="{{!item.error}}"
+              selectable="{{!item.isTyping}}"
+              space="nbsp"
+              user-select="{{!item.isTyping}}"
+            >{{item.content}}</text>
             <!-- 错误状态 -->
             <view wx:else class="error-body">
               <text class="error-icon">⚠️</text>
               <text class="error-text">{{item.content}}</text>
-              <view class="retry-btn" bindtap="retryMsg" data-id="{{item.id}}">重试</view>
+              <view class="retry-btn" bindtap="retryMsg" data-id="{{item.id}}" hover-class="btn-hover" hover-stay-time="100">重试</view>
             </view>
           </view>
 
           <!-- 时间 + 操作 -->
-          <view class="msg-footer {{item.role === 'user' ? 'footer-user' : 'footer-ai'}}" wx:if="{{!item.isTyping}}">
+          <view class="msg-footer {{item.role === 'user' ? 'footer-user' : 'footer-ai'}}" wx:if="{{!item.isTyping && item.content}}">
             <text class="msg-time">{{item.time}}</text>
-            <view class="msg-actions" wx:if="{{item.content && !item.error}}">
-              <view class="copy-btn" bindtap="copyMsg" data-content="{{item.content}}">复制</view>
-              <!-- 语音按钮（AI消息才有） -->
+            <view class="msg-actions" wx:if="{{!item.error}}">
+              <view class="copy-btn" bindtap="copyMsg" data-content="{{item.content}}" hover-class="action-hover" hover-stay-time="100">复制</view>
               <view
                 class="speak-btn {{speakMsgId === item.id ? 'speaking' : ''}}"
                 bindtap="speakMsg"
                 data-content="{{item.content}}"
                 data-id="{{item.id}}"
                 wx:if="{{item.role === 'assistant'}}"
+                hover-class="action-hover"
+                hover-stay-time="100"
               >{{speakMsgId === item.id ? '🔊' : '🔈'}}</view>
             </view>
           </view>
@@ -136,17 +151,21 @@
         <!-- 用户头像 -->
         <view class="msg-avatar user-avatar-sm" wx:if="{{item.role === 'user'}}">我</view>
       </view>
+
+      <!-- 流式光标（AI 正在输出时显示） -->
+      <view class="stream-cursor" wx:if="{{isTyping}}"></view>
     </view>
 
-    <view id="chat-bottom" style="height:16rpx"></view>
+    <view id="chat-bottom" style="height:20rpx"></view>
   </scroll-view>
 
   <!-- 推荐追问 -->
   <scroll-view
     class="suggestions-bar"
-    scroll-x
+    scroll-x="{{true}}"
     show-scrollbar="{{false}}"
     wx:if="{{suggestions.length > 0 && !isTyping}}"
+    enable-passive="{{true}}"
   >
     <view class="sug-row">
       <view
@@ -155,6 +174,8 @@
         wx:key="index"
         bindtap="onSuggestion"
         data-text="{{item}}"
+        hover-class="sug-hover"
+        hover-stay-time="100"
       >{{item}}</view>
     </view>
   </scroll-view>
@@ -169,17 +190,48 @@
         value="{{inputText}}"
         bindinput="onInput"
         bindconfirm="sendMessage"
-        auto-height
+        auto-height="{{true}}"
         maxlength="600"
-        cursor-spacing="16"
+        cursor-spacing="20"
         confirm-type="send"
+        show-confirm-bar="{{false}}"
       />
     </view>
     <view
       class="send-btn {{inputText.trim() && !isTyping ? 'send-active' : 'send-off'}}"
       bindtap="sendMessage"
+      hover-class="send-hover"
+      hover-stay-time="80"
     >
       <text class="send-icon">{{isTyping ? '⏳' : '➤'}}</text>
+    </view>
+  </view>
+
+  <!-- 模型选择器弹窗 -->
+  <view class="modal-mask" wx:if="{{showModelPicker}}" bindtap="closeModelPicker">
+    <view class="model-picker-panel" catchtap="noop">
+      <view class="picker-header">
+        <text class="picker-title">选择AI模型</text>
+        <text class="picker-close" bindtap="closeModelPicker">✕</text>
+      </view>
+      <view class="model-option-list">
+        <view
+          class="model-option {{currentModel === item.id ? 'model-option-active' : ''}}"
+          wx:for="{{modelOptions}}"
+          wx:key="id"
+          bindtap="selectModel"
+          data-id="{{item.id}}"
+          hover-class="option-hover"
+          hover-stay-time="100"
+        >
+          <text class="option-icon">{{item.icon}}</text>
+          <view class="option-info">
+            <text class="option-name">{{item.name}}</text>
+            <text class="option-desc">{{item.desc}}</text>
+          </view>
+          <view class="option-check" wx:if="{{currentModel === item.id}}">✓</view>
+        </view>
+      </view>
     </view>
   </view>
 
@@ -190,7 +242,7 @@
         <text class="panel-title">历史会话</text>
         <text class="panel-close" bindtap="closeHistory">✕</text>
       </view>
-      <scroll-view scroll-y class="panel-body">
+      <scroll-view scroll-y="{{true}}" class="panel-body" enable-passive="{{true}}">
         <view wx:if="{{historyList.length === 0}}" class="panel-empty">
           <text>暂无历史会话</text>
         </view>
@@ -200,6 +252,8 @@
           wx:key="id"
           bindtap="loadHistorySession"
           data-session="{{item}}"
+          hover-class="history-item-hover"
+          hover-stay-time="100"
         >
           <view class="hi-meta">
             <text class="hi-time">{{item.time}}</text>

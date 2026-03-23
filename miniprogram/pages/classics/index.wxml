@@ -1,4 +1,4 @@
-<!-- pages/classics/index.wxml - 诗词典籍页（生产级） -->
+<!-- pages/classics/index.wxml - 诗词典籍页 v5.0 -->
 <view class="container classics-page">
 
   <!-- 顶部搜索栏 -->
@@ -14,12 +14,12 @@
         bindconfirm="doSearch"
         confirm-type="search"
       />
-      <view class="search-btn-txt" bindtap="doSearch" wx:if="{{searchText}}">搜索</view>
+      <view class="search-btn-txt" bindtap="doSearch" wx:if="{{searchText}}" hover-class="search-hover" hover-stay-time="80">搜索</view>
     </view>
   </view>
 
   <!-- 分类标签 -->
-  <scroll-view scroll-x class="category-tabs">
+  <scroll-view scroll-x="{{true}}" class="category-tabs" enable-passive="{{true}}" show-scrollbar="{{false}}">
     <view class="tab-list">
       <view
         class="tab-item {{activeTab === item.id ? 'active' : ''}}"
@@ -27,6 +27,8 @@
         wx:key="id"
         bindtap="switchTab"
         data-id="{{item.id}}"
+        hover-class="tab-hover"
+        hover-stay-time="80"
       >{{item.name}}</view>
     </view>
   </scroll-view>
@@ -35,7 +37,7 @@
   <view class="search-result-section" wx:if="{{searchResult || isSearching}}">
     <view class="result-header-bar">
       <text class="result-title-txt">AI解析：{{searchText}}</text>
-      <text class="close-search" bindtap="closeSearch">✕</text>
+      <view class="close-search" bindtap="closeSearch" hover-class="close-hover" hover-stay-time="80">✕</view>
     </view>
 
     <view class="ai-loading" wx:if="{{isSearching}}">
@@ -55,17 +57,17 @@
             <view class="seg-dot"></view>
             <text class="seg-label">{{item.label}}</text>
           </view>
-          <text class="seg-content" selectable>{{item.content}}</text>
+          <text class="seg-content" selectable="{{true}}">{{item.content}}</text>
         </view>
       </view>
       <!-- 降级纯文本 -->
-      <text class="ai-result-text" selectable wx:else>{{searchResult}}</text>
+      <text class="ai-result-text" selectable="{{true}}" wx:else>{{searchResult}}</text>
 
       <view class="result-actions-row">
-        <view class="action-chip" bindtap="continueInChat">
+        <view class="action-chip" bindtap="continueInChat" hover-class="chip-hover" hover-stay-time="80">
           <text>💬 继续探讨</text>
         </view>
-        <view class="action-chip" bindtap="copySearchResult">
+        <view class="action-chip" bindtap="copySearchResult" hover-class="chip-hover" hover-stay-time="80">
           <text>📋 复制</text>
         </view>
       </view>
@@ -78,7 +80,7 @@
     <!-- 精选推荐 -->
     <view class="featured-section">
       <text class="section-title">精选推荐</text>
-      <scroll-view scroll-x class="featured-scroll">
+      <scroll-view scroll-x="{{true}}" class="featured-scroll" enable-passive="{{true}}" show-scrollbar="{{false}}">
         <view class="featured-list">
           <view
             class="featured-card"
@@ -86,6 +88,8 @@
             wx:key="id"
             bindtap="openPoem"
             data-poem="{{item}}"
+            hover-class="card-hover"
+            hover-stay-time="100"
           >
             <view class="card-bg" style="background: {{item.color}}">
               <view class="card-deco">{{item.dynasty}}</view>
@@ -110,6 +114,8 @@
           wx:key="id"
           bindtap="openPoem"
           data-poem="{{item}}"
+          hover-class="poem-hover"
+          hover-stay-time="100"
         >
           <view class="poem-left">
             <view class="poem-dynasty-badge">{{item.dynasty}}</view>
@@ -134,6 +140,8 @@
           wx:key="id"
           bindtap="openClassic"
           data-book="{{item}}"
+          hover-class="classic-hover"
+          hover-stay-time="100"
         >
           <view class="classic-icon-wrap" style="background: {{item.color}}">
             <text class="classic-icon">{{item.icon}}</text>
@@ -156,18 +164,18 @@
           <text class="modal-subtitle">{{currentPoem.author}} · {{currentPoem.dynasty}}</text>
         </view>
         <view class="modal-header-btns">
-          <view class="modal-fav-btn" bindtap="toggleFavoritePoem">
+          <view class="modal-fav-btn" bindtap="toggleFavoritePoem" hover-class="fav-hover" hover-stay-time="80">
             {{isFavorited ? '❤️' : '🤍'}}
           </view>
-          <text class="modal-close" bindtap="closeModal">✕</text>
+          <view class="modal-close" bindtap="closeModal" hover-class="close-hover" hover-stay-time="80">✕</view>
         </view>
       </view>
 
-      <scroll-view scroll-y class="modal-body">
+      <scroll-view scroll-y="{{true}}" class="modal-body" enable-passive="{{true}}">
         <!-- 原文 -->
         <view class="poem-original">
           <text class="section-label-sm">原文</text>
-          <text class="poem-full-text" selectable>{{currentPoem.content}}</text>
+          <text class="poem-full-text" selectable="{{true}}">{{currentPoem.content}}</text>
         </view>
 
         <!-- AI解析中 -->
@@ -183,14 +191,19 @@
         <!-- AI解析结果 -->
         <view class="poem-analysis" wx:elif="{{currentPoem.analysis}}">
           <text class="section-label-sm">AI赏析</text>
-          <text class="analysis-text" selectable>{{currentPoem.analysis}}</text>
+          <text class="analysis-text" selectable="{{true}}">{{currentPoem.analysis}}</text>
         </view>
 
         <view class="modal-actions">
-          <view class="modal-action-btn {{poemLoading ? 'btn-loading' : ''}}" bindtap="analyzePoem">
+          <view
+            class="modal-action-btn {{poemLoading ? 'btn-loading' : ''}}"
+            bindtap="analyzePoem"
+            hover-class="modal-btn-hover"
+            hover-stay-time="80"
+          >
             <text>🤖 AI深度赏析</text>
           </view>
-          <view class="modal-action-btn" bindtap="askAboutPoem">
+          <view class="modal-action-btn" bindtap="askAboutPoem" hover-class="modal-btn-hover" hover-stay-time="80">
             <text>💬 继续探讨</text>
           </view>
         </view>
