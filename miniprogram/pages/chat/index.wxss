@@ -408,3 +408,93 @@
   color: #C4882E;
 }
 .speak-btn.speaking { background: #FFF0CC; }
+
+/* ── 模型切换按钮 ─────────────────────────────── */
+.model-btn {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  background: #F5EDD6;
+  border: 1rpx solid #DDC896;
+  border-radius: 28rpx;
+  padding: 8rpx 18rpx;
+  margin-right: 8rpx;
+}
+.model-btn:active { background: #EDD9A3; }
+.model-btn-icon { font-size: 24rpx; }
+.model-btn-label { font-size: 22rpx; color: #4A3020; font-weight: 500; }
+
+/* ── 模型选择弹窗 ─────────────────────────────── */
+.modal-mask {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.model-picker-panel {
+  background: #FFFBF0;
+  width: 600rpx;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 16rpx 48rpx rgba(0,0,0,.2);
+  animation: scaleIn .2s ease-out;
+}
+
+@keyframes scaleIn {
+  from { opacity:0; transform: scale(.92); }
+  to { opacity:1; transform: scale(1); }
+}
+
+.picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 32rpx 20rpx;
+  border-bottom: 1rpx solid #EDD9A3;
+}
+.picker-title { font-size: 32rpx; font-weight: 600; color: #2C1810; }
+.picker-close { font-size: 36rpx; color: #8C7B61; padding: 4rpx 8rpx; }
+
+.model-option-list { padding: 16rpx 0; }
+
+.model-option {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx 32rpx;
+  border-bottom: 1rpx solid #F5EDD6;
+}
+.model-option:last-child { border-bottom: none; }
+.model-option:active, .option-hover { background: #FFF8E7; }
+.model-option-active { background: #FFF8E7; }
+
+.option-icon { font-size: 40rpx; }
+.option-info { flex: 1; }
+.option-name { font-size: 30rpx; font-weight: 600; color: #2C1810; display: block; }
+.option-desc { font-size: 24rpx; color: #8C7B61; margin-top: 4rpx; display: block; }
+.option-check { font-size: 32rpx; color: #8B2500; font-weight: bold; }
+
+/* ── 流式光标 ─────────────────────────────── */
+.stream-cursor {
+  width: 4rpx;
+  height: 36rpx;
+  background: #C4882E;
+  border-radius: 2rpx;
+  margin: 0 20rpx 16rpx;
+  animation: cursorBlink .8s infinite;
+}
+@keyframes cursorBlink {
+  0%,100% { opacity:1; }
+  50% { opacity:0; }
+}
+
+/* ── Hover 状态 ─────────────────────────────── */
+.quick-item-hover { background: #FFF0CC !important; }
+.sug-hover { background: #FFF0CC !important; }
+.action-hover { background: rgba(196,136,46,.15) !important; }
+.send-hover { transform: scale(.92) !important; }
+.btn-hover { opacity: .75; }
+.history-item-hover { background: #EDD9A3 !important; }

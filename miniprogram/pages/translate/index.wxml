@@ -1,6 +1,6 @@
-<!-- pages/translate/index.wxml - 古文翻译页 -->
+<!-- pages/translate/index.wxml - 古文翻译页 v5.0 -->
 <view class="container translate-page">
-  
+
   <!-- 标题 -->
   <view class="page-header">
     <text class="page-title">古文翻译</text>
@@ -9,10 +9,12 @@
 
   <!-- 翻译模式切换 -->
   <view class="mode-switch">
-    <view 
+    <view
       class="mode-item {{mode === 'ancient_to_modern' ? 'active' : ''}}"
       bindtap="switchMode"
       data-mode="ancient_to_modern"
+      hover-class="mode-hover"
+      hover-stay-time="80"
     >
       <text class="mode-icon">📖</text>
       <text class="mode-text">文言→白话</text>
@@ -20,10 +22,12 @@
     <view class="mode-divider">
       <text class="switch-icon">⇌</text>
     </view>
-    <view 
+    <view
       class="mode-item {{mode === 'modern_to_ancient' ? 'active' : ''}}"
       bindtap="switchMode"
       data-mode="modern_to_ancient"
+      hover-class="mode-hover"
+      hover-stay-time="80"
     >
       <text class="mode-icon">✍️</text>
       <text class="mode-text">白话→文言</text>
@@ -34,31 +38,35 @@
   <view class="input-section">
     <view class="input-header">
       <text class="input-label">{{mode === 'ancient_to_modern' ? '请输入文言文' : '请输入现代白话文'}}</text>
-      <text class="clear-text" bindtap="clearInput" wx:if="{{inputText}}">清空</text>
+      <text class="clear-text" bindtap="clearInput" wx:if="{{inputText}}" hover-class="clear-hover" hover-stay-time="80">清空</text>
     </view>
-    <textarea 
+    <textarea
       class="translate-input"
       value="{{inputText}}"
       placeholder="{{mode === 'ancient_to_modern' ? '例如：学而时习之，不亦说乎...' : '例如：学习了然后经常复习，很快乐...' }}"
       placeholder-class="input-ph"
       bindinput="onInput"
       maxlength="1000"
-      auto-height
+      auto-height="{{true}}"
+      cursor-spacing="20"
+      show-confirm-bar="{{false}}"
     />
-    <text class="char-count">{{inputText.length}}/1000</text>
+    <text class="char-count {{inputText.length > 800 ? 'count-warn' : ''}}">{{inputText.length}}/1000</text>
   </view>
 
   <!-- 快捷示例 -->
   <view class="examples-section">
     <text class="example-label">快捷示例：</text>
-    <scroll-view scroll-x>
+    <scroll-view scroll-x="{{true}}" enable-passive="{{true}}" show-scrollbar="{{false}}">
       <view class="example-list">
-        <view 
+        <view
           class="example-item"
           wx:for="{{examples[mode]}}"
           wx:key="index"
           bindtap="useExample"
           data-text="{{item}}"
+          hover-class="example-hover"
+          hover-stay-time="80"
         >{{item}}</view>
       </view>
     </scroll-view>
@@ -66,26 +74,32 @@
 
   <!-- 翻译按钮 -->
   <view class="translate-btn-wrap">
-    <button 
-      class="translate-btn {{isLoading ? 'loading' : ''}}"
+    <view
+      class="translate-btn {{isLoading ? 'btn-loading' : (inputText.trim() ? 'btn-active' : 'btn-disabled')}}"
       bindtap="doTranslate"
-      disabled="{{isLoading || !inputText.trim()}}"
+      hover-class="{{!isLoading && inputText.trim() ? 'translate-btn-hover' : ''}}"
+      hover-stay-time="80"
     >
-      <text wx:if="{{isLoading}}" class="btn-loading-text">正在翻译...</text>
+      <view class="btn-loading-dots" wx:if="{{isLoading}}">
+        <view class="btn-dot"></view>
+        <view class="btn-dot"></view>
+        <view class="btn-dot"></view>
+      </view>
+      <text wx:if="{{isLoading}}" class="btn-text">正在翻译...</text>
       <text wx:else class="btn-text">开始翻译</text>
-    </button>
+    </view>
   </view>
 
-  <!-- 翻译结果 -->
+  <!-- 翻译结果（分段展示） -->
   <view class="result-section" wx:if="{{result || isLoading}}">
     <view class="result-header">
       <text class="result-title">翻译结果</text>
-      <view class="result-actions" wx:if="{{result}}">
-        <text class="action-btn" bindtap="copyResult">复制</text>
-        <text class="action-btn" bindtap="shareResult">分享</text>
+      <view class="result-actions" wx:if="{{result && !isLoading}}">
+        <view class="action-btn" bindtap="copyResult" hover-class="action-hover" hover-stay-time="80">📋 复制</view>
+        <view class="action-btn" bindtap="shareResult" hover-class="action-hover" hover-stay-time="80">↗ 分享</view>
       </view>
     </view>
-    
+
     <!-- 加载中 -->
     <view class="result-loading" wx:if="{{isLoading}}">
       <view class="loading-dots">
@@ -95,10 +109,26 @@
       </view>
       <text class="loading-hint">文渊先生正在翻译中...</text>
     </view>
-    
-    <!-- 结果内容 -->
+
+    <!-- 分段结果展示 -->
+    <view class="result-sections fade-in" wx:elif="{{sections.length > 1}}">
+      <view class="result-seg" wx:for="{{sections}}" wx:key="label">
+        <view class="seg-label-row">
+          <view class="seg-dot"></view>
+          <text class="seg-label">{{item.label}}</text>
+        </view>
+        <text class="seg-content" selectable="{{true}}">{{item.content}}</text>
+      </view>
+    </view>
+
+    <!-- 纯文本（单段） -->
     <view class="result-content fade-in" wx:elif="{{result}}">
-      <text class="result-text" selectable>{{result}}</text>
+      <text class="result-text" selectable="{{true}}">{{result}}</text>
+    </view>
+
+    <!-- 继续探讨 -->
+    <view class="chat-about-btn" bindtap="chatAboutTranslation" wx:if="{{result && !isLoading}}" hover-class="chat-btn-hover" hover-stay-time="80">
+      <text>💬 与文渊先生深入探讨</text>
     </view>
   </view>
 
@@ -106,15 +136,19 @@
   <view class="history-section" wx:if="{{history.length > 0}}">
     <view class="history-header">
       <text class="section-title">翻译记录</text>
-      <text class="clear-history" bindtap="clearHistory">清除</text>
+      <view class="clear-history" bindtap="clearHistory" hover-class="clear-hover" hover-stay-time="80">
+        <text>清除</text>
+      </view>
     </view>
     <view class="history-list">
-      <view 
+      <view
         class="history-item"
         wx:for="{{history}}"
         wx:key="id"
         bindtap="loadHistory"
         data-item="{{item}}"
+        hover-class="history-item-hover"
+        hover-stay-time="100"
       >
         <view class="history-meta">
           <text class="history-mode">{{item.mode === 'ancient_to_modern' ? '文言→白话' : '白话→文言'}}</text>
@@ -124,6 +158,6 @@
       </view>
     </view>
   </view>
-  
+
   <view class="safe-bottom"></view>
 </view>

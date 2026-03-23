@@ -69,42 +69,42 @@
       </view>
     </view>
     <view class="func-grid">
-      <view class="func-item" bindtap="goToChat">
+      <view class="func-item" bindtap="goToChat" hover-class="func-hover" hover-stay-time="100">
         <view class="func-icon" style="background:linear-gradient(135deg,#FF8C5C,#C44020)">
           <text class="func-char">問</text>
         </view>
         <text class="func-name">AI问答</text>
         <text class="func-desc">智能国学问答</text>
       </view>
-      <view class="func-item" bindtap="goTranslate">
+      <view class="func-item" bindtap="goTranslate" hover-class="func-hover" hover-stay-time="100">
         <view class="func-icon" style="background:linear-gradient(135deg,#52C8A0,#1A8060)">
           <text class="func-char">译</text>
         </view>
         <text class="func-name">古文翻译</text>
         <text class="func-desc">文言白话互译</text>
       </view>
-      <view class="func-item" bindtap="goCategory" data-cat="{{categories[0]}}">
+      <view class="func-item" bindtap="goCategory" data-cat="{{categories[0]}}" hover-class="func-hover" hover-stay-time="100">
         <view class="func-icon" style="background:linear-gradient(135deg,#9B6FD5,#6A3DA8)">
           <text class="func-char">詩</text>
         </view>
         <text class="func-name">诗词典籍</text>
         <text class="func-desc">经典赏析</text>
       </view>
-      <view class="func-item" bindtap="goCategory" data-cat="{{categories[2]}}">
+      <view class="func-item" bindtap="goCategory" data-cat="{{categories[2]}}" hover-class="func-hover" hover-stay-time="100">
         <view class="func-icon" style="background:linear-gradient(135deg,#F0B840,#C48A10)">
           <text class="func-char">成</text>
         </view>
         <text class="func-name">成语故事</text>
         <text class="func-desc">典故解析</text>
       </view>
-      <view class="func-item" bindtap="goCategory" data-cat="{{categories[3]}}">
+      <view class="func-item" bindtap="goCategory" data-cat="{{categories[3]}}" hover-class="func-hover" hover-stay-time="100">
         <view class="func-icon" style="background:linear-gradient(135deg,#5BC8F5,#1A7ED5)">
           <text class="func-char">史</text>
         </view>
         <text class="func-name">历史探秘</text>
         <text class="func-desc">朝代人物</text>
       </view>
-      <view class="func-item" bindtap="goCategory" data-cat="{{categories[4]}}">
+      <view class="func-item" bindtap="goCategory" data-cat="{{categories[4]}}" hover-class="func-hover" hover-stay-time="100">
         <view class="func-icon" style="background:linear-gradient(135deg,#FF8FA3,#C03060)">
           <text class="func-char">道</text>
         </view>
@@ -130,6 +130,8 @@
           wx:key="index"
           bindtap="goHotTopic"
           data-topic="{{item}}"
+          hover-class="hot-hover"
+          hover-stay-time="80"
         >
           <text class="hot-fire">🔥</text>
           <text class="hot-text">{{item}}</text>
@@ -169,6 +171,8 @@
         wx:key="id"
         bindtap="goCategory"
         data-cat="{{item}}"
+        hover-class="cat-row-hover"
+        hover-stay-time="100"
       >
         <view class="cat-icon-wrap" style="background:{{item.bg}}">
           <text class="cat-icon">{{item.icon}}</text>

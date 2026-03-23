@@ -330,3 +330,124 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ── 分段展示 ─────────────────────────────── */
+.result-sections {
+  padding: 0 0 8rpx;
+}
+
+.result-seg {
+  padding: 20rpx 24rpx 16rpx;
+  border-bottom: 1rpx solid #F5EDD6;
+}
+.result-seg:last-child { border-bottom: none; }
+
+.seg-label-row {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 10rpx;
+}
+
+.seg-dot {
+  width: 8rpx; height: 8rpx;
+  background: #C4882E;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.seg-label {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #8B2500;
+}
+
+.seg-content {
+  font-size: 28rpx;
+  color: #2C1810;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  display: block;
+}
+
+/* ── 继续探讨按钮 ─────────────────────────────── */
+.chat-about-btn {
+  margin: 16rpx 24rpx;
+  padding: 20rpx;
+  background: #FFF8E7;
+  border: 1rpx solid #C4882E;
+  border-radius: 16rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #8B2500;
+}
+.chat-about-btn:active, .chat-btn-hover { background: #FFF0CC !important; }
+
+/* ── 翻译按钮状态 ─────────────────────────────── */
+.btn-active {
+  background: linear-gradient(135deg, #C4882E, #8B2500);
+  box-shadow: 0 8rpx 24rpx rgba(139, 37, 0, 0.3);
+}
+.btn-disabled {
+  background: #D9C8A0 !important;
+  box-shadow: none;
+  pointer-events: none;
+}
+.btn-loading {
+  background: linear-gradient(135deg, #C4882E, #8B2500);
+  opacity: 0.75;
+}
+.translate-btn-hover { transform: scale(.98); opacity: .9; }
+
+/* ── 按钮加载动画点 ─────────────────────────────── */
+.btn-loading-dots {
+  display: flex;
+  gap: 8rpx;
+  align-items: center;
+  margin-right: 12rpx;
+}
+.btn-dot {
+  width: 12rpx; height: 12rpx;
+  background: #FFF8E7;
+  border-radius: 50%;
+  animation: dotBounce 1.4s infinite ease-in-out;
+}
+.btn-dot:nth-child(1) { animation-delay: -.32s; }
+.btn-dot:nth-child(2) { animation-delay: -.16s; }
+@keyframes dotBounce {
+  0%,80%,100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+/* ── 字数过多警告 ─────────────────────────────── */
+.count-warn { color: #D4380D !important; }
+
+/* ── Hover 效果 ─────────────────────────────── */
+.mode-hover { opacity: .8; }
+.example-hover { background: #FFE0A0 !important; }
+.action-hover { background: rgba(196,136,46,.15) !important; }
+.clear-hover { opacity: .7; }
+.history-item-hover { background: #FFF5DC !important; }
+
+/* ── 淡入动画 ─────────────────────────────── */
+.fade-in {
+  animation: fadeIn .3s ease-out;
+}
+@keyframes fadeIn {
+  from { opacity:0; transform: translateY(8rpx); }
+  to { opacity:1; transform: translateY(0); }
+}
+
+/* 加载点 */
+.loading-dots {
+  display: flex;
+  gap: 10rpx;
+}
+.dot {
+  width: 14rpx; height: 14rpx;
+  background: #C4882E;
+  border-radius: 50%;
+  animation: dotBounce 1.4s infinite ease-in-out;
+}
+.dot:nth-child(1) { animation-delay: -.32s; }
+.dot:nth-child(2) { animation-delay: -.16s; }

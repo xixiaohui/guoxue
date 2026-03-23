@@ -281,4 +281,15 @@
 .modal-action-btn:active { background: rgba(196,136,46,0.2); }
 .modal-action-btn.btn-loading { opacity: 0.6; }
 
+/* ── Hover 状态 ─────────────────────────────── */
+.tab-hover { background: #FFF0CC !important; }
+.search-hover { background: rgba(196,136,46,.15) !important; }
+.card-hover { opacity: 0.88 !important; transform: scale(.98); }
+.poem-hover { background: #FFF5DC !important; }
+.classic-hover { background: #FFF5DC !important; }
+.chip-hover { background: rgba(196,136,46,.15) !important; }
+.close-hover { opacity: 0.7; }
+.fav-hover { opacity: 0.7; }
+.modal-btn-hover { background: rgba(196,136,46,.2) !important; }
+
 .safe-bottom { height: env(safe-area-inset-bottom); }
