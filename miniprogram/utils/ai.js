@@ -22,7 +22,7 @@
 // ─── 模型配置 ─────────────────────────────────────────────────
 const MODELS = {
   PRIMARY:  'hunyuan-turbos-latest',  // 主力模型（速度优先）
-  FALLBACK: 'hunyuan-pro',            // 备用模型（质量优先）
+  FALLBACK: 'hunyuan-t1-latest',            // 备用模型（质量优先）
   PROVIDER: 'hunyuan-exp',            // createModel 的 provider 标识
 };
 
