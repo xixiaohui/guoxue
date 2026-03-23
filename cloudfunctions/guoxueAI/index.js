@@ -1,263 +1,210 @@
 /**
- * 国学AI助手 - 云函数 guoxueAI (生产级 v2 - 带配额控制)
- * 模型：hunyuan-turbos-latest
- * 配额逻辑：调用前检查 user_quota，超限返回特殊错误码
+ * 国学AI助手 - 云函数 guoxueAI v4.0
+ *
+ * ★ 架构说明 ★
+ * AI 模型调用 (wx.cloud.extend.AI) 只能在【小程序端】使用，
+ * 云函数端（wx-server-sdk）没有 cloud.extend.AI 接口。
+ *
+ * 因此本云函数职责单一：
+ *   1. 配额检查 & 消费  (checkAndConsume)
+ *   2. 激励广告授予     (adBonus)
+ *   3. 会员激活         (activateVip)
+ *   4. 状态查询         (getStatus)
+ *
+ * AI 调用在小程序端 utils/ai.js 中通过
+ *   wx.cloud.extend.AI.createModel("hunyuan-exp")
+ * 直接完成，无需经过云函数。
+ *
+ * 数据库集合: user_quota
+ * 字段:
+ *   _id / openid       string   用户标识
+ *   date               string   "YYYY-MM-DD" 当日日期
+ *   used               number   当日已用次数
+ *   vip_expire         number   会员到期时间戳(ms)，0=非会员
+ *   ad_bonus_expire    number   广告奖励到期时间戳(ms)
+ *   total_used         number   历史累计调用
+ *   created_at         number
+ *   updated_at         number
  */
 
 const cloud = require('wx-server-sdk');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
-const db = cloud.database();
-const _ = db.command;
+const db   = cloud.database();
+const _cmd = db.command;
 
-// ─── 系统人设 ────────────────────────────────────────────────
-const SYSTEM_PROMPT = `你是"文渊先生"，一位精通中国传统文化的国学大师与AI助手。
-你的知识涵盖：诗词歌赋、经史子集、成语典故、历史人物与朝代、诸子百家、汉字文化。
+const COLLECTION      = 'user_quota';
+const FREE_DAILY_LIMIT = 10;   // 每日免费 AI 调用次数
 
-【回答准则】
-1. 语言：简洁精炼，深入浅出，适合手机阅读
-2. 格式：适当使用【标题】分段，关键词加粗（**词**），引用原文用「」
-3. 态度：博学而亲切，传统而不古板
-4. 长度：根据问题复杂度控制，一般不超过600字
-5. 原文：引用诗词典籍时，提供原文+白话双语
-
-请始终用中文回答。`;
-
-// 每日免费配额
-const FREE_DAILY_LIMIT = 5;
-const QUOTA_COLLECTION = 'user_quota';
-
-// ─── 入口函数 ────────────────────────────────────────────────
+// ─── 入口 ────────────────────────────────────────────────────
 exports.main = async (event, context) => {
   const { OPENID } = cloud.getWXContext();
-  const { type, skipQuota } = event;
+  if (!OPENID) return _err('无法获取用户标识，请重新进入小程序');
 
-  // daily/daily_idiom 类型不计入配额（每日一次性内容）
-  const quotaFree = ['daily', 'daily_idiom'].includes(type);
+  const { type } = event;
+  if (!type) return _err('缺少操作类型参数');
+
+  console.log(`[guoxueAI-cf] type=${type} uid=${OPENID.slice(0, 8)}`);
 
   try {
-    // ── 配额检查 ──────────────────────────────
-    if (!quotaFree && OPENID) {
-      const quotaResult = await _checkAndConsumeQuota(OPENID);
-      if (!quotaResult.canUse) {
-        return {
-          success: false,
-          quota_exceeded: true,
-          remaining: 0,
-          error: '今日免费次数已用完，请观看视频广告或升级会员继续使用',
-          isVip: quotaResult.isVip,
-          hasAdBonus: quotaResult.hasAdBonus
-        };
-      }
-    }
-
-    // ── AI 调用 ──────────────────────────────
     switch (type) {
-      case 'chat':        return await handleChat(event.messages);
-      case 'translate':   return await handleTranslate(event.text, event.mode);
-      case 'daily':       return await handleDailyClassic();
-      case 'daily_idiom': return await handleDailyIdiom();
-      case 'poem':        return await handlePoemAnalysis(event.text);
-      case 'idiom':       return await handleIdiomExplain(event.text);
-      case 'history':     return await handleHistory(event.text);
-      case 'search':      return await handleSearch(event.text);
-      default:
-        return err('未知请求类型: ' + type);
+      case 'getStatus':        return await getStatus(OPENID);
+      case 'checkAndConsume':  return await checkAndConsume(OPENID);
+      case 'adBonus':          return await grantAdBonus(OPENID);
+      case 'activateVip':      return await activateVip(OPENID, event.months || 1, event.tradeNo);
+      case 'checkVip':         return await checkVip(OPENID);
+      // 兼容旧版调用（前端可能仍发 consume）
+      case 'consume':          return await checkAndConsume(OPENID);
+      default:                 return _err('未知操作类型: ' + type);
     }
   } catch (e) {
-    console.error(`[guoxueAI][${type}]`, e);
-    return err(friendlyError(e));
+    console.error('[guoxueAI-cf]', type, e.message || e);
+    return _err('服务异常，请稍后重试');
   }
 };
 
-// ─── 配额检查并消费 ────────────────────────────────────────────────
-async function _checkAndConsumeQuota(openid) {
-  try {
-    const now = Date.now();
-    const today = _today();
+// ─── 1. 获取配额状态 ─────────────────────────────────────────
+async function getStatus(openid) {
+  const doc   = await _getOrCreate(openid);
+  const today = _today();
+  const now   = Date.now();
 
-    let doc;
-    try {
-      const res = await db.collection(QUOTA_COLLECTION).doc(openid).get();
-      doc = res.data;
-    } catch (e) {
-      // 文档不存在，创建
-      doc = { _id: openid, openid, date: today, used: 0, vip_expire: 0, ad_bonus_expire: 0, total_used: 0, created_at: now, updated_at: now };
-      await db.collection(QUOTA_COLLECTION).add({ data: doc });
-    }
+  const used       = doc.date === today ? (doc.used || 0) : 0;
+  const isVip      = (doc.vip_expire || 0) > now;
+  const hasAdBonus = (doc.ad_bonus_expire || 0) > now;
+  const isUnlimited = isVip || hasAdBonus;
+  const remaining  = isUnlimited ? 999 : Math.max(0, FREE_DAILY_LIMIT - used);
 
-    const isVip = (doc.vip_expire || 0) > now;
-    const hasAdBonus = (doc.ad_bonus_expire || 0) > now;
+  console.log(`[getStatus] uid=${openid.slice(0,8)} used=${used} vip=${isVip} ad=${hasAdBonus}`);
 
-    // 会员/激励广告不限量
-    if (isVip || hasAdBonus) {
-      // 仅递增总计数
-      await db.collection(QUOTA_COLLECTION).doc(openid).update({ data: { total_used: _.inc(1), updated_at: now } });
-      return { canUse: true, isVip, hasAdBonus, remaining: 999 };
-    }
-
-    // 跨日重置
-    const used = (doc.date === today) ? (doc.used || 0) : 0;
-    if (used >= FREE_DAILY_LIMIT) {
-      return { canUse: false, isVip: false, hasAdBonus: false, remaining: 0 };
-    }
-
-    // 消费一次
-    await db.collection(QUOTA_COLLECTION).doc(openid).update({
-      data: { date: today, used: used + 1, total_used: _.inc(1), updated_at: now }
-    });
-
-    return { canUse: true, isVip: false, hasAdBonus: false, remaining: FREE_DAILY_LIMIT - used - 1 };
-  } catch (e) {
-    console.warn('[quota] check failed, allowing request:', e.message);
-    // 配额检查失败时放行（不影响用户体验）
-    return { canUse: true, isVip: false, hasAdBonus: false, remaining: 1 };
-  }
+  return _ok({
+    isVip, hasAdBonus, isUnlimited,
+    used, remaining,
+    canUse:       remaining > 0,
+    freeLimit:    FREE_DAILY_LIMIT,
+    vipExpire:    doc.vip_expire    || 0,
+    adBonusExpire:doc.ad_bonus_expire || 0,
+    totalUsed:    doc.total_used    || 0,
+  });
 }
 
-// ─── 统一调用 AI ────────────────────────────────────────────────
-async function callModel(messages, opts = {}) {
-  const resp = await cloud.ai.inference.completions({
-    model: opts.model || 'hunyuan-turbos-latest',
-    messages,
-    temperature: opts.temperature ?? 0.7,
-    max_tokens: opts.maxTokens || 2000,
-    top_p: opts.topP ?? 0.9
+// ─── 2. 检查并消费一次配额（AI 调用前由小程序端调用） ────────────
+async function checkAndConsume(openid) {
+  const doc = await _getOrCreate(openid);
+  const today = _today();
+  const now   = Date.now();
+
+  const isVip      = (doc.vip_expire || 0) > now;
+  const hasAdBonus = (doc.ad_bonus_expire || 0) > now;
+
+  // VIP / 广告奖励 → 不消耗配额，仅记录总次数
+  if (isVip || hasAdBonus) {
+    _updateAsync(openid, { total_used: _cmd.inc(1), updated_at: now });
+    return _ok({ consumed: false, isUnlimited: true, remaining: 999, canUse: true });
+  }
+
+  // 跨日重置
+  const used = doc.date === today ? (doc.used || 0) : 0;
+
+  if (used >= FREE_DAILY_LIMIT) {
+    console.log(`[checkAndConsume] exceeded uid=${openid.slice(0,8)} used=${used}`);
+    return _ok({
+      consumed: false, isUnlimited: false,
+      remaining: 0,   canUse: false,
+      quota_exceeded: true,
+    });
+  }
+
+  // 消费一次
+  const newUsed   = used + 1;
+  const remaining = FREE_DAILY_LIMIT - newUsed;
+  await db.collection(COLLECTION).doc(openid).update({
+    data: { date: today, used: newUsed, total_used: _cmd.inc(1), updated_at: now }
   });
 
-  const content = resp?.choices?.[0]?.message?.content;
-  if (!content) throw new Error('AI 返回内容为空');
-  return content;
+  console.log(`[checkAndConsume] ok uid=${openid.slice(0,8)} used=${newUsed} left=${remaining}`);
+  return _ok({ consumed: true, isUnlimited: false, remaining, canUse: true });
 }
 
-// ─── 多轮对话 ────────────────────────────────────────────────
-async function handleChat(messages) {
-  if (!Array.isArray(messages) || messages.length === 0) return err('消息列表不能为空');
-  const trimmed = messages.slice(-12);
-  const reply = await callModel(
-    [{ role: 'system', content: SYSTEM_PROMPT }, ...trimmed],
-    { temperature: 0.75, maxTokens: 1500 }
-  );
-  return ok({ reply });
+// ─── 3. 激励广告奖励 +1天无限 ────────────────────────────────
+async function grantAdBonus(openid) {
+  const now = Date.now();
+  const doc = await _getOrCreate(openid);
+  // 若已有奖励且未过期，续期；否则从现在起24h
+  const base      = (doc.ad_bonus_expire || 0) > now ? doc.ad_bonus_expire : now;
+  const newExpire = base + 24 * 60 * 60 * 1000;
+
+  await db.collection(COLLECTION).doc(openid).update({
+    data: { ad_bonus_expire: newExpire, updated_at: now }
+  });
+  console.log(`[adBonus] uid=${openid.slice(0,8)} expire=${_fmtTs(newExpire)}`);
+  return _ok({ ad_bonus_expire: newExpire, expireText: _fmtTs(newExpire) });
 }
 
-// ─── 古文翻译 ────────────────────────────────────────────────
-async function handleTranslate(text, mode) {
-  if (!text?.trim()) return err('请输入需要翻译的文本');
-  const isAncient = mode !== 'modern_to_ancient';
-  const prompt = isAncient
-    ? `请将下列文言文翻译成现代白话文，并进行注释。\n\n【原文】\n${text}\n\n请严格按以下结构输出：\n【译文】\n（现代白话文翻译）\n\n【注释】\n（逐一解释关键字词或典故）\n\n【背景】\n（简述作品或句子的历史文化背景，2-3句）`
-    : `请将下列现代白话文改写成古雅的文言文风格。\n\n【原文】\n${text}\n\n请严格按以下结构输出：\n【文言文】\n（文言文改写版本）\n\n【用词说明】\n（解释所用的关键文言词汇及语法）`;
+// ─── 4. 激活会员 ──────────────────────────────────────────────
+async function activateVip(openid, months, tradeNo) {
+  months = Math.max(1, parseInt(months) || 1);
+  const now = Date.now();
+  const doc = await _getOrCreate(openid);
+  const base      = (doc.vip_expire || 0) > now ? doc.vip_expire : now;
+  const newExpire = base + months * 30 * 24 * 60 * 60 * 1000;
 
-  const result = await callModel(
-    [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
-    { temperature: 0.4, maxTokens: 1500 }
-  );
-  return ok({ result });
+  await db.collection(COLLECTION).doc(openid).update({
+    data: { vip_expire: newExpire, last_trade_no: tradeNo || '', updated_at: now }
+  });
+  console.log(`[activateVip] uid=${openid.slice(0,8)} months=${months} expire=${_fmtTs(newExpire)}`);
+  return _ok({ vip_expire: newExpire, expireText: _fmtTs(newExpire), months });
 }
 
-// ─── 每日经典 ────────────────────────────────────────────────
-async function handleDailyClassic() {
-  const today = formatDate(new Date());
-  const prompt = `今天是${today}，请推荐一条适合今天的经典名句（诗词、典籍、名言皆可）。\n\n请严格按以下JSON格式返回（不要有多余文字）：\n{\n  "quote": "经典原文（完整句子）",\n  "author": "作者 · 朝代 · 出处",\n  "translation": "白话文解释（30字以内）",\n  "analysis": "意境赏析（60字以内）",\n  "insight": "今日启示（30字以内）"\n}`;
+// ─── 5. 检查会员状态 ──────────────────────────────────────────
+async function checkVip(openid) {
+  const doc = await _getOrCreate(openid);
+  const now = Date.now();
+  return _ok({ isVip: (doc.vip_expire || 0) > now, vip_expire: doc.vip_expire || 0 });
+}
 
-  const raw = await callModel(
-    [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
-    { temperature: 0.85, maxTokens: 500 }
-  );
-
-  let daily = null;
+// ─── 工具：获取或创建用户文档 ────────────────────────────────
+async function _getOrCreate(openid) {
   try {
-    const jsonStr = raw.match(/\{[\s\S]*\}/)?.[0] || raw;
-    daily = JSON.parse(jsonStr);
+    const res = await db.collection(COLLECTION).doc(openid).get();
+    return res.data;
   } catch (e) {
-    daily = { quote: raw.substring(0, 200), author: '', translation: '', analysis: '', insight: '' };
+    const now    = Date.now();
+    const newDoc = {
+      _id: openid, openid,
+      date: _today(), used: 0,
+      vip_expire: 0, ad_bonus_expire: 0,
+      total_used: 0, created_at: now, updated_at: now
+    };
+    try {
+      await db.collection(COLLECTION).add({ data: newDoc });
+      console.log(`[_getOrCreate] new user uid=${openid.slice(0,8)}`);
+    } catch (addErr) {
+      // 并发冲突：尝试重新读取
+      console.warn('[_getOrCreate] add conflict, re-fetch:', addErr.message);
+      try {
+        const retry = await db.collection(COLLECTION).doc(openid).get();
+        return retry.data;
+      } catch (_) { /* 最终兜底 */ }
+    }
+    return newDoc;
   }
-  return ok({ daily });
 }
 
-// ─── 每日成语 ────────────────────────────────────────────────
-async function handleDailyIdiom() {
-  const today = formatDate(new Date());
-  const prompt = `今天是${today}，请随机推荐一个有趣的四字成语。\n\n请严格按以下JSON格式返回（不要有多余文字）：\n{\n  "word": "成语",\n  "pinyin": "pīn yīn",\n  "brief": "一句话释义（20字以内）",\n  "origin": "出处典籍或历史故事名称",\n  "story": "典故故事（80字以内）",\n  "example": "一个现代用法例句",\n  "antonym": "反义词（1-2个）",\n  "synonym": "近义词（1-2个）"\n}`;
-
-  const raw = await callModel(
-    [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
-    { temperature: 0.9, maxTokens: 600 }
-  );
-
-  let idiom = null;
-  try {
-    const jsonStr = raw.match(/\{[\s\S]*\}/)?.[0] || raw;
-    idiom = JSON.parse(jsonStr);
-  } catch (e) {
-    idiom = { word: '一鸣惊人', pinyin: 'yī míng jīng rén', brief: '平时没有表现，突然做出惊人成绩', origin: '《史记》', story: '', example: '', antonym: '', synonym: '' };
-  }
-  return ok({ idiom });
-}
-
-// ─── 诗词赏析 ────────────────────────────────────────────────
-async function handlePoemAnalysis(text) {
-  if (!text?.trim()) return err('请输入诗词内容');
-  const prompt = `请对以下诗词进行专业赏析：\n\n${text}\n\n请按以下结构输出（每部分控制在100字以内）：\n【作品信息】\n（朝代、作者、创作背景）\n\n【逐句注释】\n（关键字词解释，古汉语语法说明）\n\n【意境赏析】\n（分析意象、情感基调、艺术手法）\n\n【文学地位】\n（在中国文学史上的价值与影响）`;
-
-  const analysis = await callModel(
-    [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
-    { temperature: 0.6, maxTokens: 1800 }
-  );
-  return ok({ analysis });
-}
-
-// ─── 成语解释 ────────────────────────────────────────────────
-async function handleIdiomExplain(word) {
-  if (!word?.trim()) return err('请输入成语');
-  const prompt = `请详细解释成语「${word}」。\n\n请按以下结构输出：\n【成语释义】\n（简明释义，20字以内）\n\n【出处典故】\n（来源文献及历史故事）\n\n【原文引用】\n（出处原文，如无则说明）\n\n【用法示例】\n例句1：（现代语境例句）\n例句2：（另一语境例句）\n\n【近义词】（列出2-3个）\n【反义词】（列出2-3个）`;
-
-  const explanation = await callModel(
-    [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
-    { temperature: 0.4, maxTokens: 1200 }
-  );
-  return ok({ explanation });
-}
-
-// ─── 历史知识 ────────────────────────────────────────────────
-async function handleHistory(query) {
-  if (!query?.trim()) return err('请输入查询内容');
-  const prompt = `请介绍关于「${query}」的历史知识。\n\n请按以下结构输出（每部分控制在120字以内）：\n【历史概述】\n（时间、地点、主要人物简介）\n\n【重要内容】\n（详细历史事件、过程或人物生平）\n\n【深远影响】\n（对后世政治、文化、社会的影响）\n\n【文化印记】\n（相关诗词、典故、成语或艺术作品）`;
-
-  const content = await callModel(
-    [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
-    { temperature: 0.5, maxTokens: 1800 }
-  );
-  return ok({ content });
-}
-
-// ─── 智能搜索 ────────────────────────────────────────────────
-async function handleSearch(text) {
-  if (!text?.trim()) return err('请输入搜索内容');
-  const reply = await callModel(
-    [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: `请从国学角度介绍：${text}` }],
-    { temperature: 0.65, maxTokens: 1500 }
-  );
-  return ok({ reply });
-}
-
-// ─── 工具 ────────────────────────────────────────────────
-function ok(data) { return { success: true, ...data }; }
-function err(msg) { return { success: false, error: msg }; }
-
-function formatDate(d) {
-  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+// 异步更新（不阻塞响应，失败静默）
+function _updateAsync(openid, data) {
+  db.collection(COLLECTION).doc(openid).update({ data })
+    .catch(e => console.warn('[_updateAsync] failed:', e.message));
 }
 
 function _today() {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-function friendlyError(e) {
-  const msg = e?.message || String(e);
-  if (msg.includes('quota') || msg.includes('limit')) return 'AI调用次数达到上限，请稍后再试';
-  if (msg.includes('timeout')) return '请求超时，请重试';
-  if (msg.includes('token')) return '输入内容过长，请缩短后重试';
-  return 'AI服务暂时繁忙，请稍后重试';
+function _fmtTs(ts) {
+  const d = new Date(ts);
+  return `${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
+
+function _ok(data)  { return { success: true,  ...data }; }
+function _err(msg)  { return { success: false, error: msg }; }
