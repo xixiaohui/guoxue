@@ -1,4 +1,4 @@
-<!-- pages/home/index.wxml - 生产级首页 v6.0 -->
+<!-- pages/home/index.wxml - 生产级首页 v7.0（换一条优化 + 分享海报）-->
 <view class="home-page">
 
   <!-- Hero Banner -->
@@ -20,9 +20,27 @@
         <view class="label-bar"></view>
         <text class="section-label">今日经典</text>
       </view>
-      <view class="refresh-pill" bindtap="refreshDaily" hover-class="pill-hover" hover-stay-time="80">
-        <text class="refresh-icon">↺</text>
-        <text class="refresh-text">换一条</text>
+      <view class="head-actions">
+        <!-- 换一条按钮 -->
+        <view
+          class="refresh-pill {{refreshing ? 'pill-spinning' : ''}}"
+          bindtap="refreshDaily"
+          hover-class="pill-hover"
+          hover-stay-time="80"
+        >
+          <text class="refresh-icon">↺</text>
+          <text class="refresh-text">换一条</text>
+        </view>
+        <!-- 分享按钮 -->
+        <view
+          class="share-pill"
+          bindtap="showShareMenu"
+          hover-class="pill-hover"
+          hover-stay-time="80"
+        >
+          <text class="share-icon">↑</text>
+          <text class="share-text">分享</text>
+        </view>
       </view>
     </view>
 
@@ -37,7 +55,13 @@
     </view>
 
     <!-- 实际内容 -->
-    <view class="daily-card" wx:else bindtap="goDiscussDaily" hover-class="card-hover" hover-stay-time="100">
+    <view
+      class="daily-card {{refreshing ? 'card-fade' : ''}}"
+      wx:else
+      bindtap="goDiscussDaily"
+      hover-class="card-hover"
+      hover-stay-time="100"
+    >
       <view class="daily-badge">今日名句</view>
       <view class="daily-quote-row">
         <text class="q-mark">「</text>
@@ -57,6 +81,10 @@
 
       <view class="daily-footer">
         <text class="daily-cta">点击进入古文翻译深度赏析 →</text>
+        <view class="daily-share-hint" catchtap="showShareMenu">
+          <text class="hint-icon">↑</text>
+          <text class="hint-txt">分享</text>
+        </view>
       </view>
     </view>
   </view>
@@ -175,4 +203,55 @@
   ></ad>
 
   <view class="safe-bottom"></view>
+</view>
+
+<!-- ── 海报弹窗 ──────────────────────────────── -->
+<view class="poster-mask" wx:if="{{showPoster}}" bindtap="closePoster">
+  <view class="poster-container" catchtap="">
+
+    <!-- 关闭按钮 -->
+    <view class="poster-close" bindtap="closePoster">✕</view>
+
+    <view class="poster-title">精美海报</view>
+    <view class="poster-sub">长按图片保存或识别小程序码</view>
+
+    <!-- Canvas（用于绘制海报，设计尺寸 750×1200 → 展示按比例缩放）-->
+    <view class="poster-canvas-wrap">
+      <!-- 加载中占位 -->
+      <view class="poster-loading" wx:if="{{posterLoading}}">
+        <view class="poster-loading-spin">⟳</view>
+        <text class="poster-loading-txt">海报绘制中...</text>
+      </view>
+      <!-- Canvas 节点（始终存在） -->
+      <canvas
+        id="posterCanvas"
+        type="2d"
+        class="poster-canvas"
+        style="width:750rpx;height:1200rpx;"
+      ></canvas>
+      <!-- 生成后的预览图（覆盖在 canvas 上，供长按保存）-->
+      <image
+        wx:if="{{posterPath}}"
+        class="poster-preview"
+        src="{{posterPath}}"
+        mode="widthFix"
+        show-menu-by-longpress="{{true}}"
+        bindlongpress="savePoster"
+      ></image>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="poster-actions" wx:if="{{posterPath}}">
+      <view class="poster-btn poster-btn-save" bindtap="savePoster" hover-class="btn-hover" hover-stay-time="80">
+        <text>💾 保存到相册</text>
+      </view>
+      <view class="poster-btn poster-btn-share" bindtap="onShareAppMessage" hover-class="btn-hover" hover-stay-time="80">
+        <button open-type="share" class="poster-share-inner">
+          <text>📤 发送给好友</text>
+        </button>
+      </view>
+    </view>
+
+    <view class="poster-hint" wx:if="{{posterPath}}">长按图片可直接保存</view>
+  </view>
 </view>

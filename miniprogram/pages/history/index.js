@@ -225,5 +225,21 @@ Page({
       sections.push({ label: '历史详情', content: text.trim() });
     }
     return sections;
+  },
+
+  // ── 分享 ──────────────────────────────
+  onShareAppMessage() {
+    const q = this.data.currentQuery || '';
+    return {
+      title: q ? `【${q}】历史探秘 · 国学助手` : '历史探秘 · 朝代人物探究',
+      path:  '/pages/history/index',
+    };
+  },
+  onShareTimeline() {
+    const q = this.data.currentQuery || '';
+    return {
+      title: q ? `【${q}】探究历史真相` : '国学助手 · 历史探秘',
+      query: 'from=timeline',
+    };
   }
 });

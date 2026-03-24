@@ -216,5 +216,21 @@ Page({
     const isFav = storage.toggleFavoriteIdiom({ word: dailyIdiom.word, savedAt: Date.now() });
     this.setData({ isFavorited: isFav });
     wx.showToast({ title: isFav ? '已收藏' : '已取消收藏', icon: 'success', duration: 1200 });
+  },
+
+  // ── 分享 ──────────────────────────────
+  onShareAppMessage() {
+    const w = this.data.currentIdiom || (this.data.dailyIdiom && this.data.dailyIdiom.word) || '';
+    return {
+      title: w ? `【${w}】成语故事 · 国学助手` : '成语故事 · 字里乾坤',
+      path:  '/pages/idiom/index',
+    };
+  },
+  onShareTimeline() {
+    const w = this.data.currentIdiom || (this.data.dailyIdiom && this.data.dailyIdiom.word) || '';
+    return {
+      title: w ? `【${w}】典故故事，小小成语包含大智慧` : '国学助手 · 成语故事全汇',
+      query: 'from=timeline',
+    };
   }
 });

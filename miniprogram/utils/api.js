@@ -163,24 +163,33 @@ async function translate(text, mode) {
 
 /**
  * 每日经典（同日缓存，不消耗配额）
+ * @param {boolean} forceRefresh  是否强制刷新（忽略缓存）
+ * @param {number}  [seed]        换一条时传入随机种子，使 AI 返回不同内容
  */
-async function getDailyClassic(forceRefresh = false) {
+async function getDailyClassic(forceRefresh = false, seed) {
   const today = _todayKey();
   const cacheKey = 'daily_' + today;
-  if (!forceRefresh) {
+
+  // 仅在非强制刷新、且无 seed（即首次加载）时读缓存
+  if (!forceRefresh && !seed) {
     try {
       const cached = wx.getStorageSync(cacheKey);
       if (cached) return { success: true, daily: cached, fromCache: true };
     } catch (_) {}
   }
 
-  const prompt = `今天是${_todayCN()}，请推荐一条适合今天的经典名句（诗词、典籍、名言皆可）。
+  // 换一条时，通过随机 seed 让 AI 推荐不同名句，避免每次返回相同内容
+  const seedHint = seed
+    ? `（请推荐与上次不同的，随机种子：${seed % 1000}）`
+    : '';
+  const prompt = `今天是${_todayCN()}，请推荐一条适合今天的经典名句${seedHint}（诗词、典籍、名言皆可，尽量多样化）。
 请严格按以下JSON格式返回（不要有多余文字）：
 {"quote":"经典原文","author":"作者·朝代·出处","translation":"白话文解释（30字内）","analysis":"意境赏析（60字内）","insight":"今日启示（30字内）"}`;
 
   const msgs = [{ role: 'system', content: ai.SYSTEM_PROMPT }, { role: 'user', content: prompt }];
-  // 每日内容不消耗配额
-  const raw  = await ai.callAI('daily', msgs, { temperature: 0.85, maxTokens: 500 });
+  // 每日内容不消耗配额；换一条时提高 temperature 增加多样性
+  const temperature = seed ? 0.95 : 0.85;
+  const raw  = await ai.callAI('daily', msgs, { temperature, maxTokens: 500 });
   let daily;
   try {
     const jsonStr = raw.match(/\{[\s\S]*?\}/)?.[0] || raw;
@@ -188,7 +197,10 @@ async function getDailyClassic(forceRefresh = false) {
   } catch (_) {
     daily = { quote: raw.slice(0, 200), author: '', translation: '', analysis: '', insight: '' };
   }
-  try { wx.setStorageSync(cacheKey, daily); } catch (_) {}
+  // 首次加载时写缓存；换一条时不覆盖当日缓存（保留今日内容）
+  if (!seed) {
+    try { wx.setStorageSync(cacheKey, daily); } catch (_) {}
+  }
   return { success: true, daily };
 }
 

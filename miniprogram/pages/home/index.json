@@ -1,8 +1,9 @@
 {
   "navigationBarBackgroundColor": "#8B2500",
-  "navigationBarTitleText": "国学AI助手",
+  "navigationBarTitleText": "国学助手",
   "navigationBarTextStyle": "white",
   "backgroundColor": "#FDF6E3",
   "enablePullDownRefresh": true,
-  "backgroundTextStyle": "dark"
+  "backgroundTextStyle": "dark",
+  "usingComponents": {}
 }

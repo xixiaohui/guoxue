@@ -1,4 +1,4 @@
-/* pages/home/index.wxss - 生产级首页样式 v6.0 */
+/* pages/home/index.wxss - 生产级首页样式 v7.0（换一条动画 + 分享海报） */
 
 .home-page { background: #FDF6E3; }
 
@@ -56,16 +56,30 @@
 
 .section-label { font-size: 30rpx; font-weight: 600; color: #2C1810; }
 
-.refresh-pill {
+/* 标题右侧操作按钮组 */
+.head-actions { display: flex; align-items: center; gap: 12rpx; }
+
+/* 换一条 & 分享 共享 pill 样式 */
+.refresh-pill, .share-pill {
   display: flex; align-items: center; gap: 6rpx;
   border: 1rpx solid #C4882E;
   border-radius: 24rpx;
   padding: 6rpx 18rpx;
   background: #FFFBF0;
 }
-.refresh-icon { font-size: 26rpx; color: #C4882E; }
-.refresh-text { font-size: 24rpx; color: #C4882E; }
+.refresh-icon, .share-icon { font-size: 26rpx; color: #C4882E; }
+.refresh-text, .share-text { font-size: 24rpx; color: #C4882E; }
 .pill-hover { background: #FFF0CC !important; }
+
+/* 换一条旋转动画 */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.pill-spinning .refresh-icon {
+  display: inline-block;
+  animation: spin 0.5s linear;
+}
 
 /* ── 每日经典卡片 ─────────────────────────────── */
 .daily-card {
@@ -76,6 +90,7 @@
   border: 1rpx solid #EDD9A3;
   box-shadow: 0 6rpx 24rpx rgba(139,37,0,.1);
   position: relative; overflow: hidden;
+  transition: opacity 0.3s ease;
 }
 
 .daily-card::before {
@@ -84,6 +99,9 @@
   font-size: 160rpx; color: rgba(196,136,46,.06);
   font-weight: 900; line-height: 1; pointer-events: none;
 }
+
+/* 换一条淡出效果 */
+.card-fade { opacity: 0.3 !important; }
 
 .daily-badge {
   display: inline-block;
@@ -149,8 +167,21 @@
 .insight-dot { font-size: 20rpx; color: #C4882E; flex-shrink: 0; margin-top: 4rpx; }
 .insight-text { font-size: 25rpx; color: #4A3020; line-height: 1.7; }
 
-.daily-footer { margin-top: 18rpx; text-align: right; }
+.daily-footer {
+  margin-top: 18rpx;
+  display: flex; align-items: center; justify-content: space-between;
+}
 .daily-cta { font-size: 22rpx; color: #C4882E; }
+
+/* 卡片内分享入口 */
+.daily-share-hint {
+  display: flex; align-items: center; gap: 4rpx;
+  background: rgba(196,136,46,.1);
+  border-radius: 16rpx;
+  padding: 6rpx 14rpx;
+}
+.hint-icon { font-size: 22rpx; color: #C4882E; }
+.hint-txt  { font-size: 22rpx; color: #C4882E; }
 
 /* ── 功能网格（5宫格，3+2布局） ─────────────────────────────── */
 .func-grid {
@@ -160,10 +191,7 @@
   padding: 0 24rpx;
 }
 
-/* 若只有5个item，第5个独立占一格留中 */
-.func-item:last-child:nth-child(3n+2) {
-  grid-column: 2;
-}
+.func-item:last-child:nth-child(3n+2) { grid-column: 2; }
 
 .func-item {
   background: #FFFBF0;
@@ -173,9 +201,8 @@
   border: 1rpx solid #EDD9A3;
   box-shadow: 0 2rpx 10rpx rgba(139,37,0,.05);
   display: flex; flex-direction: column; align-items: center;
-  transition: transform 0.1s;
 }
-.func-hover { opacity: 0.85 !important; transform: scale(.96) !important; }
+.func-hover { opacity: 0.82 !important; }
 
 .func-icon {
   width: 90rpx; height: 90rpx;
@@ -234,7 +261,7 @@
 /* ── 底部 ─────────────────────────────── */
 .home-footer { padding: 36rpx 0 20rpx; text-align: center; }
 .footer-txt { font-size: 22rpx; color: #B09070; letter-spacing: 2rpx; }
-.safe-bottom { height: env(safe-area-inset-bottom); }
+.safe-bottom { height: env(safe-area-inset-bottom); min-height: 40rpx; }
 
 /* ── VIP推介条 ─────────────────────────────── */
 .vip-banner {
@@ -256,3 +283,129 @@
 
 /* ── 首页广告位 ─────────────────────────────── */
 .home-ad { margin: 10rpx 20rpx 0; border-radius: 16rpx; overflow: hidden; }
+
+/* ── 海报弹窗 ─────────────────────────────── */
+.poster-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,.75);
+  z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 40rpx 30rpx;
+  box-sizing: border-box;
+}
+
+.poster-container {
+  background: #FDF6E3;
+  border-radius: 24rpx;
+  padding: 32rpx 28rpx 28rpx;
+  width: 100%;
+  max-height: 90vh;
+  display: flex; flex-direction: column; align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.poster-close {
+  position: absolute; top: 20rpx; right: 24rpx;
+  font-size: 40rpx; color: #8C7B61;
+  padding: 10rpx;
+  z-index: 10;
+}
+
+.poster-title {
+  font-size: 32rpx; font-weight: 700; color: #2C1810;
+  margin-bottom: 8rpx;
+}
+.poster-sub {
+  font-size: 22rpx; color: #8C7B61;
+  margin-bottom: 24rpx;
+}
+
+.poster-canvas-wrap {
+  width: 100%;
+  position: relative;
+  border-radius: 16rpx;
+  overflow: hidden;
+  background: #3D1A08;
+  min-height: 320rpx;
+}
+
+.poster-loading {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: rgba(61,26,8,.9);
+  z-index: 2;
+  min-height: 320rpx;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.poster-loading-spin {
+  font-size: 64rpx; color: #C4882E;
+  display: inline-block;
+  animation: spin-slow 1.2s linear infinite;
+  margin-bottom: 16rpx;
+}
+.poster-loading-txt { font-size: 26rpx; color: rgba(253,246,227,.8); }
+
+/* Canvas 节点：设计尺寸750×1200，展示宽度撑满容器，按比例高度 */
+.poster-canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  opacity: 0; /* 画布本身隐藏，只展示 poster-preview */
+  position: absolute; top: 0; left: 0;
+  pointer-events: none;
+}
+
+.poster-preview {
+  width: 100%;
+  display: block;
+  border-radius: 16rpx;
+}
+
+/* 操作按钮 */
+.poster-actions {
+  display: flex; gap: 18rpx;
+  margin-top: 24rpx; width: 100%;
+}
+
+.poster-btn {
+  flex: 1;
+  border-radius: 50rpx;
+  padding: 22rpx 0;
+  text-align: center;
+  font-size: 26rpx; font-weight: 600;
+}
+.btn-hover { opacity: 0.8 !important; }
+
+.poster-btn-save {
+  background: linear-gradient(90deg, #8B2500, #C4882E);
+  color: #FFF8E7;
+}
+.poster-btn-share {
+  background: #FFFBF0;
+  border: 2rpx solid #C4882E;
+}
+
+/* 解除 button 默认样式 */
+.poster-share-inner {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #C4882E;
+  line-height: 1;
+  box-shadow: none !important;
+}
+.poster-share-inner::after { border: none !important; }
+
+.poster-hint {
+  font-size: 22rpx; color: #8C7B61;
+  margin-top: 14rpx;
+}
