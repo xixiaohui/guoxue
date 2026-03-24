@@ -263,5 +263,21 @@ Page({
       sections.push({ label: 'AI解析', content: text.trim() });
     }
     return sections;
+  },
+
+  // ── 分享 ──────────────────────────────
+  onShareAppMessage() {
+    const p = this.data.currentPoem;
+    return {
+      title: p && p.title ? `《${p.title}》—— ${p.author || ''}` : '诗词典籍 · 国学助手',
+      path:  '/pages/classics/index',
+    };
+  },
+  onShareTimeline() {
+    const p = this.data.currentPoem;
+    return {
+      title: p && p.title ? `《${p.title}》—— ${p.author || ''}` : '诗词典籍 · 传承经典之美',
+      query: 'from=timeline',
+    };
   }
 });

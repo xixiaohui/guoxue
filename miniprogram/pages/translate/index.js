@@ -206,16 +206,40 @@ Page({
   },
 
   shareResult() {
-    wx.showShareMenu({ withShareTicket: false, menus: ['shareAppMessage'] });
+    wx.showActionSheet({
+      itemList: ['发送给好友', '分享到朋友圈'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          wx.showShareMenu({ withShareTicket: true, menus: ['shareAppMessage'] });
+          wx.showToast({ title: '请点击右上角转发', icon: 'none', duration: 2000 });
+        } else {
+          wx.showShareMenu({ withShareTicket: true, menus: ['shareTimeline'] });
+          wx.showToast({ title: '请点击右上角分享到朋友圈', icon: 'none', duration: 2000 });
+        }
+      }
+    });
   },
 
   onShareAppMessage() {
-    const { mode, inputText, result } = this.data;
+    const { mode, inputText } = this.data;
+    const modeText = mode === 'ancient_to_modern' ? '文言→白话' : '白话→文言';
+    const snippet  = inputText ? `「${inputText.slice(0, 20)}${inputText.length > 20 ? '…' : ''}」` : '';
+    return {
+      title: snippet
+        ? `${snippet} 的${modeText}翻译 · 国学助手`
+        : `国学助手 · ${modeText}翻译`,
+      path: '/pages/translate/index',
+    };
+  },
+
+  onShareTimeline() {
+    const { mode, inputText } = this.data;
     const modeText = mode === 'ancient_to_modern' ? '文言→白话' : '白话→文言';
     return {
-      title: `国学助手 · ${modeText}翻译`,
-      path: '/pages/translate/index',
-      imageUrl: ''
+      title: inputText
+        ? `「${inputText.slice(0, 30)}」${modeText}翻译 · 国学助手`
+        : `国学助手 · 古文${modeText}翻译`,
+      query: 'from=timeline',
     };
   },
 

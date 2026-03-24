@@ -35,14 +35,14 @@ const PROVIDERS = {
 const MODELS = {
   // 混元系列
   HUNYUAN_TURBO: 'hunyuan-turbos-latest',  // 主力（速度优先）
-  HUNYUAN_PRO:   'hunyuan-pro',            // 备用（质量优先）
+  HUNYUAN_PRO:   'hunyuan-t1-latest',            // 备用（质量优先）
   // DeepSeek 系列
-  DEEPSEEK_V3:   'deepseek-v3',            // 推理增强
-  DEEPSEEK_R1:   'deepseek-r1',            // 强推理（慢）
+  DEEPSEEK_V3:   'deepseek-r1-0528',            // 推理增强
+  DEEPSEEK_R1:   'deepseek-v3-0324',            // 强推理（慢）
 
   // 别名（向后兼容）
   PRIMARY:  'hunyuan-turbos-latest',
-  FALLBACK: 'hunyuan-pro',
+  FALLBACK: 'deepseek',
   PROVIDER: 'hunyuan-exp',
 };
 
