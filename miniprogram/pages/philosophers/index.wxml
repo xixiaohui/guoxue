@@ -1,0 +1,228 @@
+<!-- pages/philosophers/index.wxml - 诸子百家页 v6.0 -->
+<view class="philosophers-page">
+
+  <!-- 页头 -->
+  <view class="page-header">
+    <view class="header-deco-char">道</view>
+    <view class="header-inner">
+      <text class="header-title">诸子百家</text>
+      <text class="header-sub">百家争鸣 · 思想精华</text>
+    </view>
+    <view class="header-stats">
+      <view class="stat-item">
+        <text class="stat-num">6</text>
+        <text class="stat-label">主要学派</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-num">2500</text>
+        <text class="stat-label">年传承</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-inner">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        value="{{searchText}}"
+        bindinput="onSearchInput"
+        placeholder="搜索学派、思想家、名言…"
+        placeholder-class="search-placeholder"
+        confirm-type="search"
+        bindconfirm="doSearch"
+      />
+      <view class="search-btn" bindtap="doSearch" hover-class="search-btn-hover" hover-stay-time="80">
+        <text class="search-btn-text">探索</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- AI解析结果 -->
+  <view class="ai-result-section" wx:if="{{aiResult || isLoading}}">
+    <view class="result-header">
+      <view class="result-title-row">
+        <view class="result-dot"></view>
+        <text class="result-title">{{currentQuery || 'AI解析'}}</text>
+      </view>
+      <view class="result-actions">
+        <view class="action-btn" wx:if="{{aiResult}}" bindtap="copyResult" hover-class="action-hover" hover-stay-time="80">
+          <text>📋</text>
+        </view>
+        <view class="action-btn" bindtap="closeResult" hover-class="action-hover" hover-stay-time="80">
+          <text>✕</text>
+        </view>
+      </view>
+    </view>
+    <view class="result-loading" wx:if="{{isLoading}}">
+      <view class="ai-loading-icon">🤔</view>
+      <text class="ai-loading-text">AI正在探索诸子思想…</text>
+    </view>
+    <view class="result-body" wx:elif="{{aiResultSections.length > 0}}">
+      <view class="seg-block" wx:for="{{aiResultSections}}" wx:key="index">
+        <view class="seg-label-row">
+          <view class="seg-dot"></view>
+          <text class="seg-label">{{item.label}}</text>
+        </view>
+        <text class="seg-content">{{item.content}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 学派总览 -->
+  <view class="schools-section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">主要学派</text>
+      </view>
+    </view>
+    <view class="schools-grid">
+      <view
+        class="school-card"
+        wx:for="{{schools}}"
+        wx:key="id"
+        bindtap="openSchool"
+        data-school="{{item}}"
+        hover-class="school-hover"
+        hover-stay-time="100"
+      >
+        <view class="school-header" style="background:{{item.color}}">
+          <text class="school-emoji">{{item.emoji}}</text>
+          <text class="school-name">{{item.name}}</text>
+          <text class="school-period">{{item.period}}·{{item.founder}}</text>
+        </view>
+        <view class="school-body">
+          <text class="school-core">{{item.core}}</text>
+          <text class="school-desc">{{item.desc}}</text>
+          <view class="school-works">
+            <text
+              class="work-tag"
+              wx:for="{{item.masterWorks}}"
+              wx:for-item="w"
+              wx:key="index"
+            >{{w}}</text>
+          </view>
+          <text class="school-cta">AI深度解析 →</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 诸子名言 -->
+  <view class="quotes-section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">诸子名言</text>
+      </view>
+    </view>
+    <scroll-view scroll-x show-scrollbar="{{false}}" class="quotes-scroll" enhanced="{{true}}" bounces="{{false}}">
+      <view class="quotes-row">
+        <view
+          class="quote-card"
+          wx:for="{{masterQuotes}}"
+          wx:key="index"
+          bindtap="exploreQuote"
+          data-quote="{{item}}"
+          hover-class="quote-hover"
+          hover-stay-time="80"
+        >
+          <view class="quote-school-badge" style="background:{{item.color}}">{{item.school}}</view>
+          <text class="quote-text">{{item.text}}</text>
+          <text class="quote-author">—— {{item.author}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 百家思想对比 -->
+  <view class="compare-section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">四家思想对比</text>
+      </view>
+    </view>
+    <view class="compare-table">
+      <view class="compare-header">
+        <text class="compare-cell compare-head-cell aspect-col">方面</text>
+        <text class="compare-cell compare-head-cell">儒家</text>
+        <text class="compare-cell compare-head-cell">道家</text>
+        <text class="compare-cell compare-head-cell">法家</text>
+        <text class="compare-cell compare-head-cell">墨家</text>
+      </view>
+      <view class="compare-row" wx:for="{{comparison}}" wx:key="index">
+        <text class="compare-cell aspect-col">{{item.aspect}}</text>
+        <text class="compare-cell ru-cell">{{item.confucianism}}</text>
+        <text class="compare-cell dao-cell">{{item.taoism}}</text>
+        <text class="compare-cell fa-cell">{{item.legalism}}</text>
+        <text class="compare-cell mo-cell">{{item.mohism}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 学派详情弹窗 -->
+  <view class="modal-mask" wx:if="{{showSchoolModal && activeSchool}}" bindtap="closeModal">
+    <view class="modal-box" catchtap="stopProp">
+      <view class="modal-header" style="background:{{activeSchool.color}}">
+        <view class="modal-header-inner">
+          <text class="modal-emoji">{{activeSchool.emoji}}</text>
+          <view>
+            <text class="modal-school-name">{{activeSchool.name}}</text>
+            <text class="modal-school-sub">{{activeSchool.period}} · 创始人：{{activeSchool.founder}}</text>
+          </view>
+        </view>
+        <view class="modal-close" bindtap="closeModal" hover-class="close-hover" hover-stay-time="80">✕</view>
+      </view>
+
+      <scroll-view scroll-y class="modal-body" enhanced="{{true}}">
+        <!-- 核心思想 -->
+        <view class="modal-section">
+          <text class="modal-section-title">💡 核心思想</text>
+          <text class="modal-core-badge">{{activeSchool.core}}</text>
+          <text class="modal-desc">{{activeSchool.desc}}</text>
+        </view>
+
+        <!-- 代表著作 -->
+        <view class="modal-section">
+          <text class="modal-section-title">📚 代表著作</text>
+          <view class="works-wrap">
+            <text class="work-chip" wx:for="{{activeSchool.masterWorks}}" wx:key="index">{{item}}</text>
+          </view>
+        </view>
+
+        <!-- 代表人物 -->
+        <view class="modal-section">
+          <text class="modal-section-title">👤 代表人物</text>
+          <view class="reps-wrap">
+            <text class="rep-chip" wx:for="{{activeSchool.representatives}}" wx:key="index">{{item}}</text>
+          </view>
+        </view>
+
+        <!-- 经典名言 -->
+        <view class="modal-section">
+          <text class="modal-section-title">✍️ 经典名言</text>
+          <view class="modal-quotes">
+            <view class="modal-quote-item" wx:for="{{activeSchool.keyQuotes}}" wx:key="index">
+              <text class="modal-quote-text">「{{item.text}}」</text>
+              <text class="modal-quote-src">—— {{item.author}}</text>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view class="modal-actions">
+        <view class="modal-close-btn" bindtap="closeModal" hover-class="btn-hover" hover-stay-time="80">
+          <text>关闭</text>
+        </view>
+        <view class="modal-analyze-btn" bindtap="analyzeSchool" hover-class="btn-hover" hover-stay-time="80">
+          <text>✨ AI深度解析</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

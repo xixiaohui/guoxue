@@ -1,4 +1,4 @@
-// pages/home/index.js - 生产级首页（含变现闭环）
+// pages/home/index.js - 生产级首页 v6.0（五大模块，无AI问答）
 const api = require('../../utils/api');
 const { FALLBACK_DAILY_LIST, TAB_PAGES } = require('../../utils/constants');
 const monetize = require('../../utils/monetize');
@@ -9,26 +9,35 @@ Page({
     dailyLoading: true,
     daily: { quote: '', author: '', translation: '', analysis: '', insight: '' },
 
-    // 热门话题
+    // 热门话题（跳转到对应功能页）
     hotTopics: [
-      '李白与杜甫谁更伟大？',
-      '论语最经典的十句话',
-      '孙子兵法现代应用',
-      '道德经核心思想',
-      '苏轼的人生智慧',
-      '儒释道三家区别',
-      '唐诗宋词的风格差异',
-      '科举制度如何影响中国'
+      { text: '李白 · 将进酒赏析', page: 'classics' },
+      { text: '道德经核心思想', page: 'philosophers' },
+      { text: '一鸣惊人的典故', page: 'idiom' },
+      { text: '贞观之治始末', page: 'history' },
+      { text: '论语十大名句', page: 'classics' },
+      { text: '苏轼的人生智慧', page: 'classics' },
+      { text: '孙子兵法精髓', page: 'philosophers' },
+      { text: '唐诗宋词风格差异', page: 'translate' }
     ],
 
-    // 国学分类
+    // 五大功能模块
+    funcs: [
+      { id: 'translate', name: '古文翻译', desc: '文言白话互译', char: '译', bg: 'linear-gradient(135deg,#52C8A0,#1A8060)', page: '/pages/translate/index', isTab: true },
+      { id: 'classics',  name: '诗词典籍', desc: '经典赏析鉴读', char: '詩', bg: 'linear-gradient(135deg,#9B6FD5,#6A3DA8)', page: '/pages/classics/index', isTab: true },
+      { id: 'idiom',     name: '成语故事', desc: '典故溯源解析', char: '成', bg: 'linear-gradient(135deg,#F0B840,#C48A10)', page: '/pages/idiom/index', isTab: false },
+      { id: 'history',   name: '历史探秘', desc: '朝代人物探究', char: '史', bg: 'linear-gradient(135deg,#5BC8F5,#1A7ED5)', page: '/pages/history/index', isTab: true },
+      { id: 'philosophers', name: '诸子百家', desc: '百家争鸣精华', char: '道', bg: 'linear-gradient(135deg,#FF8FA3,#C03060)', page: '/pages/philosophers/index', isTab: true }
+    ],
+
+    // 国学分类（丰富）
     categories: [
-      { id: 1, name: '诗词歌赋', desc: '唐诗宋词，韵律之美', icon: '📜', bg: 'linear-gradient(135deg,#FF9A5C,#E05820)', url: '/pages/classics/index', tabUrl: true },
-      { id: 2, name: '经史子集', desc: '四部典籍，学问源流', icon: '📚', bg: 'linear-gradient(135deg,#52C878,#1A8040)', url: '/pages/classics/index', tabUrl: true },
-      { id: 3, name: '成语典故', desc: '字里乾坤，故事传承', icon: '🏮', bg: 'linear-gradient(135deg,#F7C948,#C48A10)', url: '/pages/idiom/index', tabUrl: false },
-      { id: 4, name: '历史文化', desc: '朝代更迭，人文风华', icon: '🏯', bg: 'linear-gradient(135deg,#9B8FD5,#5A3DA8)', url: '/pages/history/index', tabUrl: true },
-      { id: 5, name: '诸子百家', desc: '百家争鸣，思想精华', icon: '⛩️', bg: 'linear-gradient(135deg,#FF8FA3,#C03060)', url: '/pages/chat/index', tabUrl: true, topic: '诸子百家各派核心思想介绍' },
-      { id: 6, name: '汉字文化', desc: '笔墨纸砚，文人雅韵', icon: '🖌️', bg: 'linear-gradient(135deg,#5BC8F5,#1A7ED5)', url: '/pages/chat/index', tabUrl: true, topic: '汉字的起源与演变历史' }
+      { id: 1, name: '诗词歌赋', desc: '唐诗宋词，韵律之美', icon: '📜', bg: 'linear-gradient(135deg,#FF9A5C,#E05820)', page: '/pages/classics/index', isTab: true },
+      { id: 2, name: '经史子集', desc: '四部典籍，学问源流', icon: '📚', bg: 'linear-gradient(135deg,#52C878,#1A8040)', page: '/pages/classics/index', isTab: true },
+      { id: 3, name: '成语典故', desc: '字里乾坤，故事传承', icon: '🏮', bg: 'linear-gradient(135deg,#F7C948,#C48A10)', page: '/pages/idiom/index', isTab: false },
+      { id: 4, name: '历史文化', desc: '朝代更迭，人文风华', icon: '🏯', bg: 'linear-gradient(135deg,#9B8FD5,#5A3DA8)', page: '/pages/history/index', isTab: true },
+      { id: 5, name: '诸子百家', desc: '百家争鸣，思想精华', icon: '⛩️', bg: 'linear-gradient(135deg,#FF8FA3,#C03060)', page: '/pages/philosophers/index', isTab: true },
+      { id: 6, name: '古文翻译', desc: '文言白话，智慧互通', icon: '🖌️', bg: 'linear-gradient(135deg,#5BC8F5,#1A7ED5)', page: '/pages/translate/index', isTab: true }
     ],
 
     // 今日翻译示例
@@ -45,7 +54,6 @@ Page({
     if (this._lastLoadedDay && this._lastLoadedDay !== today) {
       this._loadDaily(true);
     }
-    // 首页不显示banner，用首页内嵌原生广告位替代
   },
 
   onPullDownRefresh() {
@@ -72,7 +80,6 @@ Page({
     }
   },
 
-  // 解析纯文本格式（兼容旧格式）
   _parseFallback(text) {
     if (!text) return this._fallbackDaily();
     const extract = (label) => {
@@ -99,45 +106,58 @@ Page({
     return `${d.getFullYear()}${d.getMonth() + 1}${d.getDate()}`;
   },
 
-  // ── 换一换 ──────────────────────────────
   refreshDaily() {
     this._loadDaily(true);
   },
 
-  // ── 跳转到 AI 对话（带当日名句话题） ──────────────────────────────
-  goToChat() {
-    wx.switchTab({ url: '/pages/chat/index' });
+  // ── 跳转功能页 ──────────────────────────────
+  goFunc(e) {
+    const func = e.currentTarget.dataset.func;
+    if (!func) return;
+    if (func.isTab) {
+      wx.switchTab({ url: func.page });
+    } else {
+      wx.navigateTo({ url: func.page });
+    }
   },
 
+  // ── 热门话题 ──────────────────────────────
   goHotTopic(e) {
     const topic = e.currentTarget.dataset.topic;
-    wx.navigateTo({ url: `/pages/chat/index?topic=${encodeURIComponent(topic)}` });
+    const page = e.currentTarget.dataset.page;
+    const pageMap = {
+      classics: '/pages/classics/index',
+      translate: '/pages/translate/index',
+      idiom: '/pages/idiom/index',
+      history: '/pages/history/index',
+      philosophers: '/pages/philosophers/index'
+    };
+    const url = pageMap[page] || '/pages/classics/index';
+    const isTab = TAB_PAGES.includes(url);
+    if (isTab) {
+      wx.switchTab({ url });
+    } else {
+      wx.navigateTo({ url });
+    }
   },
 
+  // ── 国学分类 ──────────────────────────────
   goCategory(e) {
     const cat = e.currentTarget.dataset.cat;
-
-    if (cat.topic) {
-      wx.navigateTo({ url: `/pages/chat/index?topic=${encodeURIComponent(cat.topic)}` });
-    } else if (TAB_PAGES.includes(cat.url)) {
-      wx.switchTab({ url: cat.url });
+    if (!cat) return;
+    if (cat.isTab) {
+      wx.switchTab({ url: cat.page });
     } else {
-      wx.navigateTo({ url: cat.url });
+      wx.navigateTo({ url: cat.page });
     }
   },
 
-  // ── 点击每日经典卡片 → 带原文去聊天 ──────────────────────────────
+  // ── 点击每日经典卡片 → 古文翻译赏析 ──────────────────────────────
   goDiscussDaily() {
-    const { daily } = this.data;
-    if (!daily.quote) {
-      wx.switchTab({ url: '/pages/chat/index' });
-      return;
-    }
-    const topic = `请为我深入赏析这句话："${daily.quote}" （${daily.author}）`;
-    wx.navigateTo({ url: `/pages/chat/index?topic=${encodeURIComponent(topic)}` });
+    wx.switchTab({ url: '/pages/translate/index' });
   },
 
-  // ── 快速翻译示例 ──────────────────────────────
+  // ── 快速翻译 ──────────────────────────────
   goTranslate() {
     wx.switchTab({ url: '/pages/translate/index' });
   },

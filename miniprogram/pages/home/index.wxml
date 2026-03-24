@@ -1,4 +1,4 @@
-<!-- pages/home/index.wxml - 生产级首页 -->
+<!-- pages/home/index.wxml - 生产级首页 v6.0 -->
 <view class="home-page">
 
   <!-- Hero Banner -->
@@ -7,7 +7,7 @@
       <text class="hero-logo-char">文</text>
     </view>
     <view class="hero-right">
-      <text class="hero-title">国学AI助手</text>
+      <text class="hero-title">国学助手</text>
       <text class="hero-sub">传承千年智慧 · 探索文化精髓</text>
     </view>
     <view class="hero-deco">道可道，非常道</view>
@@ -20,7 +20,7 @@
         <view class="label-bar"></view>
         <text class="section-label">今日经典</text>
       </view>
-      <view class="refresh-pill" bindtap="refreshDaily">
+      <view class="refresh-pill" bindtap="refreshDaily" hover-class="pill-hover" hover-stay-time="80">
         <text class="refresh-icon">↺</text>
         <text class="refresh-text">换一条</text>
       </view>
@@ -37,7 +37,8 @@
     </view>
 
     <!-- 实际内容 -->
-    <view class="daily-card" wx:else bindtap="goDiscussDaily">
+    <view class="daily-card" wx:else bindtap="goDiscussDaily" hover-class="card-hover" hover-stay-time="100">
+      <view class="daily-badge">今日名句</view>
       <view class="daily-quote-row">
         <text class="q-mark">「</text>
         <text class="daily-quote">{{daily.quote}}</text>
@@ -55,12 +56,12 @@
       </view>
 
       <view class="daily-footer">
-        <text class="daily-cta">与文渊先生深入探讨 →</text>
+        <text class="daily-cta">点击进入古文翻译深度赏析 →</text>
       </view>
     </view>
   </view>
 
-  <!-- 功能导航 -->
+  <!-- 五大功能导航 -->
   <view class="section">
     <view class="section-head">
       <view class="section-label-wrap">
@@ -69,47 +70,20 @@
       </view>
     </view>
     <view class="func-grid">
-      <view class="func-item" bindtap="goToChat" hover-class="func-hover" hover-stay-time="100">
-        <view class="func-icon" style="background:linear-gradient(135deg,#FF8C5C,#C44020)">
-          <text class="func-char">問</text>
+      <view
+        class="func-item"
+        wx:for="{{funcs}}"
+        wx:key="id"
+        bindtap="goFunc"
+        data-func="{{item}}"
+        hover-class="func-hover"
+        hover-stay-time="100"
+      >
+        <view class="func-icon" style="background:{{item.bg}}">
+          <text class="func-char">{{item.char}}</text>
         </view>
-        <text class="func-name">AI问答</text>
-        <text class="func-desc">智能国学问答</text>
-      </view>
-      <view class="func-item" bindtap="goTranslate" hover-class="func-hover" hover-stay-time="100">
-        <view class="func-icon" style="background:linear-gradient(135deg,#52C8A0,#1A8060)">
-          <text class="func-char">译</text>
-        </view>
-        <text class="func-name">古文翻译</text>
-        <text class="func-desc">文言白话互译</text>
-      </view>
-      <view class="func-item" bindtap="goCategory" data-cat="{{categories[0]}}" hover-class="func-hover" hover-stay-time="100">
-        <view class="func-icon" style="background:linear-gradient(135deg,#9B6FD5,#6A3DA8)">
-          <text class="func-char">詩</text>
-        </view>
-        <text class="func-name">诗词典籍</text>
-        <text class="func-desc">经典赏析</text>
-      </view>
-      <view class="func-item" bindtap="goCategory" data-cat="{{categories[2]}}" hover-class="func-hover" hover-stay-time="100">
-        <view class="func-icon" style="background:linear-gradient(135deg,#F0B840,#C48A10)">
-          <text class="func-char">成</text>
-        </view>
-        <text class="func-name">成语故事</text>
-        <text class="func-desc">典故解析</text>
-      </view>
-      <view class="func-item" bindtap="goCategory" data-cat="{{categories[3]}}" hover-class="func-hover" hover-stay-time="100">
-        <view class="func-icon" style="background:linear-gradient(135deg,#5BC8F5,#1A7ED5)">
-          <text class="func-char">史</text>
-        </view>
-        <text class="func-name">历史探秘</text>
-        <text class="func-desc">朝代人物</text>
-      </view>
-      <view class="func-item" bindtap="goCategory" data-cat="{{categories[4]}}" hover-class="func-hover" hover-stay-time="100">
-        <view class="func-icon" style="background:linear-gradient(135deg,#FF8FA3,#C03060)">
-          <text class="func-char">道</text>
-        </view>
-        <text class="func-name">诸子百家</text>
-        <text class="func-desc">百家争鸣</text>
+        <text class="func-name">{{item.name}}</text>
+        <text class="func-desc">{{item.desc}}</text>
       </view>
     </view>
   </view>
@@ -122,32 +96,32 @@
         <text class="section-label">热门话题</text>
       </view>
     </view>
-    <scroll-view scroll-x show-scrollbar="{{false}}" class="hot-scroll">
+    <scroll-view scroll-x show-scrollbar="{{false}}" class="hot-scroll" enhanced="{{true}}" bounces="{{false}}">
       <view class="hot-row">
         <view
           class="hot-chip"
           wx:for="{{hotTopics}}"
           wx:key="index"
           bindtap="goHotTopic"
-          data-topic="{{item}}"
+          data-topic="{{item.text}}"
+          data-page="{{item.page}}"
           hover-class="hot-hover"
           hover-stay-time="80"
         >
           <text class="hot-fire">🔥</text>
-          <text class="hot-text">{{item}}</text>
+          <text class="hot-text">{{item.text}}</text>
         </view>
       </view>
     </scroll-view>
   </view>
 
-  <!-- 国学分类（前插入VIP推介条） -->
   <!-- VIP推介条 -->
-  <view class="vip-banner" bindtap="goVip">
+  <view class="vip-banner" bindtap="goVip" hover-class="vip-hover" hover-stay-time="100">
     <view class="vip-banner-left">
       <text class="vip-banner-crown">👑</text>
       <view>
         <text class="vip-banner-title">升级会员 · 无限畅用</text>
-        <text class="vip-banner-sub">去广告 · 无限AI · 语音朗读</text>
+        <text class="vip-banner-sub">去广告 · 无限AI · 专属内容</text>
       </view>
     </view>
     <view class="vip-banner-right">
@@ -188,10 +162,10 @@
 
   <!-- 底部 -->
   <view class="home-footer">
-    <text class="footer-txt">传承国学精髓 · AI赋能学习</text>
+    <text class="footer-txt">传承国学精髓 · 智慧赋能人生</text>
   </view>
 
-  <!-- 原生广告（嵌入首页底部，VIP时可隐藏） -->
+  <!-- 原生广告 -->
   <ad
     unit-id="adunit-513a37c7d48cdf7f"
     ad-type="native"

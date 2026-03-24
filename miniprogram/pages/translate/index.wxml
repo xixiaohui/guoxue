@@ -1,160 +1,229 @@
-<!-- pages/translate/index.wxml - 古文翻译页 v5.0 -->
-<view class="container translate-page">
+<!-- pages/translate/index.wxml - 生产级古文翻译 v6.0 -->
+<view class="translate-page">
 
-  <!-- 标题 -->
+  <!-- 页头 -->
   <view class="page-header">
-    <text class="page-title">古文翻译</text>
-    <text class="page-subtitle">文言白话 · 双向互译</text>
+    <view class="header-inner">
+      <text class="header-title">古文翻译</text>
+      <text class="header-sub">文言白话 · 智慧互通</text>
+    </view>
   </view>
 
-  <!-- 翻译模式切换 -->
+  <!-- 模式切换 -->
   <view class="mode-switch">
     <view
-      class="mode-item {{mode === 'ancient_to_modern' ? 'active' : ''}}"
+      class="mode-item {{mode === 'ancient_to_modern' ? 'mode-active' : ''}}"
       bindtap="switchMode"
       data-mode="ancient_to_modern"
       hover-class="mode-hover"
       hover-stay-time="80"
     >
-      <text class="mode-icon">📖</text>
-      <text class="mode-text">文言→白话</text>
+      <text class="mode-icon">📜</text>
+      <text class="mode-text">文言 → 白话</text>
     </view>
-    <view class="mode-divider">
-      <text class="switch-icon">⇌</text>
-    </view>
+    <view class="mode-divider"></view>
     <view
-      class="mode-item {{mode === 'modern_to_ancient' ? 'active' : ''}}"
+      class="mode-item {{mode === 'modern_to_ancient' ? 'mode-active' : ''}}"
       bindtap="switchMode"
       data-mode="modern_to_ancient"
       hover-class="mode-hover"
       hover-stay-time="80"
     >
       <text class="mode-icon">✍️</text>
-      <text class="mode-text">白话→文言</text>
+      <text class="mode-text">白话 → 文言</text>
     </view>
   </view>
 
   <!-- 输入区域 -->
   <view class="input-section">
     <view class="input-header">
-      <text class="input-label">{{mode === 'ancient_to_modern' ? '请输入文言文' : '请输入现代白话文'}}</text>
-      <text class="clear-text" bindtap="clearInput" wx:if="{{inputText}}" hover-class="clear-hover" hover-stay-time="80">清空</text>
+      <text class="input-label">{{mode === 'ancient_to_modern' ? '输入文言文' : '输入现代文'}}</text>
+      <view class="input-actions-row">
+        <text class="char-count {{charCount > 700 ? 'char-warn' : ''}}">{{charCount}}/800</text>
+        <view class="clear-btn" wx:if="{{inputText}}" bindtap="clearInput" hover-class="btn-hover" hover-stay-time="80">
+          <text class="clear-text">清空</text>
+        </view>
+      </view>
     </view>
     <textarea
-      class="translate-input"
+      class="input-area"
       value="{{inputText}}"
-      placeholder="{{mode === 'ancient_to_modern' ? '例如：学而时习之，不亦说乎...' : '例如：学习了然后经常复习，很快乐...' }}"
-      placeholder-class="input-ph"
       bindinput="onInput"
-      maxlength="1000"
-      auto-height="{{true}}"
-      cursor-spacing="20"
+      placeholder="{{mode === 'ancient_to_modern' ? '请输入要翻译的文言文，如：学而时习之，不亦说乎…' : '请输入要改写成文言文的现代语句…'}}"
+      placeholder-class="input-placeholder"
+      maxlength="800"
+      auto-height
       show-confirm-bar="{{false}}"
-    />
-    <text class="char-count {{inputText.length > 800 ? 'count-warn' : ''}}">{{inputText.length}}/1000</text>
-  </view>
+      cursor-spacing="200"
+    ></textarea>
 
-  <!-- 快捷示例 -->
-  <view class="examples-section">
-    <text class="example-label">快捷示例：</text>
-    <scroll-view scroll-x="{{true}}" enable-passive="{{true}}" show-scrollbar="{{false}}">
-      <view class="example-list">
-        <view
-          class="example-item"
-          wx:for="{{examples[mode]}}"
-          wx:key="index"
-          bindtap="useExample"
-          data-text="{{item}}"
-          hover-class="example-hover"
-          hover-stay-time="80"
-        >{{item}}</view>
-      </view>
-    </scroll-view>
-  </view>
+    <!-- 示例选择 -->
+    <view class="examples-row">
+      <text class="examples-label">快速示例：</text>
+      <scroll-view scroll-x show-scrollbar="{{false}}" class="examples-scroll" enhanced="{{true}}" bounces="{{false}}">
+        <view class="examples-list">
+          <view
+            class="example-chip"
+            wx:for="{{examples[mode]}}"
+            wx:key="index"
+            bindtap="useExample"
+            data-text="{{item.text}}"
+            hover-class="chip-hover"
+            hover-stay-time="80"
+          >
+            <text class="chip-tag">{{item.tag}}</text>
+            <text class="chip-text">{{item.text}}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
 
-  <!-- 翻译按钮 -->
-  <view class="translate-btn-wrap">
+    <!-- 翻译按钮 -->
     <view
-      class="translate-btn {{isLoading ? 'btn-loading' : (inputText.trim() ? 'btn-active' : 'btn-disabled')}}"
+      class="translate-btn {{isLoading ? 'btn-loading' : ''}} {{!inputText ? 'btn-disabled' : ''}}"
       bindtap="doTranslate"
-      hover-class="{{!isLoading && inputText.trim() ? 'translate-btn-hover' : ''}}"
-      hover-stay-time="80"
+      hover-class="{{!isLoading && inputText ? 'btn-hover-press' : ''}}"
+      hover-stay-time="100"
     >
-      <view class="btn-loading-dots" wx:if="{{isLoading}}">
-        <view class="btn-dot"></view>
-        <view class="btn-dot"></view>
-        <view class="btn-dot"></view>
+      <view wx:if="{{isLoading}}" class="btn-loading-inner">
+        <view class="loading-dots">
+          <view class="dot dot1"></view>
+          <view class="dot dot2"></view>
+          <view class="dot dot3"></view>
+        </view>
+        <text class="btn-text">正在翻译...</text>
       </view>
-      <text wx:if="{{isLoading}}" class="btn-text">正在翻译...</text>
-      <text wx:else class="btn-text">开始翻译</text>
+      <view wx:else class="btn-normal-inner">
+        <text class="btn-icon-text">⚡</text>
+        <text class="btn-text">AI 智能翻译</text>
+      </view>
     </view>
   </view>
 
-  <!-- 翻译结果（分段展示） -->
+  <!-- 翻译结果 -->
   <view class="result-section" wx:if="{{result || isLoading}}">
     <view class="result-header">
-      <text class="result-title">翻译结果</text>
-      <view class="result-actions" wx:if="{{result && !isLoading}}">
-        <view class="action-btn" bindtap="copyResult" hover-class="action-hover" hover-stay-time="80">📋 复制</view>
-        <view class="action-btn" bindtap="shareResult" hover-class="action-hover" hover-stay-time="80">↗ 分享</view>
+      <view class="result-title-row">
+        <view class="result-dot"></view>
+        <text class="result-title">翻译结果</text>
+      </view>
+      <view class="result-actions" wx:if="{{result}}">
+        <view class="action-btn" bindtap="copyResult" hover-class="action-hover" hover-stay-time="80">
+          <text class="action-icon">📋</text>
+          <text class="action-text">复制</text>
+        </view>
+        <view class="action-btn" bindtap="shareResult" hover-class="action-hover" hover-stay-time="80">
+          <text class="action-icon">↗️</text>
+          <text class="action-text">分享</text>
+        </view>
       </view>
     </view>
 
     <!-- 加载中 -->
     <view class="result-loading" wx:if="{{isLoading}}">
-      <view class="loading-dots">
-        <view class="dot"></view>
-        <view class="dot"></view>
-        <view class="dot"></view>
-      </view>
-      <text class="loading-hint">文渊先生正在翻译中...</text>
+      <view class="ai-loading-icon">🤔</view>
+      <text class="ai-loading-text">AI正在理解古文意境...</text>
     </view>
 
-    <!-- 分段结果展示 -->
-    <view class="result-sections fade-in" wx:elif="{{sections.length > 1}}">
-      <view class="result-seg" wx:for="{{sections}}" wx:key="label">
+    <!-- 分段结果 -->
+    <view class="result-body" wx:elif="{{sections.length > 0}}">
+      <view
+        class="seg-block"
+        wx:for="{{sections}}"
+        wx:key="index"
+      >
         <view class="seg-label-row">
           <view class="seg-dot"></view>
           <text class="seg-label">{{item.label}}</text>
         </view>
-        <text class="seg-content" selectable="{{true}}">{{item.content}}</text>
+        <text class="seg-content">{{item.content}}</text>
       </view>
     </view>
 
-    <!-- 纯文本（单段） -->
-    <view class="result-content fade-in" wx:elif="{{result}}">
-      <text class="result-text" selectable="{{true}}">{{result}}</text>
-    </view>
-
-    <!-- 继续探讨 -->
-    <view class="chat-about-btn" bindtap="chatAboutTranslation" wx:if="{{result && !isLoading}}" hover-class="chat-btn-hover" hover-stay-time="80">
-      <text>💬 与文渊先生深入探讨</text>
+    <!-- 纯文本结果 -->
+    <view class="result-body" wx:elif="{{result}}">
+      <text class="result-plain">{{result}}</text>
     </view>
   </view>
 
-  <!-- 历史记录 -->
+  <!-- 翻译技巧 -->
+  <view class="tips-section">
+    <view class="tips-header" bindtap="toggleTips" hover-class="btn-hover" hover-stay-time="80">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">文言文阅读技巧</text>
+      </view>
+      <text class="tips-toggle">{{showTips ? '收起 ▲' : '展开 ▼'}}</text>
+    </view>
+    <view class="tips-grid" wx:if="{{showTips}}">
+      <view class="tip-card" wx:for="{{tips}}" wx:key="index">
+        <text class="tip-icon">{{item.icon}}</text>
+        <text class="tip-title">{{item.title}}</text>
+        <text class="tip-desc">{{item.desc}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 经典名句分组 -->
+  <view class="classic-section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">经典名句赏析</text>
+      </view>
+    </view>
+    <view class="classic-groups">
+      <view class="classic-group" wx:for="{{classicGroups}}" wx:key="id">
+        <view class="group-header">
+          <text class="group-icon">{{item.icon}}</text>
+          <text class="group-name">{{item.name}}</text>
+        </view>
+        <view
+          class="classic-quote-item"
+          wx:for="{{item.quotes}}"
+          wx:for-item="q"
+          wx:key="index"
+          bindtap="useClassicQuote"
+          data-text="{{q.text}}"
+          hover-class="quote-hover"
+          hover-stay-time="80"
+        >
+          <view class="quote-content">
+            <text class="quote-text">{{q.text}}</text>
+            <text class="quote-from">{{q.from}}</text>
+          </view>
+          <text class="quote-arrow">译 →</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 翻译历史 -->
   <view class="history-section" wx:if="{{history.length > 0}}">
-    <view class="history-header">
-      <text class="section-title">翻译记录</text>
-      <view class="clear-history" bindtap="clearHistory" hover-class="clear-hover" hover-stay-time="80">
-        <text>清除</text>
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">翻译历史</text>
+      </view>
+      <view class="clear-history-btn" bindtap="clearHistory" hover-class="btn-hover" hover-stay-time="80">
+        <text class="clear-history-text">🗑️ 清除</text>
       </view>
     </view>
     <view class="history-list">
       <view
         class="history-item"
         wx:for="{{history}}"
-        wx:key="id"
+        wx:key="index"
         bindtap="loadHistory"
         data-item="{{item}}"
-        hover-class="history-item-hover"
-        hover-stay-time="100"
+        hover-class="history-hover"
+        hover-stay-time="80"
       >
-        <view class="history-meta">
-          <text class="history-mode">{{item.mode === 'ancient_to_modern' ? '文言→白话' : '白话→文言'}}</text>
-          <text class="history-time">{{item.time}}</text>
+        <view class="history-top">
+          <text class="history-mode-tag">{{item.mode === 'ancient_to_modern' ? '文→白' : '白→文'}}</text>
+          <text class="history-input">{{item.input}}</text>
         </view>
-        <text class="history-preview">{{item.input}}</text>
+        <text class="history-preview">{{item.result}}</text>
       </view>
     </view>
   </view>

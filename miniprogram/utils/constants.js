@@ -1,6 +1,6 @@
 /**
  * utils/constants.js - 全局常量配置
- * 生产级国学AI助手
+ * 生产级国学助手 v6.0（无AI问答，五大模块）
  */
 
 // ─── 云函数名称 ────────────────────────────────────
@@ -21,7 +21,6 @@ const STORAGE_KEYS = {
   DAILY_PREFIX: 'daily_',
   DAILY_IDIOM_PREFIX: 'daily_idiom_',
   TRANSLATE_HISTORY: 'trans_history',
-  CHAT_HISTORY: 'chat_history',
   FAVORITES_POEM: 'fav_poems',
   FAVORITES_IDIOM: 'fav_idioms',
   USER_PREFS: 'user_prefs',
@@ -30,7 +29,6 @@ const STORAGE_KEYS = {
 
 // ─── AI 请求类型 ────────────────────────────────────
 const AI_TYPES = {
-  CHAT: 'chat',
   TRANSLATE: 'translate',
   DAILY: 'daily',
   DAILY_IDIOM: 'daily_idiom',
@@ -38,6 +36,7 @@ const AI_TYPES = {
   IDIOM: 'idiom',
   HISTORY: 'history',
   SEARCH: 'search',
+  PHILOSOPHER: 'philosopher',
 };
 
 // ─── 翻译模式 ────────────────────────────────────
@@ -49,10 +48,10 @@ const TRANSLATE_MODES = {
 // ─── Tab 页路径 ────────────────────────────────────
 const TAB_PAGES = [
   '/pages/home/index',
-  '/pages/chat/index',
   '/pages/translate/index',
   '/pages/classics/index',
   '/pages/history/index',
+  '/pages/philosophers/index',
 ];
 
 // ─── 主题色 ────────────────────────────────────

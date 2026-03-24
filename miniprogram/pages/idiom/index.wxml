@@ -1,183 +1,215 @@
-<!-- pages/idiom/index.wxml - 成语故事页 v5.0 -->
-<view class="container idiom-page">
+<!-- pages/idiom/index.wxml - 成语故事页 v6.0 -->
+<view class="idiom-page">
 
-  <!-- 顶部搜索 -->
-  <view class="idiom-header">
-    <view class="header-bg"></view>
-    <view class="header-content">
+  <!-- 页头 -->
+  <view class="page-header">
+    <view class="header-inner">
       <text class="header-title">成语故事</text>
-      <text class="header-subtitle">字里乾坤，典故传承</text>
+      <text class="header-sub">字里乾坤 · 典故传承</text>
     </view>
-    <view class="search-wrap">
+  </view>
+
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-inner">
+      <text class="search-icon">🔍</text>
       <input
-        class="idiom-search"
-        placeholder="输入成语进行查询..."
-        placeholder-class="search-ph"
+        class="search-input"
         value="{{searchText}}"
         bindinput="onSearchInput"
-        bindconfirm="searchIdiom"
+        placeholder="输入成语查询详解，如：一鸣惊人…"
+        placeholder-class="search-placeholder"
         confirm-type="search"
+        bindconfirm="searchIdiom"
       />
-      <view class="search-action" bindtap="searchIdiom" hover-class="search-hover" hover-stay-time="80">查</view>
+      <view class="search-btn" bindtap="searchIdiom" hover-class="search-btn-hover" hover-stay-time="80">
+        <text class="search-btn-text">查询</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- AI解析结果 -->
+  <view class="result-section" wx:if="{{result || isLoading}}">
+    <view class="result-header">
+      <view class="result-title-row">
+        <view class="result-dot"></view>
+        <text class="result-title">「{{currentIdiom}}」解析</text>
+      </view>
+      <view class="result-header-actions">
+        <view class="action-btn" wx:if="{{result}}" bindtap="copyResult" hover-class="action-hover" hover-stay-time="80">
+          <text>📋</text>
+        </view>
+        <view class="action-btn close-btn" bindtap="closeResult" hover-class="action-hover" hover-stay-time="80">
+          <text>✕</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 加载中 -->
+    <view class="result-loading" wx:if="{{isLoading}}">
+      <view class="ai-loading-icon">🤔</view>
+      <text class="ai-loading-text">AI正在溯源成语故事…</text>
+    </view>
+
+    <!-- 分段结果 -->
+    <view class="result-body" wx:elif="{{resultSections.length > 0}}">
+      <view class="seg-block" wx:for="{{resultSections}}" wx:key="index">
+        <view class="seg-label-row">
+          <view class="seg-dot"></view>
+          <text class="seg-label">{{item.label}}</text>
+        </view>
+        <text class="seg-content">{{item.content}}</text>
+      </view>
+      <view class="result-foot-actions">
+        <view class="foot-btn" bindtap="toggleFavorite" hover-class="btn-hover" hover-stay-time="80">
+          <text>{{isFavorited ? '❤️ 已收藏' : '🤍 收藏'}}</text>
+        </view>
+        <view class="foot-btn" bindtap="copyResult" hover-class="btn-hover" hover-stay-time="80">
+          <text>📋 复制</text>
+        </view>
+      </view>
     </view>
   </view>
 
   <!-- 每日成语 -->
-  <view class="daily-idiom">
-    <view class="daily-idiom-header">
-      <text class="daily-label">📖 每日一成语</text>
-      <view class="change-idiom-btn" bindtap="changeDailyIdiom" hover-class="change-hover" hover-stay-time="80">
-        <text>{{dailyIdiomLoading ? '加载中...' : '换一个'}}</text>
+  <view class="daily-section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">今日成语</text>
+      </view>
+      <view class="change-btn" bindtap="changeDailyIdiom" hover-class="btn-hover" hover-stay-time="80">
+        <text class="change-text">↺ 换一个</text>
       </view>
     </view>
 
     <!-- 骨架屏 -->
-    <view class="daily-idiom-skeleton" wx:if="{{dailyIdiomLoading}}">
-      <view class="sk-word"></view>
-      <view class="sk-pinyin"></view>
-      <view class="sk-brief"></view>
+    <view class="daily-card skeleton-card" wx:if="{{dailyIdiomLoading}}">
+      <view class="sk-line sk-w60 sk-h40 sk-mb10"></view>
+      <view class="sk-line sk-w40 sk-h24 sk-mb16"></view>
+      <view class="sk-line sk-w100 sk-h22 sk-mb8"></view>
+      <view class="sk-line sk-w80 sk-h22 sk-mb8"></view>
     </view>
 
-    <!-- AI生成的每日成语 -->
-    <view
-      class="daily-idiom-card"
-      wx:else
-      bindtap="lookupDailyIdiom"
-      hover-class="card-hover"
-      hover-stay-time="100"
-    >
-      <view class="idiom-card-top">
-        <view class="idiom-word-block">
-          <text class="idiom-word">{{dailyIdiom.word}}</text>
-          <text class="idiom-pinyin">{{dailyIdiom.pinyin}}</text>
+    <!-- 成语卡片 -->
+    <view class="daily-card" wx:else>
+      <view class="daily-card-bg-char">{{dailyIdiom.word}}</view>
+      <view class="daily-top">
+        <text class="daily-word">{{dailyIdiom.word}}</text>
+        <text class="daily-pinyin">{{dailyIdiom.pinyin}}</text>
+        <text class="daily-brief">{{dailyIdiom.brief}}</text>
+      </view>
+      <view class="daily-sep"></view>
+      <view class="daily-story-section" wx:if="{{dailyIdiom.story}}">
+        <text class="story-label">📖 典故故事</text>
+        <text class="daily-story">{{dailyIdiom.story}}</text>
+      </view>
+      <view class="daily-extra" wx:if="{{dailyIdiom.origin}}">
+        <text class="extra-label">出处</text>
+        <text class="extra-text">{{dailyIdiom.origin}}</text>
+      </view>
+      <view class="daily-tags" wx:if="{{dailyIdiom.synonym || dailyIdiom.antonym}}">
+        <view class="tag-item" wx:if="{{dailyIdiom.synonym}}">
+          <text class="tag-label">近义：</text>
+          <text class="tag-val">{{dailyIdiom.synonym}}</text>
         </view>
-        <view class="idiom-origin-tag" wx:if="{{dailyIdiom.origin}}">
-          <text class="origin-text">{{dailyIdiom.origin}}</text>
-        </view>
-      </view>
-      <text class="idiom-brief">{{dailyIdiom.brief}}</text>
-      <view class="idiom-story-box" wx:if="{{dailyIdiom.story}}">
-        <text class="story-label">典故</text>
-        <text class="story-text">{{dailyIdiom.story}}</text>
-      </view>
-      <view class="idiom-extra-row" wx:if="{{dailyIdiom.synonym || dailyIdiom.antonym}}">
-        <text class="extra-item" wx:if="{{dailyIdiom.synonym}}">近义：{{dailyIdiom.synonym}}</text>
-        <text class="extra-item" wx:if="{{dailyIdiom.antonym}}">反义：{{dailyIdiom.antonym}}</text>
-      </view>
-      <view class="tap-hint">点击查看详解 →</view>
-    </view>
-  </view>
-
-  <!-- 查询结果 -->
-  <view class="result-section" wx:if="{{result || isLoading}}">
-    <view class="result-card">
-      <view class="result-word-header">
-        <text class="result-word">{{currentIdiom}}</text>
-        <view class="action-row">
-          <view
-            class="icon-btn {{isFavorited ? 'icon-btn-active' : ''}}"
-            bindtap="toggleFavorite"
-            hover-class="btn-hover"
-            hover-stay-time="80"
-          >
-            {{isFavorited ? '❤️' : '🤍'}}
-          </view>
-          <view class="icon-btn" bindtap="copyResult" hover-class="btn-hover" hover-stay-time="80">📋</view>
-          <view class="icon-btn" bindtap="chatAboutIdiom" hover-class="btn-hover" hover-stay-time="80">💬</view>
+        <view class="tag-item" wx:if="{{dailyIdiom.antonym}}">
+          <text class="tag-label">反义：</text>
+          <text class="tag-val">{{dailyIdiom.antonym}}</text>
         </view>
       </view>
-
-      <!-- 加载中 -->
-      <view class="ai-loading" wx:if="{{isLoading}}">
-        <view class="loading-dots">
-          <view class="dot"></view>
-          <view class="dot"></view>
-          <view class="dot"></view>
+      <view class="daily-actions">
+        <view class="daily-action-btn primary-btn" bindtap="lookupDailyIdiom" hover-class="btn-hover" hover-stay-time="80">
+          <text>✨ AI深度解析</text>
         </view>
-        <text class="loading-text">正在查询成语...</text>
-      </view>
-
-      <!-- 分段展示 -->
-      <view class="result-sections" wx:elif="{{resultSections.length > 0}}">
-        <view class="result-seg" wx:for="{{resultSections}}" wx:key="label">
-          <view class="seg-label-row">
-            <view class="seg-dot"></view>
-            <text class="seg-label">{{item.label}}</text>
-          </view>
-          <text class="seg-content" selectable="{{true}}">{{item.content}}</text>
-        </view>
-      </view>
-
-      <!-- 纯文本降级 -->
-      <text class="result-content-text fade-in" selectable="{{true}}" wx:elif="{{result}}">{{result}}</text>
-    </view>
-  </view>
-
-  <!-- 成语分类 -->
-  <view class="categories-section">
-    <text class="section-title">成语分类</text>
-    <view class="cat-grid">
-      <view
-        class="cat-item"
-        wx:for="{{idiomCategories}}"
-        wx:key="id"
-        bindtap="exploreCat"
-        data-cat="{{item}}"
-        style="background: {{item.bg}}"
-        hover-class="cat-hover"
-        hover-stay-time="100"
-      >
-        <text class="cat-emoji">{{item.icon}}</text>
-        <text class="cat-name">{{item.name}}</text>
-        <text class="cat-count">{{item.count}}个</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 精选成语 -->
-  <view class="featured-idioms">
-    <text class="section-title">精选成语</text>
-    <view class="idioms-list">
-      <view
-        class="idiom-item"
-        wx:for="{{featuredIdioms}}"
-        wx:key="id"
-        bindtap="lookupIdiom"
-        data-idiom="{{item.word}}"
-        hover-class="idiom-hover"
-        hover-stay-time="100"
-      >
-        <view class="idiom-word-wrap">
-          <text class="featured-word">{{item.word}}</text>
-          <text class="featured-pinyin">{{item.pinyin}}</text>
-        </view>
-        <text class="featured-brief">{{item.brief}}</text>
-        <view class="idiom-tags">
-          <text class="idiom-cat-tag">{{item.category}}</text>
+        <view class="daily-action-btn outline-btn" bindtap="toggleDailyFavorite" hover-class="btn-hover" hover-stay-time="80">
+          <text>{{isFavorited ? '❤️ 已收藏' : '🤍 收藏'}}</text>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 已知成语列表（新增） -->
-  <view class="known-idioms-section" wx:if="{{knownIdioms.length > 0}}">
-    <text class="section-title">常见成语</text>
-    <scroll-view scroll-x="{{true}}" show-scrollbar="{{false}}" enable-passive="{{true}}">
-      <view class="known-list">
+  <!-- 分类Tab -->
+  <view class="category-section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">成语分类</text>
+      </view>
+    </view>
+    <scroll-view scroll-x show-scrollbar="{{false}}" class="cat-scroll" enhanced="{{true}}" bounces="{{false}}">
+      <view class="cat-row">
         <view
-          class="known-item"
-          wx:for="{{knownIdioms}}"
-          wx:key="word"
-          bindtap="lookupIdiom"
-          data-idiom="{{item.word}}"
-          hover-class="known-hover"
+          class="cat-chip {{activeCategory === item.id ? 'cat-active' : ''}}"
+          wx:for="{{idiomCategories}}"
+          wx:key="id"
+          bindtap="selectCategory"
+          data-id="{{item.id}}"
+          hover-class="chip-hover"
           hover-stay-time="80"
         >
-          <text class="known-word">{{item.word}}</text>
-          <text class="known-cat">{{item.category}}</text>
+          <text class="cat-chip-icon">{{item.icon}}</text>
+          <text class="cat-chip-name">{{item.name}}</text>
+          <text class="cat-chip-count" wx:if="{{item.count}}">{{item.count}}</text>
         </view>
       </view>
     </scroll-view>
+  </view>
+
+  <!-- 精选成语故事 -->
+  <view class="featured-section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">精选故事</text>
+      </view>
+    </view>
+    <view
+      class="featured-item"
+      wx:for="{{featuredIdioms}}"
+      wx:key="id"
+      bindtap="lookupFeatured"
+      data-word="{{item.word}}"
+      hover-class="item-hover"
+      hover-stay-time="80"
+    >
+      <view class="feat-header">
+        <view class="feat-word-wrap">
+          <text class="feat-word">{{item.word}}</text>
+          <text class="feat-pinyin">{{item.pinyin}}</text>
+        </view>
+        <view class="feat-cat-tag">{{item.category}}</view>
+      </view>
+      <text class="feat-brief">{{item.brief}}</text>
+      <text class="feat-story">{{item.story}}</text>
+      <view class="feat-footer">
+        <text class="feat-cta">AI深度解析 →</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快速查询成语 -->
+  <view class="quick-section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">快速查询</text>
+      </view>
+    </view>
+    <view class="quick-grid">
+      <view
+        class="quick-item"
+        wx:for="{{knownIdioms}}"
+        wx:key="index"
+        bindtap="lookupIdiom"
+        data-idiom="{{item.word}}"
+        hover-class="quick-hover"
+        hover-stay-time="80"
+      >
+        <text class="quick-word">{{item.word}}</text>
+        <text class="quick-brief">{{item.brief}}</text>
+      </view>
+    </view>
   </view>
 
   <view class="safe-bottom"></view>
