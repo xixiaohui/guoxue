@@ -23,7 +23,7 @@
         <view class="status-icon">⚡</view>
         <view class="status-text">免费用户</view>
         <view class="status-sub">
-          今日剩余 {{quotaStatus ? quotaStatus.remaining : 5}} / 5 次
+          今日剩余 {{quotaStatus ? quotaStatus.remaining : 10}} / 10 次
         </view>
       </block>
     </view>
