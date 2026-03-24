@@ -1,78 +1,110 @@
-<!-- pages/history/index.wxml - 历史知识页 v5.0 -->
-<view class="container history-page">
+<!-- pages/history/index.wxml - 历史探秘页 v6.0 -->
+<view class="history-page">
 
-  <!-- 顶部 -->
-  <view class="history-header">
-    <text class="header-title">历史探秘</text>
-    <text class="header-sub">千古风云，人文荟萃</text>
-    <view class="search-row">
+  <!-- 页头 -->
+  <view class="page-header">
+    <view class="header-inner">
+      <text class="header-title">历史探秘</text>
+      <text class="header-sub">朝代更迭 · 人文风华</text>
+    </view>
+  </view>
+
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-inner">
+      <text class="search-icon">🔍</text>
       <input
-        class="hist-search"
-        placeholder="搜索历史人物、事件、朝代..."
-        placeholder-class="hist-ph"
+        class="search-input"
         value="{{searchText}}"
         bindinput="onSearch"
-        bindconfirm="doSearch"
+        placeholder="搜索历史事件、人物、朝代…"
+        placeholder-class="search-placeholder"
         confirm-type="search"
+        bindconfirm="doSearch"
       />
-      <view class="hist-search-btn" bindtap="doSearch" hover-class="search-btn-hover" hover-stay-time="80">
-        <text>🔍</text>
+      <view class="search-btn" bindtap="doSearch" hover-class="search-btn-hover" hover-stay-time="80">
+        <text class="search-btn-text">探秘</text>
       </view>
+    </view>
+  </view>
+
+  <!-- AI探秘结果 -->
+  <view class="ai-result-section" wx:if="{{aiResult || (isLoading && currentQuery)}}">
+    <view class="result-header">
+      <view class="result-title-row">
+        <view class="result-dot"></view>
+        <text class="result-title">{{currentQuery || 'AI历史解析'}}</text>
+      </view>
+      <view class="result-actions">
+        <view class="action-btn" wx:if="{{aiResult}}" bindtap="copyAiResult" hover-class="action-hover" hover-stay-time="80">
+          <text>📋</text>
+        </view>
+        <view class="action-btn" bindtap="closeResult" hover-class="action-hover" hover-stay-time="80">
+          <text>✕</text>
+        </view>
+      </view>
+    </view>
+    <view class="result-loading" wx:if="{{isLoading}}">
+      <view class="ai-loading-icon">🔍</view>
+      <text class="ai-loading-text">AI正在翻阅历史典籍…</text>
+    </view>
+    <view class="result-body" wx:elif="{{aiResultSections.length > 0}}">
+      <view class="seg-block" wx:for="{{aiResultSections}}" wx:key="index">
+        <view class="seg-label-row">
+          <view class="seg-dot"></view>
+          <text class="seg-label">{{item.label}}</text>
+        </view>
+        <text class="seg-content">{{item.content}}</text>
+      </view>
+    </view>
+    <view class="result-body" wx:elif="{{aiResult}}">
+      <text class="result-plain">{{aiResult}}</text>
     </view>
   </view>
 
   <!-- 朝代导航 -->
-  <scroll-view scroll-x="{{true}}" class="dynasty-nav" enable-passive="{{true}}" show-scrollbar="{{false}}">
-    <view class="dynasty-list">
-      <view
-        class="dynasty-item {{activeDynasty === item.id ? 'active' : ''}}"
-        wx:for="{{dynasties}}"
-        wx:key="id"
-        bindtap="selectDynasty"
-        data-id="{{item.id}}"
-        data-name="{{item.name}}"
-        hover-class="{{activeDynasty !== item.id ? 'dynasty-hover' : ''}}"
-        hover-stay-time="80"
-      >
-        <text class="dynasty-name">{{item.name}}</text>
-        <text class="dynasty-years">{{item.years}}</text>
+  <view class="dynasty-section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">朝代年表</text>
       </view>
     </view>
-  </scroll-view>
-
-  <!-- AI搜索结果 -->
-  <view class="ai-result-section" wx:if="{{aiResult || isLoading}}">
-    <view class="ai-result-header">
-      <text class="ai-label">🤖 AI历史解读</text>
-      <view class="close-result" bindtap="closeResult" hover-class="close-hover" hover-stay-time="80">✕</view>
-    </view>
-
-    <view class="result-loading" wx:if="{{isLoading}}">
-      <view class="loading-dots">
-        <view class="dot"></view>
-        <view class="dot"></view>
-        <view class="dot"></view>
-      </view>
-      <text class="loading-hint">正在为您解读历史...</text>
-    </view>
-
-    <view class="ai-result-content" wx:elif="{{aiResult}}">
-      <text class="ai-result-text" selectable="{{true}}">{{aiResult}}</text>
-      <view class="result-btn-row">
-        <view class="result-action-btn" bindtap="deepExplore" hover-class="action-hover" hover-stay-time="80">
-          <text>💬 深度探讨</text>
-        </view>
-        <view class="result-action-btn" bindtap="copyAiResult" hover-class="action-hover" hover-stay-time="80">
-          <text>📋 复制</text>
+    <scroll-view scroll-x show-scrollbar="{{false}}" class="dynasty-scroll" enhanced="{{true}}" bounces="{{false}}">
+      <view class="dynasty-row">
+        <view
+          class="dynasty-item {{activeDynasty === item.id ? 'dynasty-active' : ''}}"
+          wx:for="{{dynasties}}"
+          wx:key="id"
+          bindtap="selectDynasty"
+          data-id="{{item.id}}"
+          hover-class="dynasty-hover"
+          hover-stay-time="80"
+        >
+          <text class="dynasty-emoji">{{item.emoji}}</text>
+          <text class="dynasty-name">{{item.name}}</text>
+          <text class="dynasty-years">{{item.years}}</text>
         </view>
       </view>
-    </view>
+    </scroll-view>
   </view>
 
-  <!-- 历史时间轴 -->
-  <view class="timeline-section" wx:if="{{!aiResult && !isLoading}}">
-    <text class="section-title">{{activeTitle}}重要事件</text>
-    <view class="timeline">
+  <!-- 时间轴（或AI生成内容） -->
+  <view class="timeline-section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">{{activeTitle}}·大事记</text>
+      </view>
+    </view>
+
+    <!-- AI结果（无预置数据时） -->
+    <view class="ai-plain-result" wx:if="{{aiResult && timelineEvents.length === 0 && !isLoading}}">
+      <text class="ai-plain-text">{{aiResult}}</text>
+    </view>
+
+    <!-- 时间轴事件 -->
+    <view class="timeline-list" wx:elif="{{timelineEvents.length > 0}}">
       <view
         class="timeline-item"
         wx:for="{{timelineEvents}}"
@@ -80,68 +112,111 @@
         bindtap="exploreEvent"
         data-event="{{item}}"
         hover-class="timeline-hover"
-        hover-stay-time="100"
+        hover-stay-time="80"
       >
         <view class="timeline-left">
-          <view class="time-dot" style="background: {{item.color}}"></view>
-          <view class="time-line" wx:if="{{index < timelineEvents.length - 1}}"></view>
+          <view class="timeline-dot" style="background:{{item.color}}"></view>
+          <view class="timeline-line" wx:if="{{index < timelineEvents.length - 1}}"></view>
         </view>
         <view class="timeline-content">
-          <text class="event-year">{{item.year}}</text>
-          <text class="event-name">{{item.name}}</text>
-          <text class="event-desc">{{item.desc}}</text>
-          <view class="event-figures" wx:if="{{item.figures && item.figures.length > 0}}">
-            <text class="figure-tag" wx:for="{{item.figures}}" wx:key="*this" wx:for-item="fig">{{fig}}</text>
+          <view class="timeline-year-row">
+            <text class="timeline-year" style="color:{{item.color}}">{{item.year}}</text>
+            <view class="figure-tags">
+              <text
+                class="figure-tag"
+                wx:for="{{item.figures}}"
+                wx:for-item="fig"
+                wx:key="index"
+              >{{fig}}</text>
+            </view>
           </view>
+          <text class="timeline-name">{{item.name}}</text>
+          <text class="timeline-desc">{{item.desc}}</text>
+          <text class="timeline-cta">点击了解详情 →</text>
         </view>
       </view>
+    </view>
+
+    <!-- 加载中 -->
+    <view class="timeline-loading" wx:elif="{{isLoading && timelineEvents.length === 0}}">
+      <view class="ai-loading-icon">📜</view>
+      <text class="ai-loading-text">AI正在整理{{activeTitle}}历史…</text>
     </view>
   </view>
 
-  <!-- 名人殿堂 -->
-  <view class="figures-section" wx:if="{{!aiResult && !isLoading}}">
-    <text class="section-title">名人殿堂</text>
-    <view class="figures-grid">
-      <view
-        class="figure-card"
-        wx:for="{{famousFigures}}"
-        wx:key="id"
-        bindtap="exploreFigure"
-        data-figure="{{item}}"
-        hover-class="figure-hover"
-        hover-stay-time="100"
-      >
-        <view class="figure-avatar" style="background: {{item.color}}">
-          <text class="figure-emoji">{{item.emoji}}</text>
-        </view>
-        <text class="figure-name">{{item.name}}</text>
-        <text class="figure-dynasty">{{item.dynasty}}</text>
-        <text class="figure-role">{{item.role}}</text>
+  <!-- 历史名人 -->
+  <view class="figures-section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">历史名人堂</text>
       </view>
     </view>
+    <scroll-view scroll-x show-scrollbar="{{false}}" class="figures-scroll" enhanced="{{true}}" bounces="{{false}}">
+      <view class="figures-row">
+        <view
+          class="figure-card"
+          wx:for="{{famousFigures}}"
+          wx:key="id"
+          bindtap="exploreFigure"
+          data-figure="{{item}}"
+          style="background:{{item.color}}"
+          hover-class="figure-hover"
+          hover-stay-time="100"
+        >
+          <text class="figure-emoji">{{item.emoji}}</text>
+          <text class="figure-name">{{item.name}}</text>
+          <text class="figure-dynasty">{{item.dynasty}}</text>
+          <text class="figure-role">{{item.role}}</text>
+          <text class="figure-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </scroll-view>
   </view>
 
   <!-- 历史趣闻 -->
-  <view class="trivia-section" wx:if="{{!aiResult && !isLoading}}">
-    <text class="section-title">历史趣闻</text>
-    <view class="trivia-list">
-      <view
-        class="trivia-item"
-        wx:for="{{trivias}}"
-        wx:key="id"
-        bindtap="exploreTrivia"
-        data-trivia="{{item}}"
-        hover-class="trivia-hover"
-        hover-stay-time="100"
-      >
-        <text class="trivia-icon">{{item.icon}}</text>
-        <view class="trivia-info">
-          <text class="trivia-title">{{item.title}}</text>
-          <text class="trivia-hint">{{item.hint}}</text>
-        </view>
-        <text class="trivia-arrow">›</text>
+  <view class="trivia-section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">历史趣闻</text>
       </view>
     </view>
+    <view
+      class="trivia-item"
+      wx:for="{{trivias}}"
+      wx:key="id"
+      bindtap="exploreTrivia"
+      data-trivia="{{item}}"
+      hover-class="trivia-hover"
+      hover-stay-time="80"
+    >
+      <text class="trivia-icon">{{item.icon}}</text>
+      <view class="trivia-content">
+        <text class="trivia-title">{{item.title}}</text>
+        <text class="trivia-hint">{{item.hint}}</text>
+      </view>
+      <text class="trivia-arr">›</text>
+    </view>
+  </view>
+
+  <!-- 历史小知识 -->
+  <view class="facts-section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">历史小知识</text>
+      </view>
+    </view>
+    <scroll-view scroll-x show-scrollbar="{{false}}" class="facts-scroll" enhanced="{{true}}" bounces="{{false}}">
+      <view class="facts-row">
+        <view class="fact-card" wx:for="{{historyFacts}}" wx:key="id">
+          <text class="fact-icon">{{item.icon}}</text>
+          <text class="fact-tag">{{item.tag}}</text>
+          <text class="fact-text">{{item.fact}}</text>
+        </view>
+      </view>
+    </scroll-view>
   </view>
 
   <view class="safe-bottom"></view>

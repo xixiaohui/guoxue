@@ -1,11 +1,11 @@
 {
   "pages": [
     "pages/home/index",
-    "pages/chat/index",
     "pages/translate/index",
     "pages/classics/index",
     "pages/idiom/index",
     "pages/history/index",
+    "pages/philosophers/index",
     "pages/detail/index",
     "pages/vip/index"
   ],
@@ -13,7 +13,7 @@
     "backgroundColor": "#F5EDD6",
     "backgroundTextStyle": "dark",
     "navigationBarBackgroundColor": "#8B2500",
-    "navigationBarTitleText": "国学AI助手",
+    "navigationBarTitleText": "国学助手",
     "navigationBarTextStyle": "white"
   },
   "tabBar": {
@@ -27,12 +27,6 @@
         "text": "首页",
         "iconPath": "images/tab_home.png",
         "selectedIconPath": "images/tab_home_active.png"
-      },
-      {
-        "pagePath": "pages/chat/index",
-        "text": "问答",
-        "iconPath": "images/tab_chat.png",
-        "selectedIconPath": "images/tab_chat_active.png"
       },
       {
         "pagePath": "pages/translate/index",
@@ -51,6 +45,12 @@
         "text": "历史",
         "iconPath": "images/tab_history.png",
         "selectedIconPath": "images/tab_history_active.png"
+      },
+      {
+        "pagePath": "pages/philosophers/index",
+        "text": "百家",
+        "iconPath": "images/tab_home.png",
+        "selectedIconPath": "images/tab_home_active.png"
       }
     ]
   },
