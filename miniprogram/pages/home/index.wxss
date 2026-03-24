@@ -1,4 +1,4 @@
-/* pages/home/index.wxss - 生产级首页样式 */
+/* pages/home/index.wxss - 生产级首页样式 v6.0 */
 
 .home-page { background: #FDF6E3; }
 
@@ -65,7 +65,7 @@
 }
 .refresh-icon { font-size: 26rpx; color: #C4882E; }
 .refresh-text { font-size: 24rpx; color: #C4882E; }
-.refresh-pill:active { background: #FFF0CC; }
+.pill-hover { background: #FFF0CC !important; }
 
 /* ── 每日经典卡片 ─────────────────────────────── */
 .daily-card {
@@ -84,6 +84,20 @@
   font-size: 160rpx; color: rgba(196,136,46,.06);
   font-weight: 900; line-height: 1; pointer-events: none;
 }
+
+.daily-badge {
+  display: inline-block;
+  background: linear-gradient(90deg, #C4882E, #8B2500);
+  color: #FFF8E7;
+  font-size: 20rpx;
+  padding: 4rpx 18rpx;
+  border-radius: 20rpx;
+  margin-bottom: 18rpx;
+  font-weight: 500;
+  letter-spacing: 2rpx;
+}
+
+.card-hover { opacity: 0.9 !important; }
 
 /* 骨架屏 */
 .skeleton-card { animation: shimmer 1.5s infinite; }
@@ -138,12 +152,17 @@
 .daily-footer { margin-top: 18rpx; text-align: right; }
 .daily-cta { font-size: 22rpx; color: #C4882E; }
 
-/* ── 功能网格 ─────────────────────────────── */
+/* ── 功能网格（5宫格，3+2布局） ─────────────────────────────── */
 .func-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 18rpx;
   padding: 0 24rpx;
+}
+
+/* 若只有5个item，第5个独立占一格留中 */
+.func-item:last-child:nth-child(3n+2) {
+  grid-column: 2;
 }
 
 .func-item {
@@ -154,8 +173,9 @@
   border: 1rpx solid #EDD9A3;
   box-shadow: 0 2rpx 10rpx rgba(139,37,0,.05);
   display: flex; flex-direction: column; align-items: center;
+  transition: transform 0.1s;
 }
-.func-item:active { transform: scale(.96); }
+.func-hover { opacity: 0.85 !important; transform: scale(.96) !important; }
 
 .func-icon {
   width: 90rpx; height: 90rpx;
@@ -182,7 +202,7 @@
   white-space: nowrap;
   box-shadow: 0 2rpx 8rpx rgba(196,136,46,.1);
 }
-.hot-chip:active { background: #FFF0CC; }
+.hot-hover { background: #FFF0CC !important; }
 .hot-fire { font-size: 24rpx; }
 
 /* ── 分类列表 ─────────────────────────────── */
@@ -197,7 +217,7 @@
   border: 1rpx solid #EDD9A3;
   box-shadow: 0 2rpx 8rpx rgba(139,37,0,.04);
 }
-.cat-row:active { background: #FFF5DC; }
+.cat-row-hover { background: #FFF5DC !important; }
 
 .cat-icon-wrap {
   width: 76rpx; height: 76rpx;
@@ -225,6 +245,7 @@
   display: flex; align-items: center; justify-content: space-between;
   box-shadow: 0 6rpx 20rpx rgba(139,37,0,.25);
 }
+.vip-hover { opacity: 0.9 !important; }
 .vip-banner-left { display: flex; align-items: center; gap: 16rpx; }
 .vip-banner-crown { font-size: 40rpx; }
 .vip-banner-title { display: block; font-size: 28rpx; font-weight: bold; color: #FFF8E7; }
@@ -235,9 +256,3 @@
 
 /* ── 首页广告位 ─────────────────────────────── */
 .home-ad { margin: 10rpx 20rpx 0; border-radius: 16rpx; overflow: hidden; }
-
-/* ── Hover 状态 ─────────────────────────────── */
-.func-hover { opacity: 0.85 !important; transform: scale(.96); }
-.hot-hover { background: #FFF0CC !important; }
-.cat-row-hover { background: #FFF5DC !important; }
-.daily-card:active { background: linear-gradient(135deg, #FFF5D6, #FFEDB8); }
