@@ -13,15 +13,8 @@
   <view class="search-bar">
     <view class="search-inner">
       <text class="search-icon">🔍</text>
-      <input
-        class="search-input"
-        value="{{searchText}}"
-        bindinput="onSearch"
-        placeholder="搜索历史事件、人物、朝代…"
-        placeholder-class="search-placeholder"
-        confirm-type="search"
-        bindconfirm="doSearch"
-      />
+      <input class="search-input" value="{{searchText}}" bindinput="onSearch" placeholder="搜索历史事件、人物、朝代…"
+        placeholder-class="search-placeholder" confirm-type="search" bindconfirm="doSearch" />
       <view class="search-btn" bindtap="doSearch" hover-class="search-btn-hover" hover-stay-time="80">
         <text class="search-btn-text">探秘</text>
       </view>
@@ -36,7 +29,8 @@
         <text class="result-title">{{currentQuery || 'AI历史解析'}}</text>
       </view>
       <view class="result-actions">
-        <view class="action-btn" wx:if="{{aiResult}}" bindtap="copyAiResult" hover-class="action-hover" hover-stay-time="80">
+        <view class="action-btn" wx:if="{{aiResult}}" bindtap="copyAiResult" hover-class="action-hover"
+          hover-stay-time="80">
           <text>📋</text>
         </view>
         <view class="action-btn" bindtap="closeResult" hover-class="action-hover" hover-stay-time="80">
@@ -72,15 +66,8 @@
     </view>
     <scroll-view scroll-x show-scrollbar="{{false}}" class="dynasty-scroll" enhanced="{{true}}" bounces="{{false}}">
       <view class="dynasty-row">
-        <view
-          class="dynasty-item {{activeDynasty === item.id ? 'dynasty-active' : ''}}"
-          wx:for="{{dynasties}}"
-          wx:key="id"
-          bindtap="selectDynasty"
-          data-id="{{item.id}}"
-          hover-class="dynasty-hover"
-          hover-stay-time="80"
-        >
+        <view class="dynasty-item {{activeDynasty === item.id ? 'dynasty-active' : ''}}" wx:for="{{dynasties}}"
+          wx:key="id" bindtap="selectDynasty" data-id="{{item.id}}" hover-class="dynasty-hover" hover-stay-time="80">
           <text class="dynasty-emoji">{{item.emoji}}</text>
           <text class="dynasty-name">{{item.name}}</text>
           <text class="dynasty-years">{{item.years}}</text>
@@ -105,15 +92,8 @@
 
     <!-- 时间轴事件 -->
     <view class="timeline-list" wx:elif="{{timelineEvents.length > 0}}">
-      <view
-        class="timeline-item"
-        wx:for="{{timelineEvents}}"
-        wx:key="id"
-        bindtap="exploreEvent"
-        data-event="{{item}}"
-        hover-class="timeline-hover"
-        hover-stay-time="80"
-      >
+      <view class="timeline-item" wx:for="{{timelineEvents}}" wx:key="id" bindtap="exploreEvent" data-event="{{item}}"
+        hover-class="timeline-hover" hover-stay-time="80">
         <view class="timeline-left">
           <view class="timeline-dot" style="background:{{item.color}}"></view>
           <view class="timeline-line" wx:if="{{index < timelineEvents.length - 1}}"></view>
@@ -122,12 +102,7 @@
           <view class="timeline-year-row">
             <text class="timeline-year" style="color:{{item.color}}">{{item.year}}</text>
             <view class="figure-tags">
-              <text
-                class="figure-tag"
-                wx:for="{{item.figures}}"
-                wx:for-item="fig"
-                wx:key="index"
-              >{{fig}}</text>
+              <text class="figure-tag" wx:for="{{item.figures}}" wx:for-item="fig" wx:key="index">{{fig}}</text>
             </view>
           </view>
           <text class="timeline-name">{{item.name}}</text>
@@ -154,16 +129,8 @@
     </view>
     <scroll-view scroll-x show-scrollbar="{{false}}" class="figures-scroll" enhanced="{{true}}" bounces="{{false}}">
       <view class="figures-row">
-        <view
-          class="figure-card"
-          wx:for="{{famousFigures}}"
-          wx:key="id"
-          bindtap="exploreFigure"
-          data-figure="{{item}}"
-          style="background:{{item.color}}"
-          hover-class="figure-hover"
-          hover-stay-time="100"
-        >
+        <view class="figure-card" wx:for="{{famousFigures}}" wx:key="id" bindtap="exploreFigure" data-figure="{{item}}"
+          style="background:{{item.color}}" hover-class="figure-hover" hover-stay-time="100">
           <text class="figure-emoji">{{item.emoji}}</text>
           <text class="figure-name">{{item.name}}</text>
           <text class="figure-dynasty">{{item.dynasty}}</text>
@@ -182,15 +149,8 @@
         <text class="section-label">历史趣闻</text>
       </view>
     </view>
-    <view
-      class="trivia-item"
-      wx:for="{{trivias}}"
-      wx:key="id"
-      bindtap="exploreTrivia"
-      data-trivia="{{item}}"
-      hover-class="trivia-hover"
-      hover-stay-time="80"
-    >
+    <view class="trivia-item" wx:for="{{trivias}}" wx:key="id" bindtap="exploreTrivia" data-trivia="{{item}}"
+      hover-class="trivia-hover" hover-stay-time="80">
       <text class="trivia-icon">{{item.icon}}</text>
       <view class="trivia-content">
         <text class="trivia-title">{{item.title}}</text>
@@ -218,6 +178,13 @@
       </view>
     </scroll-view>
   </view>
+
+  <!-- 底部 -->
+  <view class="home-footer">
+    <text class="footer-txt">传承国学精髓 · 智慧赋能人生</text>
+  </view>
+  <!-- 原生广告 -->
+  <ad unit-id="adunit-67efd80bac46e2ad" bindload="adLoad" binderror="adError" bindclose="adClose"></ad>
 
   <view class="safe-bottom"></view>
 </view>

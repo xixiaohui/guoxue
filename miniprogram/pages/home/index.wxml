@@ -144,7 +144,7 @@
   </view>
 
   <!-- VIP推介条 -->
-  <view class="vip-banner" bindtap="goVip" hover-class="vip-hover" hover-stay-time="100">
+  <!-- <view class="vip-banner" bindtap="goVip" hover-class="vip-hover" hover-stay-time="100">
     <view class="vip-banner-left">
       <text class="vip-banner-crown">👑</text>
       <view>
@@ -156,7 +156,7 @@
       <text class="vip-banner-price">9.9元/月</text>
       <text class="vip-banner-arrow">›</text>
     </view>
-  </view>
+  </view> -->
 
   <!-- 国学分类 -->
   <view class="section">
@@ -194,13 +194,8 @@
   </view>
 
   <!-- 原生广告 -->
-  <ad
-    unit-id="adunit-513a37c7d48cdf7f"
-    ad-type="native"
-    native-ad-template="large"
-    class="home-ad"
-    binderror="onAdError"
-  ></ad>
+  <ad unit-id="adunit-67efd80bac46e2ad" bindload="adLoad" binderror="adError" bindclose="adClose"></ad>
+
 
   <view class="safe-bottom"></view>
 </view>

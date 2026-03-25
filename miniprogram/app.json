@@ -28,12 +28,7 @@
         "iconPath": "images/tab_home.png",
         "selectedIconPath": "images/tab_home_active.png"
       },
-      {
-        "pagePath": "pages/translate/index",
-        "text": "译文",
-        "iconPath": "images/tab_translate.png",
-        "selectedIconPath": "images/tab_translate_active.png"
-      },
+      
       {
         "pagePath": "pages/classics/index",
         "text": "典籍",

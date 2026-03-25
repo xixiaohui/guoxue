@@ -279,5 +279,14 @@ Page({
       title: p && p.title ? `《${p.title}》—— ${p.author || ''}` : '诗词典籍 · 传承经典之美',
       query: 'from=timeline',
     };
+  },
+  adLoad() {
+    console.log('Banner 广告加载成功')
+  },
+  adError(err) {
+    console.error('Banner 广告加载失败', err)
+  },
+  adClose() {
+    console.log('Banner 广告关闭')
   }
 });

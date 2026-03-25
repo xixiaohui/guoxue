@@ -24,15 +24,8 @@
   <view class="search-bar">
     <view class="search-inner">
       <text class="search-icon">🔍</text>
-      <input
-        class="search-input"
-        value="{{searchText}}"
-        bindinput="onSearchInput"
-        placeholder="搜索学派、思想家、名言…"
-        placeholder-class="search-placeholder"
-        confirm-type="search"
-        bindconfirm="doSearch"
-      />
+      <input class="search-input" value="{{searchText}}" bindinput="onSearchInput" placeholder="搜索学派、思想家、名言…"
+        placeholder-class="search-placeholder" confirm-type="search" bindconfirm="doSearch" />
       <view class="search-btn" bindtap="doSearch" hover-class="search-btn-hover" hover-stay-time="80">
         <text class="search-btn-text">探索</text>
       </view>
@@ -47,7 +40,8 @@
         <text class="result-title">{{currentQuery || 'AI解析'}}</text>
       </view>
       <view class="result-actions">
-        <view class="action-btn" wx:if="{{aiResult}}" bindtap="copyResult" hover-class="action-hover" hover-stay-time="80">
+        <view class="action-btn" wx:if="{{aiResult}}" bindtap="copyResult" hover-class="action-hover"
+          hover-stay-time="80">
           <text>📋</text>
         </view>
         <view class="action-btn" bindtap="closeResult" hover-class="action-hover" hover-stay-time="80">
@@ -79,15 +73,8 @@
       </view>
     </view>
     <view class="schools-grid">
-      <view
-        class="school-card"
-        wx:for="{{schools}}"
-        wx:key="id"
-        bindtap="openSchool"
-        data-school="{{item}}"
-        hover-class="school-hover"
-        hover-stay-time="100"
-      >
+      <view class="school-card" wx:for="{{schools}}" wx:key="id" bindtap="openSchool" data-school="{{item}}"
+        hover-class="school-hover" hover-stay-time="100">
         <view class="school-header" style="background:{{item.color}}">
           <text class="school-emoji">{{item.emoji}}</text>
           <text class="school-name">{{item.name}}</text>
@@ -97,12 +84,7 @@
           <text class="school-core">{{item.core}}</text>
           <text class="school-desc">{{item.desc}}</text>
           <view class="school-works">
-            <text
-              class="work-tag"
-              wx:for="{{item.masterWorks}}"
-              wx:for-item="w"
-              wx:key="index"
-            >{{w}}</text>
+            <text class="work-tag" wx:for="{{item.masterWorks}}" wx:for-item="w" wx:key="index">{{w}}</text>
           </view>
           <text class="school-cta">AI深度解析 →</text>
         </view>
@@ -120,15 +102,8 @@
     </view>
     <scroll-view scroll-x show-scrollbar="{{false}}" class="quotes-scroll" enhanced="{{true}}" bounces="{{false}}">
       <view class="quotes-row">
-        <view
-          class="quote-card"
-          wx:for="{{masterQuotes}}"
-          wx:key="index"
-          bindtap="exploreQuote"
-          data-quote="{{item}}"
-          hover-class="quote-hover"
-          hover-stay-time="80"
-        >
+        <view class="quote-card" wx:for="{{masterQuotes}}" wx:key="index" bindtap="exploreQuote" data-quote="{{item}}"
+          hover-class="quote-hover" hover-stay-time="80">
           <view class="quote-school-badge" style="background:{{item.color}}">{{item.school}}</view>
           <text class="quote-text">{{item.text}}</text>
           <text class="quote-author">—— {{item.author}}</text>
@@ -223,6 +198,13 @@
       </view>
     </view>
   </view>
+
+  <!-- 底部 -->
+  <view class="home-footer">
+    <text class="footer-txt">传承国学精髓 · 智慧赋能人生</text>
+  </view>
+  <!-- 原生广告 -->
+  <ad unit-id="adunit-67efd80bac46e2ad" bindload="adLoad" binderror="adError" bindclose="adClose"></ad>
 
   <view class="safe-bottom"></view>
 </view>

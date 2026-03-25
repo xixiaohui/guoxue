@@ -192,4 +192,7 @@
 .fact-tag { font-size: 19rpx; color: #2A5AA0; background: #EDF3FF; padding: 3rpx 12rpx; border-radius: 10rpx; align-self: flex-start; }
 .fact-text { font-size: 24rpx; color: #2C1810; line-height: 1.7; white-space: normal; }
 
-.safe-bottom { height: env(safe-area-inset-bottom); background: #FDF6E3; }
+/* ── 底部 ─────────────────────────────── */
+.home-footer { padding: 36rpx 0 20rpx; text-align: center; }
+.footer-txt { font-size: 22rpx; color: #B09070; letter-spacing: 2rpx; }
+.safe-bottom { height: env(safe-area-inset-bottom); min-height: 40rpx; }

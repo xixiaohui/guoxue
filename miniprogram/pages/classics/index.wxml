@@ -13,22 +13,10 @@
   <view class="search-bar">
     <view class="search-inner">
       <text class="search-icon">🔍</text>
-      <input
-        class="search-input"
-        value="{{searchText}}"
-        bindinput="onSearchInput"
-        placeholder="搜索诗词名句、作者、典籍…"
-        placeholder-class="search-placeholder"
-        confirm-type="search"
-        bindconfirm="doSearch"
-      />
-      <view
-        class="search-btn"
-        bindtap="doSearch"
-        hover-class="search-btn-hover"
-        hover-stay-time="80"
-        wx:if="{{!isSearching}}"
-      >
+      <input class="search-input" value="{{searchText}}" bindinput="onSearchInput" placeholder="搜索诗词名句、作者、典籍…"
+        placeholder-class="search-placeholder" confirm-type="search" bindconfirm="doSearch" />
+      <view class="search-btn" bindtap="doSearch" hover-class="search-btn-hover" hover-stay-time="80"
+        wx:if="{{!isSearching}}">
         <text class="search-btn-text">搜索</text>
       </view>
       <view class="search-loading" wx:else>
@@ -45,7 +33,8 @@
         <text class="result-title">AI解析结果</text>
       </view>
       <view class="result-actions">
-        <view class="action-btn" wx:if="{{searchResult}}" bindtap="copySearchResult" hover-class="action-hover" hover-stay-time="80">
+        <view class="action-btn" wx:if="{{searchResult}}" bindtap="copySearchResult" hover-class="action-hover"
+          hover-stay-time="80">
           <text>📋 复制</text>
         </view>
         <view class="action-btn close-btn" bindtap="closeSearch" hover-class="action-hover" hover-stay-time="80">
@@ -71,15 +60,8 @@
   <!-- 分类Tab -->
   <scroll-view scroll-x show-scrollbar="{{false}}" class="tabs-scroll" enhanced="{{true}}" bounces="{{false}}">
     <view class="tabs-row">
-      <view
-        class="tab-item {{activeTab === item.id ? 'tab-active' : ''}}"
-        wx:for="{{tabs}}"
-        wx:key="id"
-        bindtap="switchTab"
-        data-id="{{item.id}}"
-        hover-class="tab-hover"
-        hover-stay-time="80"
-      >
+      <view class="tab-item {{activeTab === item.id ? 'tab-active' : ''}}" wx:for="{{tabs}}" wx:key="id"
+        bindtap="switchTab" data-id="{{item.id}}" hover-class="tab-hover" hover-stay-time="80">
         <text class="tab-icon">{{item.icon}}</text>
         <text class="tab-name">{{item.name}}</text>
       </view>
@@ -92,16 +74,8 @@
     <view class="featured-section">
       <scroll-view scroll-x show-scrollbar="{{false}}" class="featured-scroll" enhanced="{{true}}" bounces="{{false}}">
         <view class="featured-row">
-          <view
-            class="featured-card"
-            wx:for="{{featuredPoems}}"
-            wx:key="id"
-            style="background:{{item.color}}"
-            bindtap="openPoem"
-            data-poem="{{item}}"
-            hover-class="featured-hover"
-            hover-stay-time="100"
-          >
+          <view class="featured-card" wx:for="{{featuredPoems}}" wx:key="id" style="background:{{item.color}}"
+            bindtap="openPoem" data-poem="{{item}}" hover-class="featured-hover" hover-stay-time="100">
             <view class="featured-badge">精选</view>
             <text class="featured-desc">{{item.desc}}</text>
             <text class="featured-title">{{item.title}}</text>
@@ -120,15 +94,8 @@
           <text class="section-label">更多诗词</text>
         </view>
       </view>
-      <view
-        class="poem-item"
-        wx:for="{{poems}}"
-        wx:key="id"
-        bindtap="openPoem"
-        data-poem="{{item}}"
-        hover-class="poem-hover"
-        hover-stay-time="80"
-      >
+      <view class="poem-item" wx:for="{{poems}}" wx:key="id" bindtap="openPoem" data-poem="{{item}}"
+        hover-class="poem-hover" hover-stay-time="80">
         <view class="poem-left">
           <text class="poem-dynasty-tag">{{item.dynasty}}</text>
         </view>
@@ -152,15 +119,8 @@
         </view>
       </view>
       <view class="books-grid">
-        <view
-          class="book-card"
-          wx:for="{{classicBooks}}"
-          wx:key="id"
-          bindtap="openClassic"
-          data-book="{{item}}"
-          hover-class="book-hover"
-          hover-stay-time="100"
-        >
+        <view class="book-card" wx:for="{{classicBooks}}" wx:key="id" bindtap="openClassic" data-book="{{item}}"
+          hover-class="book-hover" hover-stay-time="100">
           <view class="book-icon-wrap" style="background:{{item.color}}">
             <text class="book-icon">{{item.icon}}</text>
           </view>
@@ -168,12 +128,7 @@
           <text class="book-era">{{item.era}}</text>
           <text class="book-desc">{{item.desc}}</text>
           <view class="book-highlights">
-            <text
-              class="book-hl"
-              wx:for="{{item.highlights}}"
-              wx:for-item="hl"
-              wx:key="index"
-            >「{{hl}}」</text>
+            <text class="book-hl" wx:for="{{item.highlights}}" wx:for-item="hl" wx:key="index">「{{hl}}」</text>
           </view>
         </view>
       </view>
@@ -187,15 +142,8 @@
         <text class="dynasty-banner-title">盛唐气象</text>
         <text class="dynasty-banner-sub">李白·杜甫·王维·白居易 群星璀璨</text>
       </view>
-      <view
-        class="poem-item"
-        wx:for="{{tangPoems}}"
-        wx:key="id"
-        bindtap="openPoem"
-        data-poem="{{item}}"
-        hover-class="poem-hover"
-        hover-stay-time="80"
-      >
+      <view class="poem-item" wx:for="{{tangPoems}}" wx:key="id" bindtap="openPoem" data-poem="{{item}}"
+        hover-class="poem-hover" hover-stay-time="80">
         <view class="poem-left">
           <text class="poem-dynasty-tag">唐</text>
         </view>
@@ -216,15 +164,8 @@
         <text class="dynasty-banner-title">词章风骨</text>
         <text class="dynasty-banner-sub">苏轼·辛弃疾·李清照 情词雅韵</text>
       </view>
-      <view
-        class="poem-item"
-        wx:for="{{songCi}}"
-        wx:key="id"
-        bindtap="openPoem"
-        data-poem="{{item}}"
-        hover-class="poem-hover"
-        hover-stay-time="80"
-      >
+      <view class="poem-item" wx:for="{{songCi}}" wx:key="id" bindtap="openPoem" data-poem="{{item}}"
+        hover-class="poem-hover" hover-stay-time="80">
         <view class="poem-left">
           <text class="poem-dynasty-tag song-tag">宋</text>
         </view>
@@ -245,15 +186,8 @@
         <text class="dynasty-banner-title">曲韵悠扬</text>
         <text class="dynasty-banner-sub">马致远·张养浩·白朴 散曲精华</text>
       </view>
-      <view
-        class="poem-item"
-        wx:for="{{yuanQu}}"
-        wx:key="id"
-        bindtap="openPoem"
-        data-poem="{{item}}"
-        hover-class="poem-hover"
-        hover-stay-time="80"
-      >
+      <view class="poem-item" wx:for="{{yuanQu}}" wx:key="id" bindtap="openPoem" data-poem="{{item}}"
+        hover-class="poem-hover" hover-stay-time="80">
         <view class="poem-left">
           <text class="poem-dynasty-tag yuan-tag">元</text>
         </view>
@@ -295,25 +229,26 @@
       </scroll-view>
 
       <view class="modal-actions">
-        <view
-          class="modal-action-btn favor-btn {{isFavorited ? 'favorited' : ''}}"
-          bindtap="toggleFavoritePoem"
-          hover-class="modal-btn-hover"
-          hover-stay-time="80"
-        >
+        <view class="modal-action-btn favor-btn {{isFavorited ? 'favorited' : ''}}" bindtap="toggleFavoritePoem"
+          hover-class="modal-btn-hover" hover-stay-time="80">
           <text>{{isFavorited ? '❤️ 已收藏' : '🤍 收藏'}}</text>
         </view>
-        <view
-          class="modal-action-btn analyze-btn"
-          bindtap="analyzePoem"
-          hover-class="modal-btn-hover"
-          hover-stay-time="80"
-        >
+        <view class="modal-action-btn analyze-btn" bindtap="analyzePoem" hover-class="modal-btn-hover"
+          hover-stay-time="80">
           <text>{{poemLoading ? '分析中…' : (currentPoem.analysis ? '✓ 已解析' : '✨ AI赏析')}}</text>
         </view>
       </view>
     </view>
   </view>
+
+  <!-- 底部 -->
+  <view class="home-footer">
+    <text class="footer-txt">传承国学精髓 · 智慧赋能人生</text>
+  </view>
+  <!-- 原生广告 -->
+  <ad unit-id="adunit-67efd80bac46e2ad" bindload="adLoad" binderror="adError" bindclose="adClose"></ad>
+
+
 
   <view class="safe-bottom"></view>
 </view>

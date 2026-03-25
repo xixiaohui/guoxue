@@ -241,5 +241,14 @@ Page({
       title: q ? `【${q}】探究历史真相` : '国学助手 · 历史探秘',
       query: 'from=timeline',
     };
+  },
+  adLoad() {
+    console.log('Banner 广告加载成功')
+  },
+  adError(err) {
+    console.error('Banner 广告加载失败', err)
+  },
+  adClose() {
+    console.log('Banner 广告关闭')
   }
 });

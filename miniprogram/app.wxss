@@ -1,5 +1,13 @@
 /**app.wxss - 国学AI助手全局样式**/
 
+/*{
+        "pagePath": "pages/translate/index",
+        "text": "译文",
+        "iconPath": "images/tab_translate.png",
+        "selectedIconPath": "images/tab_translate_active.png"
+      },
+      */
+
 /* 导入字体相关 */
 page {
   background: #FDF6E3;

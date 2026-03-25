@@ -271,5 +271,14 @@ Page({
       title: s && s.name ? `【${s.name}】思想精华，流传千年` : '国学助手 · 诸子百家思想宝库',
       query: 'from=timeline',
     };
+  },
+  adLoad() {
+    console.log('Banner 广告加载成功')
+  },
+  adError(err) {
+    console.error('Banner 广告加载失败', err)
+  },
+  adClose() {
+    console.log('Banner 广告关闭')
   }
 });

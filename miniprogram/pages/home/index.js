@@ -67,7 +67,7 @@ Page({
 
     // 五大功能模块
     funcs: [
-      { id: 'translate',    name: '古文翻译',  desc: '文言白话互译', char: '译', bg: 'linear-gradient(135deg,#52C8A0,#1A8060)', page: '/pages/translate/index',    isTab: true  },
+      // { id: 'translate',    name: '古文翻译',  desc: '文言白话互译', char: '译', bg: 'linear-gradient(135deg,#52C8A0,#1A8060)', page: '/pages/translate/index',    isTab: true  },
       { id: 'classics',     name: '诗词典籍',  desc: '经典赏析鉴读', char: '詩', bg: 'linear-gradient(135deg,#9B6FD5,#6A3DA8)', page: '/pages/classics/index',     isTab: true  },
       { id: 'idiom',        name: '成语故事',  desc: '典故溯源解析', char: '成', bg: 'linear-gradient(135deg,#F0B840,#C48A10)', page: '/pages/idiom/index',         isTab: false },
       { id: 'history',      name: '历史探秘',  desc: '朝代人物探究', char: '史', bg: 'linear-gradient(135deg,#5BC8F5,#1A7ED5)', page: '/pages/history/index',      isTab: true  },
@@ -81,7 +81,7 @@ Page({
       { id: 3, name: '成语典故', desc: '字里乾坤，故事传承',  icon: '🏮', bg: 'linear-gradient(135deg,#F7C948,#C48A10)', page: '/pages/idiom/index',         isTab: false },
       { id: 4, name: '历史文化', desc: '朝代更迭，人文风华',  icon: '🏯', bg: 'linear-gradient(135deg,#9B8FD5,#5A3DA8)', page: '/pages/history/index',      isTab: true  },
       { id: 5, name: '诸子百家', desc: '百家争鸣，思想精华',  icon: '⛩️', bg: 'linear-gradient(135deg,#FF8FA3,#C03060)', page: '/pages/philosophers/index',  isTab: true  },
-      { id: 6, name: '古文翻译', desc: '文言白话，智慧互通',  icon: '🖌️', bg: 'linear-gradient(135deg,#5BC8F5,#1A7ED5)', page: '/pages/translate/index',    isTab: true  }
+      // { id: 6, name: '古文翻译', desc: '文言白话，智慧互通',  icon: '🖌️', bg: 'linear-gradient(135deg,#5BC8F5,#1A7ED5)', page: '/pages/translate/index',    isTab: true  }
     ],
 
     // 海报相关
@@ -354,5 +354,15 @@ Page({
 
   onAdError(e) {
     console.warn('[Home] ad error:', e.detail);
+  },
+
+  adLoad() {
+    console.log('Banner 广告加载成功')
+  },
+  adError(err) {
+    console.error('Banner 广告加载失败', err)
+  },
+  adClose() {
+    console.log('Banner 广告关闭')
   }
 });
