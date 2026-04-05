@@ -1,4 +1,4 @@
-// pages/history/index.js - 历史探秘页 v6.0（生产级，无AI问答跳转）
+// pages/history/index.js - 历史探秘页 v8.0（云数据库缓存版）
 const api = require('../../utils/api');
 const monetize = require('../../utils/monetize');
 
@@ -122,22 +122,6 @@ Page({
   async doSearch() {
     const text = this.data.searchText.trim();
     if (!text || this.data.isLoading) return;
-
-    let quotaResult;
-    try {
-      quotaResult = await monetize.consumeQuota();
-    } catch (e) {
-      quotaResult = { allowed: true, reason: 'fallback' };
-    }
-
-    if (!quotaResult.allowed) {
-      const unlocked = await monetize.handleQuotaExceeded({
-        onContinue: () => this._doSearch(text)
-      });
-      if (!unlocked) return;
-      this._doSearch(text);
-      return;
-    }
     this._doSearch(text);
   },
 
@@ -145,7 +129,7 @@ Page({
     this.setData({ isLoading: true, aiResult: '', aiResultSections: [], currentQuery: text });
     try {
       const res = await api.queryHistory(text);
-      const sections = this._parseSections(res.content);
+      const sections = res.sections || this._parseSections(res.content);
       this.setData({ aiResult: res.content, aiResultSections: sections, isLoading: false });
       wx.pageScrollTo({ selector: '.ai-result-section', duration: 400 });
     } catch (e) {
@@ -168,12 +152,11 @@ Page({
   // ── 点击时间轴事件 ──────────────────────────────
   async exploreEvent(e) {
     const event = e.currentTarget.dataset.event;
-    const query = `${event.name}（${event.year}）的详细历史背景、经过和影响`;
-    this.setData({ isLoading: true, aiResult: '', aiResultSections: [], currentQuery: query });
-
+    const query = `${event.name}（${event.year}）的历史背景、经过和影响`;
+    this.setData({ isLoading: true, aiResult: '', aiResultSections: [], currentQuery: event.name });
     try {
       const res = await api.queryHistory(query);
-      const sections = this._parseSections(res.content);
+      const sections = res.sections || this._parseSections(res.content);
       this.setData({ aiResult: res.content, aiResultSections: sections, isLoading: false });
       wx.pageScrollTo({ selector: '.ai-result-section', duration: 400 });
     } catch (err) {
@@ -185,11 +168,11 @@ Page({
   // ── 探索名人 ──────────────────────────────
   async exploreFigure(e) {
     const figure = e.currentTarget.dataset.figure;
-    const query = `请详细介绍${figure.dynasty}${figure.name}的生平事迹、主要贡献和历史评价`;
-    this.setData({ isLoading: true, aiResult: '', aiResultSections: [], currentQuery: query });
+    const query = `${figure.dynasty}${figure.name}的生平事迹、主要贡献和历史评价`;
+    this.setData({ isLoading: true, aiResult: '', aiResultSections: [], currentQuery: figure.name });
     try {
       const res = await api.queryHistory(query);
-      const sections = this._parseSections(res.content);
+      const sections = res.sections || this._parseSections(res.content);
       this.setData({ aiResult: res.content, aiResultSections: sections, isLoading: false });
       wx.pageScrollTo({ selector: '.ai-result-section', duration: 400 });
     } catch (e) {
@@ -200,10 +183,10 @@ Page({
   // ── 历史趣闻 ──────────────────────────────
   async exploreTrivia(e) {
     const trivia = e.currentTarget.dataset.trivia;
-    this.setData({ isLoading: true, aiResult: '', aiResultSections: [], currentQuery: trivia.query });
+    this.setData({ isLoading: true, aiResult: '', aiResultSections: [], currentQuery: trivia.title });
     try {
       const res = await api.queryHistory(trivia.query);
-      const sections = this._parseSections(res.content);
+      const sections = res.sections || this._parseSections(res.content);
       this.setData({ aiResult: res.content, aiResultSections: sections, isLoading: false });
       wx.pageScrollTo({ selector: '.ai-result-section', duration: 400 });
     } catch (e) {

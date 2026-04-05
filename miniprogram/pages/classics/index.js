@@ -1,4 +1,4 @@
-// pages/classics/index.js - 诗词典籍页 v6.0（生产级，丰富内容）
+// pages/classics/index.js - 诗词典籍页 v8.0（云数据库缓存版）
 const api = require('../../utils/api');
 const storage = require('../../utils/storage');
 const monetize = require('../../utils/monetize');
@@ -123,33 +123,17 @@ Page({
   async doSearch() {
     const text = this.data.searchText.trim();
     if (!text || this.data.isSearching) return;
-
-    let quotaResult;
-    try {
-      quotaResult = await monetize.consumeQuota();
-    } catch (e) {
-      quotaResult = { allowed: true, reason: 'fallback' };
-    }
-
-    if (!quotaResult.allowed) {
-      const unlocked = await monetize.handleQuotaExceeded({
-        onContinue: () => this._doSearch(text)
-      });
-      if (!unlocked) return;
-      this._doSearch(text);
-      return;
-    }
     this._doSearch(text);
   },
 
   async _doSearch(text) {
     this.setData({ isSearching: true, searchResult: '', searchSections: [] });
     try {
-      const res = await api.analyzePoem(text);
+      const res = await api.analyzePoem(text, { title: text });
       const raw = res.analysis || '';
       this.setData({
         searchResult: raw,
-        searchSections: this._parseSections(raw),
+        searchSections: res.sections || this._parseSections(raw),
         isSearching: false
       });
       wx.pageScrollTo({ selector: '.search-result-section', duration: 400 });
@@ -188,35 +172,19 @@ Page({
 
   stopProp() {},
 
-  // ── AI诗词赏析 ──────────────────────────────
   async analyzePoem() {
     const poem = this.data.currentPoem;
     if (poem.analysis) return;
     if (this.data.poemLoading) return;
-
-    let quotaResult;
-    try {
-      quotaResult = await monetize.consumeQuota();
-    } catch (e) {
-      quotaResult = { allowed: true, reason: 'fallback' };
-    }
-
-    if (!quotaResult.allowed) {
-      const unlocked = await monetize.handleQuotaExceeded({
-        onContinue: () => this._doAnalyzePoem(poem)
-      });
-      if (!unlocked) return;
-      this._doAnalyzePoem(poem);
-      return;
-    }
     this._doAnalyzePoem(poem);
   },
 
   async _doAnalyzePoem(poem) {
     this.setData({ poemLoading: true });
     try {
-      const res = await api.analyzePoem(`${poem.title} - ${poem.author}\n${poem.content}`);
-      const updatedPoem = { ...poem, analysis: res.analysis };
+      const text = poem.content ? `${poem.title} - ${poem.author}\n${poem.content}` : poem.title;
+      const res = await api.analyzePoem(text, { title: poem.title, author: poem.author, dynasty: poem.dynasty });
+      const updatedPoem = { ...poem, analysis: res.analysis, analysisSections: res.sections || [] };
       this.setData({ currentPoem: updatedPoem, poemLoading: false });
     } catch (e) {
       this.setData({ poemLoading: false });

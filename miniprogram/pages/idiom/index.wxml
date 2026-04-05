@@ -48,7 +48,7 @@
     <!-- 加载中 -->
     <view class="result-loading" wx:if="{{isLoading}}">
       <view class="ai-loading-icon">🤔</view>
-      <text class="ai-loading-text">AI正在溯源成语故事…</text>
+      <text class="ai-loading-text">正在查询成语典故…</text>
     </view>
 
     <!-- 分段结果 -->

@@ -32,12 +32,12 @@
     </view>
   </view>
 
-  <!-- AI解析结果 -->
+  <!-- 内容解析 -->
   <view class="ai-result-section" wx:if="{{aiResult || isLoading}}">
     <view class="result-header">
       <view class="result-title-row">
         <view class="result-dot"></view>
-        <text class="result-title">{{currentQuery || 'AI解析'}}</text>
+        <text class="result-title">{{currentQuery || '内容解析'}}</text>
       </view>
       <view class="result-actions">
         <view class="action-btn" wx:if="{{aiResult}}" bindtap="copyResult" hover-class="action-hover"
@@ -51,7 +51,7 @@
     </view>
     <view class="result-loading" wx:if="{{isLoading}}">
       <view class="ai-loading-icon">🤔</view>
-      <text class="ai-loading-text">AI正在探索诸子思想…</text>
+      <text class="ai-loading-text">正在查询诸子思想…</text>
     </view>
     <view class="result-body" wx:elif="{{aiResultSections.length > 0}}">
       <view class="seg-block" wx:for="{{aiResultSections}}" wx:key="index">
@@ -86,7 +86,7 @@
           <view class="school-works">
             <text class="work-tag" wx:for="{{item.masterWorks}}" wx:for-item="w" wx:key="index">{{w}}</text>
           </view>
-          <text class="school-cta">AI深度解析 →</text>
+          <text class="school-cta">深度解析 →</text>
         </view>
       </view>
     </view>
@@ -193,7 +193,7 @@
           <text>关闭</text>
         </view>
         <view class="modal-analyze-btn" bindtap="analyzeSchool" hover-class="btn-hover" hover-stay-time="80">
-          <text>✨ AI深度解析</text>
+          <text>✨ 深度解析</text>
         </view>
       </view>
     </view>
