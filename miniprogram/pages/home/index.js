@@ -251,12 +251,12 @@ Page({
 
   // ── 点击每日经典卡片 → 古文翻译赏析 ─────────────────────
   goDiscussDaily() {
-    wx.switchTab({ url: '/pages/translate/index' });
+    wx.navigateTo({ url: '/pages/translate/index' });
   },
 
   // ── 快速翻译 ──────────────────────────────────
   goTranslate() {
-    wx.switchTab({ url: '/pages/translate/index' });
+    wx.navigateTo({ url: '/pages/translate/index' });
   },
 
   // ── 会员中心 ──────────────────────────────────

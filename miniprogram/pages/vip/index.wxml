@@ -4,7 +4,7 @@
   <!-- 顶部会员横幅 -->
   <view class="vip-header">
     <view class="vip-crown">👑</view>
-    <view class="vip-title">国学AI助手 · 会员中心</view>
+    <view class="vip-title">国学助手 · 会员中心</view>
     <view class="vip-subtitle">开启无限国学之旅</view>
 
     <!-- 当前状态 -->
@@ -86,7 +86,7 @@
     <button class="btn-ad" bindtap="watchAd">
       📺 观看广告 · 解锁今日无限
     </button>
-    <view class="ad-hint">观看约15秒广告，今天无限次使用AI功能</view>
+    <view class="ad-hint">观看约15秒广告，今天无限次使用所有功能</view>
   </view>
 
   <!-- 已是会员 -->
