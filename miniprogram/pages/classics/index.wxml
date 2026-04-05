@@ -30,7 +30,7 @@
     <view class="result-header">
       <view class="result-title-row">
         <view class="result-dot"></view>
-        <text class="result-title">AI解析结果</text>
+        <text class="result-title">内容解析</text>
       </view>
       <view class="result-actions">
         <view class="action-btn" wx:if="{{searchResult}}" bindtap="copySearchResult" hover-class="action-hover"
@@ -44,7 +44,7 @@
     </view>
     <view class="result-loading" wx:if="{{isSearching}}">
       <view class="ai-loading-icon">📖</view>
-      <text class="ai-loading-text">AI正在深度解析…</text>
+      <text class="ai-loading-text">正在查询诗词解析…</text>
     </view>
     <view class="result-body" wx:elif="{{searchSections.length > 0}}">
       <view class="seg-block" wx:for="{{searchSections}}" wx:key="index">
@@ -217,13 +217,13 @@
         <view class="section-label-sm">原文</view>
         <text class="poem-original">{{currentPoem.content}}</text>
 
-        <!-- AI赏析 -->
+        <!-- 智能赏析 -->
         <view wx:if="{{poemLoading}}" class="poem-loading">
           <text class="ai-loading-icon-sm">🤔</text>
-          <text class="ai-loading-text">AI正在赏析中…</text>
+          <text class="ai-loading-text">正在加载赏析内容…</text>
         </view>
         <view wx:elif="{{currentPoem.analysis}}" class="poem-analysis">
-          <view class="section-label-sm">AI赏析</view>
+          <view class="section-label-sm">智能赏析</view>
           <text class="analysis-text">{{currentPoem.analysis}}</text>
         </view>
       </scroll-view>
@@ -233,9 +233,13 @@
           hover-class="modal-btn-hover" hover-stay-time="80">
           <text>{{isFavorited ? '❤️ 已收藏' : '🤍 收藏'}}</text>
         </view>
-        <view class="modal-action-btn analyze-btn" bindtap="analyzePoem" hover-class="modal-btn-hover"
-          hover-stay-time="80">
-          <text>{{poemLoading ? '分析中…' : (currentPoem.analysis ? '✓ 已解析' : '✨ AI赏析')}}</text>
+        <view
+          class="modal-action-btn analyze-btn"
+          bindtap="analyzePoem"
+          hover-class="modal-btn-hover"
+          hover-stay-time="80"
+        >
+          <text>{{poemLoading ? '分析中…' : (currentPoem.analysis ? '✓ 已解析' : '✨ 查看赏析')}}</text>
         </view>
       </view>
     </view>

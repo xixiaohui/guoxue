@@ -1,4 +1,4 @@
-// pages/philosophers/index.js - 诸子百家页 v6.0（全新页面，生产级）
+// pages/philosophers/index.js - 诸子百家页 v8.0（云数据库缓存版）
 const api = require('../../utils/api');
 const monetize = require('../../utils/monetize');
 
@@ -131,30 +131,14 @@ Page({
   async doSearch() {
     const text = this.data.searchText.trim();
     if (!text || this.data.isLoading) return;
-
-    let quotaResult;
-    try {
-      quotaResult = await monetize.consumeQuota();
-    } catch (e) {
-      quotaResult = { allowed: true, reason: 'fallback' };
-    }
-
-    if (!quotaResult.allowed) {
-      const unlocked = await monetize.handleQuotaExceeded({
-        onContinue: () => this._doSearch(text)
-      });
-      if (!unlocked) return;
-      this._doSearch(text);
-      return;
-    }
     this._doSearch(text);
   },
 
   async _doSearch(text) {
     this.setData({ isLoading: true, aiResult: '', aiResultSections: [], currentQuery: text });
     try {
-      const res = await api.queryHistory(`诸子百家：${text}`);
-      const sections = this._parseSections(res.content);
+      const res = await api.analyzePhilosopher('', `诸子百家：${text}`);
+      const sections = res.sections || this._parseSections(res.content);
       this.setData({ aiResult: res.content, aiResultSections: sections, isLoading: false });
       wx.pageScrollTo({ selector: '.ai-result-section', duration: 400 });
     } catch (e) {
@@ -190,34 +174,17 @@ Page({
   async analyzeSchool() {
     const school = this.data.activeSchool;
     if (!school || this.data.isLoading) return;
-
-    let quotaResult;
-    try {
-      quotaResult = await monetize.consumeQuota();
-    } catch (e) {
-      quotaResult = { allowed: true, reason: 'fallback' };
-    }
-
-    if (!quotaResult.allowed) {
-      const unlocked = await monetize.handleQuotaExceeded({
-        onContinue: () => this._analyzeSchool(school)
-      });
-      if (!unlocked) return;
-      this._analyzeSchool(school);
-      return;
-    }
     this._analyzeSchool(school);
   },
 
   async _analyzeSchool(school) {
-    const query = `请详细介绍${school.name}的核心思想、主要代表人物、代表著作和历史影响`;
-    this.setData({ isLoading: true, closeSchoolModal: false });
+    const query = `${school.name}（${school.founder}）的核心思想、代表人物、著作和历史影响`;
+    this.setData({ isLoading: true });
     this.closeModal();
-
-    this.setData({ aiResult: '', aiResultSections: [], currentQuery: query });
+    this.setData({ aiResult: '', aiResultSections: [], currentQuery: `${school.name} · 深度解析` });
     try {
-      const res = await api.queryHistory(query);
-      const sections = this._parseSections(res.content);
+      const res = await api.analyzePhilosopher(school.name, query);
+      const sections = res.sections || this._parseSections(res.content);
       this.setData({ aiResult: res.content, aiResultSections: sections, isLoading: false });
       wx.pageScrollTo({ selector: '.ai-result-section', duration: 400 });
     } catch (e) {
@@ -229,11 +196,11 @@ Page({
   // ── 查询名言 ──────────────────────────────
   async exploreQuote(e) {
     const quote = e.currentTarget.dataset.quote;
-    const query = `请解读"${quote.text}"（${quote.author}）的含义、背景和现代启示`;
-    this.setData({ isLoading: true, aiResult: '', aiResultSections: [], currentQuery: query });
+    const query = `解读名言"${quote.text}"（${quote.author}）的含义、背景和现代启示`;
+    this.setData({ isLoading: true, aiResult: '', aiResultSections: [], currentQuery: `"${quote.text.slice(0,12)}…"解析` });
     try {
-      const res = await api.queryHistory(query);
-      const sections = this._parseSections(res.content);
+      const res = await api.analyzePhilosopher('', query);
+      const sections = res.sections || this._parseSections(res.content);
       this.setData({ aiResult: res.content, aiResultSections: sections, isLoading: false });
       wx.pageScrollTo({ selector: '.ai-result-section', duration: 400 });
     } catch (e) {

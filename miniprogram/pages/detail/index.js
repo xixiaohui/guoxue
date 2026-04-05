@@ -36,36 +36,26 @@ Page({
     if (this._bannerAd) { try { this._bannerAd.destroy(); } catch (e) {} }
   },
 
-  // ── 加载 AI 内容 ──────────────────────────────
+  // ── 加载 AI 内容（云数据库缓存版）──────────────────────────────
   async _loadAiContent(title, content, category) {
     this.setData({ isLoading: true });
-
     try {
       let res;
       if (category === 'poem') {
-        res = await api.analyzePoem(`${title}\n${content}`);
+        res = await api.analyzePoem(`${title}\n${content}`, { title });
         const raw = res.analysis || '';
-        this.setData({
-          aiContent: raw,
-          aiSections: this._parseSections(raw),
-          isLoading: false
-        });
+        const sections = res.sections || this._parseSections(raw);
+        this.setData({ aiContent: raw, aiSections: sections, isLoading: false });
       } else if (category === 'idiom') {
         res = await api.explainIdiom(title);
         const raw = res.explanation || '';
-        this.setData({
-          aiContent: raw,
-          aiSections: this._parseSections(raw),
-          isLoading: false
-        });
+        const sections = res.sections || this._parseSections(raw);
+        this.setData({ aiContent: raw, aiSections: sections, isLoading: false });
       } else if (category === 'history') {
         res = await api.queryHistory(title);
         const raw = res.content || '';
-        this.setData({
-          aiContent: raw,
-          aiSections: this._parseSections(raw),
-          isLoading: false
-        });
+        const sections = res.sections || this._parseSections(raw);
+        this.setData({ aiContent: raw, aiSections: sections, isLoading: false });
       } else {
         this.setData({ isLoading: false });
       }
@@ -84,15 +74,10 @@ Page({
     });
   },
 
-  // ── 继续探讨 ──────────────────────────────
+  // ── 继续探讨（返回上一页）──────────────────────────────
   continueInChat() {
-    const { title, content } = this.data;
-    const topic = content
-      ? `请深入讲解"${title}"：${content.substring(0, 80)}`
-      : title;
-    wx.navigateTo({
-      url: `/pages/chat/index?topic=${encodeURIComponent(topic)}`
-    });
+    // 无AI问答页，直接返回对应模块页面
+    wx.navigateBack({ delta: 1 });
   },
 
   // ── 分享 ──────────────────────────────

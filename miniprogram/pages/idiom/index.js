@@ -128,36 +128,19 @@ Page({
     this.lookupIdiomByWord(word);
   },
 
-  // ── 核心查询（含配额检查）──────────────────────────────
+  // ── 核心查询（云数据库缓存版）──────────────────────────────
   async lookupIdiomByWord(word) {
     if (!word || this.data.isLoading) return;
-
-    let quotaResult;
-    try {
-      quotaResult = await monetize.consumeQuota();
-    } catch (e) {
-      quotaResult = { allowed: true, reason: 'fallback' };
-    }
-
-    if (!quotaResult.allowed) {
-      const unlocked = await monetize.handleQuotaExceeded({
-        onContinue: () => this._doLookupIdiom(word)
-      });
-      if (!unlocked) return;
-      this._doLookupIdiom(word);
-      return;
-    }
     this._doLookupIdiom(word);
   },
 
   async _doLookupIdiom(word) {
     this.setData({ currentIdiom: word, result: '', resultSections: [], isLoading: true });
     wx.pageScrollTo({ selector: '.result-section', duration: 400 });
-
     try {
       const res = await api.explainIdiom(word);
       const text = res.explanation || '';
-      const sections = this._parseSections(text);
+      const sections = res.sections || this._parseSections(text);
       this.setData({ result: text, resultSections: sections, isLoading: false });
     } catch (e) {
       this.setData({ isLoading: false });

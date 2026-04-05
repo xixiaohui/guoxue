@@ -44,8 +44,8 @@
       {
         "pagePath": "pages/philosophers/index",
         "text": "百家",
-        "iconPath": "images/tab_home.png",
-        "selectedIconPath": "images/tab_home_active.png"
+        "iconPath": "images/tab_philosophers.png",
+        "selectedIconPath": "images/tab_philosophers_active.png"
       }
     ]
   },

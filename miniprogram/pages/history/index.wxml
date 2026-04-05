@@ -21,12 +21,12 @@
     </view>
   </view>
 
-  <!-- AI探秘结果 -->
+  <!-- 历史探秘结果 -->
   <view class="ai-result-section" wx:if="{{aiResult || (isLoading && currentQuery)}}">
     <view class="result-header">
       <view class="result-title-row">
         <view class="result-dot"></view>
-        <text class="result-title">{{currentQuery || 'AI历史解析'}}</text>
+        <text class="result-title">{{currentQuery || '历史详情'}}</text>
       </view>
       <view class="result-actions">
         <view class="action-btn" wx:if="{{aiResult}}" bindtap="copyAiResult" hover-class="action-hover"
@@ -40,7 +40,7 @@
     </view>
     <view class="result-loading" wx:if="{{isLoading}}">
       <view class="ai-loading-icon">🔍</view>
-      <text class="ai-loading-text">AI正在翻阅历史典籍…</text>
+      <text class="ai-loading-text">正在查询历史资料…</text>
     </view>
     <view class="result-body" wx:elif="{{aiResultSections.length > 0}}">
       <view class="seg-block" wx:for="{{aiResultSections}}" wx:key="index">
@@ -85,7 +85,7 @@
       </view>
     </view>
 
-    <!-- AI结果（无预置数据时） -->
+    <!-- 历史内容（无预置数据时显示） -->
     <view class="ai-plain-result" wx:if="{{aiResult && timelineEvents.length === 0 && !isLoading}}">
       <text class="ai-plain-text">{{aiResult}}</text>
     </view>
@@ -115,7 +115,7 @@
     <!-- 加载中 -->
     <view class="timeline-loading" wx:elif="{{isLoading && timelineEvents.length === 0}}">
       <view class="ai-loading-icon">📜</view>
-      <text class="ai-loading-text">AI正在整理{{activeTitle}}历史…</text>
+      <text class="ai-loading-text">正在整理{{activeTitle}}历史…</text>
     </view>
   </view>
 

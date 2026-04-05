@@ -1,28 +1,31 @@
 /**
- * utils/api.js - 业务 API 层（生产级）
+ * utils/api.js - 业务 API 层 v8.0（云数据库缓存版）
+ *
+ * 审核要求：不能实时使用 AI 生成答案
+ * 方案：所有 AI 答案先查云数据库（guoxue 集合）缓存
+ *       命中 → 直接返回（无 AI 调用）
+ *       未命中 → AI 生成 → 写入云数据库 → 返回
  *
  * 职责分工：
- *   - AI 调用  → utils/ai.js（wx.cloud.extend.AI，小程序端直调）
- *   - 配额管理 → 云函数 guoxueAI（checkAndConsume / getStatus / adBonus）
- *   - 缓存     → 每日内容本地缓存，同日不重复请求
+ *   - AI 调用    → utils/ai.js
+ *   - 配额管理   → 云函数 guoxueAI
+ *   - 内容缓存   → utils/db.js（本地+云数据库 guoxue 集合）
  *
- * 每个业务函数流程：
- *   1. 输入校验
- *   2. 配额检查（非每日缓存类型）
- *   3. 构建 prompt → 调用 ai.callAI
- *   4. 解析结果 → 返回结构化数据
+ * 内容类型（guoxue 集合 type 字段）：
+ *   poem        诗词赏析
+ *   idiom       成语解释
+ *   history     历史知识
+ *   philosopher 诸子百家
+ *   classic     典籍内容
  */
 
 const ai = require('./ai');
+const db = require('./db');
 
-const QUOTA_FUNC  = 'guoxueAI';    // 云函数名（仅管配额）
-const CACHE_TTL   = 60 * 1000;    // 配额本地缓存 1 分钟
+const QUOTA_FUNC  = 'guoxueAI';
+const CACHE_TTL   = 60 * 1000;
 
-// ─── 配额检查（带本地缓存） ───────────────────────────────────
-/**
- * 消费一次配额
- * @returns {{ allowed:boolean, reason:string, remaining:number }}
- */
+// ─── 配额检查 ─────────────────────────────────────────────────
 async function consumeQuota() {
   try {
     const res = await wx.cloud.callFunction({
@@ -30,11 +33,8 @@ async function consumeQuota() {
       data: { type: 'checkAndConsume' }
     });
     const d = res.result;
-    // 使本地状态缓存失效
     try { wx.removeStorageSync('_quota_cache'); } catch (_) {}
-
     if (!d || !d.success) {
-      // 云函数异常 → 降级放行（不影响用户体验）
       console.warn('[api] consumeQuota cloud error, fallback allow:', d);
       return { allowed: true, reason: 'fallback', remaining: 1 };
     }
@@ -52,9 +52,6 @@ async function consumeQuota() {
   }
 }
 
-/**
- * 查询配额状态（带本地缓存，仅用于展示，不消费）
- */
 async function getQuotaStatus(forceRefresh = false) {
   const CACHE_KEY = '_quota_cache';
   if (!forceRefresh) {
@@ -76,20 +73,11 @@ async function getQuotaStatus(forceRefresh = false) {
   } catch (e) {
     console.warn('[api] getQuotaStatus failed:', e.message);
   }
-  // 降级返回：假装有足够配额
   return { canUse: true, remaining: 10, isVip: false, hasAdBonus: false, freeLimit: 10 };
 }
 
-// ─── 公共调用包装（配额 + AI + 错误统一处理） ─────────────────
-/**
- * @param {string}   type       业务类型（用于限流 key）
- * @param {Array}    messages   AI 消息数组
- * @param {boolean}  needQuota  是否需要消耗配额（每日内容不需要）
- * @param {Object}   opts       { temperature, maxTokens }
- * @returns {Promise<string>}   AI 回复文本
- */
+// ─── 内部：配额检查 + AI 调用（无缓存版，用于翻译等实时场景）─────
 async function _invoke(type, messages, needQuota, opts = {}) {
-  // 配额检查
   if (needQuota) {
     const quota = await consumeQuota();
     if (!quota.allowed) {
@@ -102,21 +90,68 @@ async function _invoke(type, messages, needQuota, opts = {}) {
   return ai.callAI(type, messages, opts);
 }
 
+// ─── 内部：云数据库缓存版调用 ─────────────────────────────────
+/**
+ * 先查云数据库缓存，未命中才调 AI 生成
+ * @param {string}   contentType  类型
+ * @param {string}   cacheKey     唯一键（不含 type 前缀）
+ * @param {Function} buildPrompt  () => string  构建 AI prompt
+ * @param {Object}   aiOpts       AI 调用参数
+ * @param {string}   aiType       AI 限流 key
+ * @param {Object}   meta         { title, ...其他 meta }
+ * @param {boolean}  needQuota    是否需要配额（云端无缓存时才需要）
+ */
+async function _invokeWithCache(contentType, cacheKey, buildPrompt, aiOpts, aiType, meta, needQuota = true) {
+  // 1. 查缓存（本地 + 云端）
+  const cached = await db.getContent(contentType, cacheKey);
+  if (cached.found) {
+    console.log(`[api] cache hit: ${contentType}/${cacheKey} from ${cached.source}`);
+    return cached.data;
+  }
+
+  // 2. 未命中：需要 AI 生成，先检查配额
+  if (needQuota) {
+    const quota = await consumeQuota();
+    if (!quota.allowed) {
+      const e = new Error('今日免费次数已用完，请观看广告或升级会员');
+      e.code = 'QUOTA_EXCEEDED';
+      e.remaining = 0;
+      throw e;
+    }
+  }
+
+  // 3. AI 生成
+  const prompt = buildPrompt();
+  const msgs = [{ role: 'system', content: ai.SYSTEM_PROMPT }, { role: 'user', content: prompt }];
+  const rawText = await ai.callAI(aiType, msgs, aiOpts);
+
+  // 4. 解析段落
+  const sections = _parseSections(rawText);
+  const data = {
+    title:    meta.title || cacheKey,
+    content:  rawText,
+    sections,
+    meta:     { ...meta, generatedAt: Date.now() }
+  };
+
+  // 5. 写云数据库（异步，不阻塞返回）
+  db.saveContent(contentType, cacheKey, data).catch(e =>
+    console.warn('[api] saveContent failed:', e.message)
+  );
+
+  return data;
+}
+
 // ─── 业务 API ─────────────────────────────────────────────────
 
 /**
- * 多轮对话（流式）
- * @param {Array}    messages  [{role, content}]
- * @param {Function} onChunk   (text) => void
- * @param {Function} onDone    (fullText) => void
- * @param {Function} onError   (err) => void
+ * 多轮对话（流式）—— 翻译页专用，仍走实时 AI
  */
 async function chatStream(messages, onChunk, onDone, onError) {
   if (!Array.isArray(messages) || messages.length === 0) {
     onError && onError(new Error('消息列表不能为空'));
     return;
   }
-  // 配额检查（非流式方式：先检查再流式，避免流了一半发现超额）
   const quota = await consumeQuota();
   if (!quota.allowed) {
     const e = new Error('今日免费次数已用完，请观看广告或升级会员');
@@ -124,17 +159,12 @@ async function chatStream(messages, onChunk, onDone, onError) {
     onError && onError(e);
     return;
   }
-
   const valid   = messages.filter(m => m && typeof m.role === 'string' && typeof m.content === 'string');
   const trimmed = valid.slice(-12);
   const msgs    = [{ role: 'system', content: ai.SYSTEM_PROMPT }, ...trimmed];
-
   await ai.callAIStream('chat', msgs, onChunk, onDone, onError, { temperature: 0.75, maxTokens: 1500 });
 }
 
-/**
- * 多轮对话（非流式，兼容旧代码）
- */
 async function chat(messages) {
   if (!Array.isArray(messages) || messages.length === 0) throw new Error('消息列表不能为空');
   const valid   = messages.filter(m => m && typeof m.role === 'string' && typeof m.content === 'string');
@@ -145,7 +175,7 @@ async function chat(messages) {
 }
 
 /**
- * 古文翻译
+ * 古文翻译（实时，每次不同，不缓存）
  */
 async function translate(text, mode) {
   if (!text?.trim()) throw new Error('请输入需要翻译的文本');
@@ -162,15 +192,12 @@ async function translate(text, mode) {
 }
 
 /**
- * 每日经典（同日缓存，不消耗配额）
- * @param {boolean} forceRefresh  是否强制刷新（忽略缓存）
- * @param {number}  [seed]        换一条时传入随机种子，使 AI 返回不同内容
+ * 每日经典（本地缓存）
  */
 async function getDailyClassic(forceRefresh = false, seed) {
   const today = _todayKey();
   const cacheKey = 'daily_' + today;
 
-  // 仅在非强制刷新、且无 seed（即首次加载）时读缓存
   if (!forceRefresh && !seed) {
     try {
       const cached = wx.getStorageSync(cacheKey);
@@ -178,16 +205,12 @@ async function getDailyClassic(forceRefresh = false, seed) {
     } catch (_) {}
   }
 
-  // 换一条时，通过随机 seed 让 AI 推荐不同名句，避免每次返回相同内容
-  const seedHint = seed
-    ? `（请推荐与上次不同的，随机种子：${seed % 1000}）`
-    : '';
+  const seedHint = seed ? `（请推荐与上次不同的，随机种子：${seed % 1000}）` : '';
   const prompt = `今天是${_todayCN()}，请推荐一条适合今天的经典名句${seedHint}（诗词、典籍、名言皆可，尽量多样化）。
 请严格按以下JSON格式返回（不要有多余文字）：
 {"quote":"经典原文","author":"作者·朝代·出处","translation":"白话文解释（30字内）","analysis":"意境赏析（60字内）","insight":"今日启示（30字内）"}`;
 
   const msgs = [{ role: 'system', content: ai.SYSTEM_PROMPT }, { role: 'user', content: prompt }];
-  // 每日内容不消耗配额；换一条时提高 temperature 增加多样性
   const temperature = seed ? 0.95 : 0.85;
   const raw  = await ai.callAI('daily', msgs, { temperature, maxTokens: 500 });
   let daily;
@@ -197,7 +220,6 @@ async function getDailyClassic(forceRefresh = false, seed) {
   } catch (_) {
     daily = { quote: raw.slice(0, 200), author: '', translation: '', analysis: '', insight: '' };
   }
-  // 首次加载时写缓存；换一条时不覆盖当日缓存（保留今日内容）
   if (!seed) {
     try { wx.setStorageSync(cacheKey, daily); } catch (_) {}
   }
@@ -205,7 +227,7 @@ async function getDailyClassic(forceRefresh = false, seed) {
 }
 
 /**
- * 每日成语（同日缓存，不消耗配额）
+ * 每日成语（本地缓存）
  */
 async function getDailyIdiom(forceRefresh = false) {
   const today = _todayKey();
@@ -235,58 +257,114 @@ async function getDailyIdiom(forceRefresh = false) {
 }
 
 /**
- * 诗词赏析
+ * 诗词赏析 ✅ 走云数据库缓存
+ * @param {string} text   诗词文本或"标题-作者"
+ * @param {Object} [opts] { title, author, dynasty } 附加信息
  */
-async function analyzePoem(text) {
+async function analyzePoem(text, opts = {}) {
   if (!text?.trim()) throw new Error('请输入诗词内容');
   if (text.length > ai.CFG.MAX_INPUT_LEN) throw new Error('诗词内容过长');
 
-  const prompt = `请对以下诗词进行专业赏析：\n\n${text}\n\n请按以下结构输出（每部分100字内）：\n【作品信息】\n（朝代、作者、创作背景）\n\n【逐句注释】\n（关键字词及语法）\n\n【意境赏析】\n（意象、情感、艺术手法）\n\n【文学地位】\n（在文学史上的价值）`;
-  const msgs     = [{ role: 'system', content: ai.SYSTEM_PROMPT }, { role: 'user', content: prompt }];
-  const analysis = await _invoke('poem', msgs, true, { temperature: 0.6, maxTokens: 1800 });
-  return { success: true, analysis };
+  // 生成稳定 key（去除空白/换行，取前60字）
+  const cacheKey = _normalizeKey(text, 60);
+  const meta = { title: opts.title || cacheKey, author: opts.author || '', dynasty: opts.dynasty || '' };
+
+  const data = await _invokeWithCache(
+    'poem',
+    cacheKey,
+    () => `请对以下诗词进行专业赏析：\n\n${text}\n\n请按以下结构输出（每部分100字内）：\n【作品信息】\n（朝代、作者、创作背景）\n\n【逐句注释】\n（关键字词及语法）\n\n【意境赏析】\n（意象、情感、艺术手法）\n\n【文学地位】\n（在文学史上的价值）`,
+    { temperature: 0.6, maxTokens: 1800 },
+    'poem',
+    meta,
+    true
+  );
+  return { success: true, analysis: data.content, sections: data.sections };
 }
 
 /**
- * 成语解释
+ * 成语解释 ✅ 走云数据库缓存
  */
 async function explainIdiom(word) {
   const w = (word || '').trim();
   if (!w) throw new Error('请输入成语');
   if (w.length > 20) throw new Error('成语过长，请检查输入');
 
-  const prompt = `请详细解释成语「${w}」。\n\n请按以下结构输出：\n【成语释义】（20字内）\n\n【出处典故】\n\n【原文引用】\n\n【用法示例】\n例句1：\n例句2：\n\n【近义词】\n【反义词】`;
-  const msgs        = [{ role: 'system', content: ai.SYSTEM_PROMPT }, { role: 'user', content: prompt }];
-  const explanation = await _invoke('idiom', msgs, true, { temperature: 0.4, maxTokens: 1200 });
-  return { success: true, explanation };
+  const data = await _invokeWithCache(
+    'idiom',
+    w,
+    () => `请详细解释成语「${w}」。\n\n请按以下结构输出：\n【成语释义】（20字内）\n\n【出处典故】\n\n【原文引用】\n\n【用法示例】\n例句1：\n例句2：\n\n【近义词】\n【反义词】`,
+    { temperature: 0.4, maxTokens: 1200 },
+    'idiom',
+    { title: w },
+    true
+  );
+  return { success: true, explanation: data.content, sections: data.sections };
 }
 
 /**
- * 历史知识
+ * 历史知识 ✅ 走云数据库缓存
  */
 async function queryHistory(query) {
   if (!query?.trim()) throw new Error('请输入查询内容');
   if (query.length > 200) throw new Error('查询内容过长，请精简后重试');
 
-  const prompt = `请介绍关于「${query}」的历史知识。\n\n请按以下结构输出（每部分120字内）：\n【历史概述】\n【重要内容】\n【深远影响】\n【文化印记】`;
-  const msgs    = [{ role: 'system', content: ai.SYSTEM_PROMPT }, { role: 'user', content: prompt }];
-  const content = await _invoke('history', msgs, true, { temperature: 0.5, maxTokens: 1800 });
-  return { success: true, content };
+  const cacheKey = _normalizeKey(query, 80);
+  const data = await _invokeWithCache(
+    'history',
+    cacheKey,
+    () => `请介绍关于「${query}」的历史知识。\n\n请按以下结构输出（每部分120字内）：\n【历史概述】\n【重要内容】\n【深远影响】\n【文化印记】`,
+    { temperature: 0.5, maxTokens: 1800 },
+    'history',
+    { title: query },
+    true
+  );
+  return { success: true, content: data.content, sections: data.sections };
 }
 
 /**
- * 智能搜索
+ * 诸子百家学派解析 ✅ 走云数据库缓存
+ */
+async function analyzePhilosopher(school, query) {
+  const q = query || `${school}的核心思想、代表人物、著作和历史影响`;
+  const cacheKey = _normalizeKey(q, 80);
+
+  const data = await _invokeWithCache(
+    'philosopher',
+    cacheKey,
+    () => `请详细介绍${q}。\n\n请按以下结构输出（每部分120字内）：\n【核心思想】\n【代表人物】\n【主要著作】\n【历史影响】\n【现代价值】`,
+    { temperature: 0.5, maxTokens: 1800 },
+    'philosopher',
+    { title: school || q, school },
+    true
+  );
+  return { success: true, content: data.content, sections: data.sections };
+}
+
+/**
+ * 智能搜索 ✅ 走云数据库缓存
  */
 async function searchClassics(text) {
   if (!text?.trim()) throw new Error('请输入搜索内容');
   if (text.length > 200) throw new Error('搜索内容过长');
 
-  const msgs  = [
-    { role: 'system', content: ai.SYSTEM_PROMPT },
-    { role: 'user',   content: `请从国学角度介绍：${text}` }
-  ];
-  const reply = await _invoke('search', msgs, true, { temperature: 0.65, maxTokens: 1500 });
-  return { success: true, reply };
+  const cacheKey = _normalizeKey(text, 80);
+  const data = await _invokeWithCache(
+    'classic',
+    cacheKey,
+    () => `请从国学角度介绍：${text}`,
+    { temperature: 0.65, maxTokens: 1500 },
+    'search',
+    { title: text },
+    true
+  );
+  return { success: true, reply: data.content, sections: data.sections };
+}
+
+/**
+ * 搜索云数据库中已有的内容（不触发 AI）
+ */
+async function searchCached(keyword, contentType) {
+  return db.searchContent(keyword, contentType, 10);
 }
 
 // ─── Toast 错误提示 ───────────────────────────────────────────
@@ -295,6 +373,25 @@ function showError(msg) {
 }
 
 // ─── 内部工具 ─────────────────────────────────────────────────
+function _parseSections(text) {
+  if (!text) return [];
+  const sections = [];
+  const re = /【([^】]+)】\s*([\s\S]*?)(?=【|$)/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const content = m[2].trim();
+    if (content) sections.push({ label: m[1], content });
+  }
+  if (sections.length === 0 && text.trim()) {
+    sections.push({ label: '详细解析', content: text.trim() });
+  }
+  return sections;
+}
+
+function _normalizeKey(text, maxLen) {
+  return (text || '').replace(/[\s\n\r]/g, '').slice(0, maxLen);
+}
+
 function _todayKey() {
   const d = new Date();
   return `${d.getFullYear()}${d.getMonth()+1}${d.getDate()}`;
@@ -318,7 +415,9 @@ module.exports = {
   analyzePoem,
   explainIdiom,
   queryHistory,
+  analyzePhilosopher,
   searchClassics,
+  searchCached,
   // 兼容旧名称
   callAI: (type, data) => {
     const map = {
