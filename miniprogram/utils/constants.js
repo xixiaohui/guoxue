@@ -8,7 +8,7 @@ const CLOUD_FUNC = 'guoxueAI';
 
 // ─── 变现相关常量 ────────────────────────────────────
 const MONETIZE = {
-  FREE_DAILY_LIMIT: 10,
+  FREE_DAILY_LIMIT: 100,
   REWARDED_AD_ID: 'adunit-513a37c7d48cdf7f',
   BANNER_AD_ID: 'adunit-49f0f4a3d03930f8',
   VIP_PRICE_1MONTH: 9.9,

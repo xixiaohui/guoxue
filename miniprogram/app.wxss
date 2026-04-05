@@ -1,5 +1,6 @@
 /**app.wxss - 国学AI助手全局样式**/
 
+
 /*{
         "pagePath": "pages/translate/index",
         "text": "译文",
@@ -224,3 +225,5 @@ page {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+

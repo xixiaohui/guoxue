@@ -235,15 +235,6 @@
 /* ── 分类列表 ─────────────────────────────── */
 .cat-list { padding: 0 24rpx; }
 
-.cat-row {
-  display: flex; align-items: center;
-  background: #FFFBF0;
-  border-radius: 16rpx;
-  padding: 20rpx 18rpx;
-  margin-bottom: 14rpx;
-  border: 1rpx solid #EDD9A3;
-  box-shadow: 0 2rpx 8rpx rgba(139,37,0,.04);
-}
 .cat-row-hover { background: #FFF5DC !important; }
 
 .cat-icon-wrap {
@@ -264,14 +255,7 @@
 .safe-bottom { height: env(safe-area-inset-bottom); min-height: 40rpx; }
 
 /* ── VIP推介条 ─────────────────────────────── */
-.vip-banner {
-  margin: 0 20rpx 20rpx;
-  background: linear-gradient(90deg, #5A0A00, #8B2500 60%, #C4882E);
-  border-radius: 20rpx;
-  padding: 22rpx 28rpx;
-  display: flex; align-items: center; justify-content: space-between;
-  box-shadow: 0 6rpx 20rpx rgba(139,37,0,.25);
-}
+
 .vip-hover { opacity: 0.9 !important; }
 .vip-banner-left { display: flex; align-items: center; gap: 16rpx; }
 .vip-banner-crown { font-size: 40rpx; }
@@ -284,26 +268,10 @@
 /* ── 首页广告位 ─────────────────────────────── */
 .home-ad { margin: 10rpx 20rpx 0; border-radius: 16rpx; overflow: hidden; }
 
-/* ── 海报弹窗 ─────────────────────────────── */
-.poster-mask {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,.75);
-  z-index: 1000;
-  display: flex; align-items: center; justify-content: center;
-  padding: 40rpx 30rpx;
-  box-sizing: border-box;
-}
 
-.poster-container {
-  background: #FDF6E3;
-  border-radius: 24rpx;
-  padding: 32rpx 28rpx 28rpx;
-  width: 100%;
-  max-height: 90vh;
-  display: flex; flex-direction: column; align-items: center;
-  position: relative;
-  overflow: hidden;
-}
+
+
+
 
 .poster-close {
   position: absolute; top: 20rpx; right: 24rpx;
@@ -409,3 +377,167 @@
   font-size: 22rpx; color: #8C7B61;
   margin-top: 14rpx;
 }
+
+
+/* 修复版本 */
+.home-page {
+    background: #FDF6E3;
+    width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+  
+  /* ── Hero 修复 ─────────────────────────────── */
+  .hero {
+    background: linear-gradient(150deg, #5A1200 0%, #8B2500 55%, #A83500 100%);
+    padding: 32rpx 30rpx 44rpx;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden; /* 重要：防止 ::after 溢出 */
+    width: 100%;
+    box-sizing: border-box; /* 重要：padding 包含在宽度内 */
+  }
+  
+  .hero::after {
+    content: '文';
+    position: absolute;
+    right: -60rpx; /* 改为更大的负值，让它完全在容器外 */
+    top: -30rpx;
+    font-size: 260rpx;
+    color: rgba(255,255,255,.04);
+    font-weight: 900;
+    line-height: 1;
+    pointer-events: none;
+  }
+  
+  /* ── Section 修复 ─────────────────────────────── */
+  .section {
+    margin-top: 28rpx;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24rpx 16rpx;
+    width: 100%;
+    box-sizing: border-box; /* 重要 */
+  }
+  
+  /* ── 每日经典卡片 修复 ─────────────────────────────── */
+  .daily-card {
+    background: linear-gradient(135deg, #FFFBF0 0%, #FFF5D6 100%);
+    border-radius: 20rpx;
+    margin: 0 24rpx;
+    padding: 32rpx;
+    border: 1rpx solid #EDD9A3;
+    box-shadow: 0 6rpx 24rpx rgba(139,37,0,.1);
+    position: relative;
+    overflow: hidden; /* 重要：隐藏 ::before 溢出 */
+    transition: opacity 0.3s ease;
+    box-sizing: border-box; /* 重要 */
+  }
+  
+  .daily-card::before {
+    content: '詩';
+    position: absolute;
+    right: -50rpx; /* 改为更大的负值 */
+    bottom: -60rpx; /* 改为更大的负值 */
+    font-size: 160rpx;
+    color: rgba(196,136,46,.06);
+    font-weight: 900;
+    line-height: 1;
+    pointer-events: none;
+  }
+  
+  /* ── 功能网格 修复 ─────────────────────────────── */
+  .func-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18rpx;
+    padding: 0 24rpx;
+    width: 100%;
+    box-sizing: border-box; /* 重要 */
+  }
+  
+  /* ── 热门话题 修复 ─────────────────────────────── */
+  .hot-scroll {
+    padding: 0 24rpx;
+    white-space: nowrap;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto; /* 如果内容超出，允许横向滚动而不是溢出 */
+    overflow-y: hidden;
+  }
+  
+  /* ── 分类列表 修复 ─────────────────────────────── */
+  .cat-list {
+    padding: 0 24rpx;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .cat-row {
+    display: flex;
+    align-items: center;
+    background: #FFFBF0;
+    border-radius: 16rpx;
+    padding: 20rpx 18rpx;
+    margin-bottom: 14rpx;
+    border: 1rpx solid #EDD9A3;
+    box-shadow: 0 2rpx 8rpx rgba(139,37,0,.04);
+    width: 100%;
+    box-sizing: border-box; /* 重要 */
+  }
+  
+  /* ── VIP推介条 修复 ─────────────────────────────── */
+  .vip-banner {
+    margin: 0 20rpx 20rpx;
+    background: linear-gradient(90deg, #5A0A00, #8B2500 60%, #C4882E);
+    border-radius: 20rpx;
+    padding: 22rpx 28rpx;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 6rpx 20rpx rgba(139,37,0,.25);
+    width: calc(100% - 40rpx); /* 减去左右各 20rpx margin */
+    box-sizing: border-box;
+  }
+  
+  /* ── 海报容器 修复 ─────────────────────────────── */
+  .poster-mask {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,.75);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40rpx 30rpx;
+    box-sizing: border-box; /* 重要 */
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  .poster-container {
+    background: #FDF6E3;
+    border-radius: 24rpx;
+    padding: 32rpx 28rpx 28rpx;
+    width: 100%;
+    max-width: 100%; /* 防止超出 */
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  
