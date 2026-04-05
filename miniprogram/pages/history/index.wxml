@@ -76,7 +76,7 @@
     </scroll-view>
   </view>
 
-  <!-- 时间轴（或AI生成内容） -->
+  <!-- 时间轴内容 -->
   <view class="timeline-section">
     <view class="section-head">
       <view class="section-label-wrap">

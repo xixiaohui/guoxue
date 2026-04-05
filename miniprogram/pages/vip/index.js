@@ -9,7 +9,7 @@ Page({
     purchasing: false,
     selectedProduct: 'vip_1month',
     benefits: [
-      { icon: '♾️', title: '无限AI解析', desc: '诗词/成语/历史/百家无限查询' },
+      { icon: '♾️', title: '无限深度解析', desc: '诗词/成语/历史/百家无限查询' },
       { icon: '🚫', title: '去除广告', desc: '纯净阅读，无打扰' },
       { icon: '🔊', title: '专属语音朗读', desc: '聆听国学之美' },
       { icon: '⚡', title: '优先响应', desc: '云端缓存优先推送' },

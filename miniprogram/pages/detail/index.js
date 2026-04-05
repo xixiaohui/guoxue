@@ -83,7 +83,7 @@ Page({
   // ── 分享 ──────────────────────────────
   onShareAppMessage() {
     return {
-      title: this.data.title || '国学AI助手',
+      title: this.data.title || '国学助手',
       path: '/pages/home/index'
     };
   },
@@ -98,7 +98,7 @@ Page({
       if (content) sections.push({ label: m[1], content });
     }
     if (sections.length === 0 && text.trim()) {
-      sections.push({ label: 'AI解读', content: text.trim() });
+      sections.push({ label: '详细解读', content: text.trim() });
     }
     return sections;
   }

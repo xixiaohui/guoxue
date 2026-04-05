@@ -228,7 +228,7 @@ Page({
       if (content) sections.push({ label: m[1], content });
     }
     if (sections.length === 0 && text.trim()) {
-      sections.push({ label: 'AI解析', content: text.trim() });
+      sections.push({ label: '详细解析', content: text.trim() });
     }
     return sections;
   },
