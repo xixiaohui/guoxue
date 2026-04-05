@@ -1,4 +1,4 @@
-<!-- pages/home/index.wxml - 生产级首页 v7.0（换一条优化 + 分享海报）-->
+<!-- pages/home/index.wxml - 生产级首页 v9.1（修复显示问题）-->
 <view class="home-page">
 
   <!-- Hero Banner -->
@@ -23,35 +23,36 @@
       <view class="head-actions">
         <!-- 换一条按钮 -->
         <view
-          class="refresh-pill {{refreshing ? 'pill-spinning' : ''}}"
+          class="action-pill {{refreshing ? 'pill-spinning' : ''}}"
           bindtap="refreshDaily"
           hover-class="pill-hover"
           hover-stay-time="80"
         >
-          <text class="refresh-icon">↺</text>
-          <text class="refresh-text">换一条</text>
+          <text class="pill-icon">↺</text>
+          <text class="pill-text">换一条</text>
         </view>
         <!-- 分享按钮 -->
         <view
-          class="share-pill"
+          class="action-pill share-pill"
           bindtap="showShareMenu"
           hover-class="pill-hover"
           hover-stay-time="80"
         >
-          <text class="share-icon">↑</text>
-          <text class="share-text">分享</text>
+          <text class="pill-icon">⤴</text>
+          <text class="pill-text">分享</text>
         </view>
       </view>
     </view>
 
     <!-- 骨架屏 -->
     <view class="daily-card skeleton-card" wx:if="{{dailyLoading}}">
-      <view class="sk-line sk-w80 sk-h32 sk-mb12"></view>
-      <view class="sk-line sk-w40 sk-h22 sk-mb20"></view>
+      <view class="sk-line sk-w60 sk-h28 sk-mb10"></view>
+      <view class="sk-line sk-w90 sk-h36 sk-mb8"></view>
+      <view class="sk-line sk-w80 sk-h36 sk-mb16"></view>
+      <view class="sk-line sk-w40 sk-h22 sk-mb18"></view>
       <view class="sk-divider"></view>
       <view class="sk-line sk-w100 sk-h22 sk-mb8"></view>
-      <view class="sk-line sk-w90 sk-h22 sk-mb8"></view>
-      <view class="sk-line sk-w60 sk-h22"></view>
+      <view class="sk-line sk-w85 sk-h22 sk-mb8"></view>
     </view>
 
     <!-- 实际内容 -->
@@ -64,9 +65,9 @@
     >
       <view class="daily-badge">今日名句</view>
       <view class="daily-quote-row">
-        <text class="q-mark">「</text>
+        <text class="q-mark q-open">「</text>
         <text class="daily-quote">{{daily.quote}}</text>
-        <text class="q-mark">」</text>
+        <text class="q-mark q-close">」</text>
       </view>
       <text class="daily-author" wx:if="{{daily.author}}">—— {{daily.author}}</text>
 
@@ -80,16 +81,16 @@
       </view>
 
       <view class="daily-footer">
-        <text class="daily-cta">点击进入古文翻译深度赏析 →</text>
-        <view class="daily-share-hint" catchtap="showShareMenu">
-          <text class="hint-icon">↑</text>
-          <text class="hint-txt">分享</text>
+        <text class="daily-cta">点击进入古文翻译赏析 →</text>
+        <view class="daily-share-btn" catchtap="showShareMenu">
+          <text class="share-btn-icon">⤴</text>
+          <text class="share-btn-txt">分享</text>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 五大功能导航 -->
+  <!-- 功能导航 -->
   <view class="section">
     <view class="section-head">
       <view class="section-label-wrap">
@@ -97,6 +98,7 @@
         <text class="section-label">功能导航</text>
       </view>
     </view>
+    <!-- 2×2 网格布局，共4项 -->
     <view class="func-grid">
       <view
         class="func-item"
@@ -107,7 +109,7 @@
         hover-class="func-hover"
         hover-stay-time="100"
       >
-        <view class="func-icon" style="background:{{item.bg}}">
+        <view class="func-icon-wrap" style="background:{{item.bg}}">
           <text class="func-char">{{item.char}}</text>
         </view>
         <text class="func-name">{{item.name}}</text>
@@ -143,21 +145,6 @@
     </scroll-view>
   </view>
 
-  <!-- VIP推介条 -->
-  <!-- <view class="vip-banner" bindtap="goVip" hover-class="vip-hover" hover-stay-time="100">
-    <view class="vip-banner-left">
-      <text class="vip-banner-crown">👑</text>
-      <view>
-        <text class="vip-banner-title">升级会员 · 无限畅用</text>
-        <text class="vip-banner-sub">去广告 · 无限功能 · 专属内容</text>
-      </view>
-    </view>
-    <view class="vip-banner-right">
-      <text class="vip-banner-price">9.9元/月</text>
-      <text class="vip-banner-arrow">›</text>
-    </view>
-  </view> -->
-
   <!-- 国学分类 -->
   <view class="section">
     <view class="section-head">
@@ -166,24 +153,21 @@
         <text class="section-label">国学分类</text>
       </view>
     </view>
-    <view class="cat-list">
+    <view class="cat-grid">
       <view
-        class="cat-row"
+        class="cat-card"
         wx:for="{{categories}}"
         wx:key="id"
         bindtap="goCategory"
         data-cat="{{item}}"
-        hover-class="cat-row-hover"
+        hover-class="cat-hover"
         hover-stay-time="100"
       >
         <view class="cat-icon-wrap" style="background:{{item.bg}}">
           <text class="cat-icon">{{item.icon}}</text>
         </view>
-        <view class="cat-info">
-          <text class="cat-name">{{item.name}}</text>
-          <text class="cat-desc">{{item.desc}}</text>
-        </view>
-        <text class="cat-arr">›</text>
+        <text class="cat-name">{{item.name}}</text>
+        <text class="cat-desc">{{item.desc}}</text>
       </view>
     </view>
   </view>
@@ -195,7 +179,6 @@
 
   <!-- 原生广告 -->
   <ad unit-id="adunit-67efd80bac46e2ad" bindload="adLoad" binderror="adError" bindclose="adClose"></ad>
-
 
   <view class="safe-bottom"></view>
 </view>
@@ -210,21 +193,21 @@
     <view class="poster-title">精美海报</view>
     <view class="poster-sub">长按图片保存或识别小程序码</view>
 
-    <!-- Canvas（用于绘制海报，设计尺寸 750×1200 → 展示按比例缩放）-->
+    <!-- Canvas（用于绘制海报）-->
     <view class="poster-canvas-wrap">
       <!-- 加载中占位 -->
       <view class="poster-loading" wx:if="{{posterLoading}}">
         <view class="poster-loading-spin">⟳</view>
         <text class="poster-loading-txt">海报绘制中...</text>
       </view>
-      <!-- Canvas 节点（始终存在） -->
+      <!-- Canvas 节点 -->
       <canvas
         id="posterCanvas"
         type="2d"
         class="poster-canvas"
         style="width:750rpx;height:1200rpx;"
       ></canvas>
-      <!-- 生成后的预览图（覆盖在 canvas 上，供长按保存）-->
+      <!-- 生成后的预览图 -->
       <image
         wx:if="{{posterPath}}"
         class="poster-preview"
@@ -240,7 +223,7 @@
       <view class="poster-btn poster-btn-save" bindtap="savePoster" hover-class="btn-hover" hover-stay-time="80">
         <text>💾 保存到相册</text>
       </view>
-      <view class="poster-btn poster-btn-share" bindtap="onShareAppMessage" hover-class="btn-hover" hover-stay-time="80">
+      <view class="poster-btn poster-btn-share" hover-class="btn-hover" hover-stay-time="80">
         <button open-type="share" class="poster-share-inner">
           <text>📤 发送给好友</text>
         </button>
