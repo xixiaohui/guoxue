@@ -184,7 +184,7 @@
     <text class="footer-txt">传承国学精髓 · 智慧赋能人生</text>
   </view>
   <!-- 原生广告 -->
-  <ad unit-id="adunit-67efd80bac46e2ad" bindload="adLoad" binderror="adError" bindclose="adClose"></ad>
+  <!-- <ad unit-id="adunit-67efd80bac46e2ad" bindload="adLoad" binderror="adError" bindclose="adClose"></ad> -->
 
   <view class="safe-bottom"></view>
 </view>

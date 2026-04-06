@@ -1,6 +1,6 @@
 // pages/history/index.js - 历史探秘页 v8.0（云数据库缓存版）
 const api = require('../../utils/api');
-const monetize = require('../../utils/monetize');
+// const monetize = require('../../utils/monetize');
 
 Page({
   data: {
@@ -75,7 +75,7 @@ Page({
 
   onLoad() {
     this.loadDynastyEvents('tang');
-    monetize.preloadRewardedAd();
+    // monetize.preloadRewardedAd();
   },
 
   // ── 加载朝代事件 ──────────────────────────────

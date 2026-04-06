@@ -1,7 +1,7 @@
 // pages/classics/index.js - 诗词典籍页 v8.0（云数据库缓存版）
 const api = require('../../utils/api');
 const storage = require('../../utils/storage');
-const monetize = require('../../utils/monetize');
+// const monetize = require('../../utils/monetize');
 
 Page({
   data: {
@@ -105,10 +105,10 @@ Page({
   },
 
   onLoad() {
-    monetize.preloadRewardedAd();
-    monetize.getQuotaStatus().then(s => {
-      if (!s.isVip) this._bannerAd = monetize.createBannerAd();
-    }).catch(() => {});
+    // monetize.preloadRewardedAd();
+    // monetize.getQuotaStatus().then(s => {
+    //   if (!s.isVip) this._bannerAd = monetize.createBannerAd();
+    // }).catch(() => {});
   },
 
   onUnload() {
