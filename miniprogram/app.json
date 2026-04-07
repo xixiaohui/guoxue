@@ -13,7 +13,7 @@
     "backgroundColor": "#F5EDD6",
     "backgroundTextStyle": "dark",
     "navigationBarBackgroundColor": "#8B2500",
-    "navigationBarTitleText": "国文AI助手",
+    "navigationBarTitleText": "国学AI助手",
     "navigationBarTextStyle": "white"
   },
   "tabBar": {
