@@ -45,7 +45,7 @@ App({
 
     // ── 系统信息（用于自适应布局） ──────────────────────────────
     try {
-      const sysInfo = wx.getSystemInfoSync();
+      const sysInfo = wx.getWindowInfo();
       this.globalData.statusBarHeight = sysInfo.statusBarHeight || 0;
       this.globalData.windowHeight    = sysInfo.windowHeight    || 0;
       this.globalData.pixelRatio      = sysInfo.pixelRatio      || 2;

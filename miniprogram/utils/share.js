@@ -1,98 +1,142 @@
 /**
  * utils/share.js - 分享与海报生成工具
- * 生产级国学助手 v7.0
+ * 新中式高级版 v8.0
  *
  * 功能：
  *  1. 生成分享给好友的消息卡片（onShareAppMessage）
- *  2. 生成分享到朋友圈的图片（onShareTimeline）
- *  3. 使用 Canvas 2D 绘制带小程序码的海报并保存到相册
+ *  2. 生成分享到朋友圈的参数（onShareTimeline）
+ *  3. 使用 Canvas 2D 绘制高颜值国学海报
+ *  4. 保存海报到相册
+ *
+ * 使用说明：
+ *  - 页面需放置 <canvas type="2d" id="posterCanvas"></canvas>
+ *  - 默认二维码占位图：/images/mini.png
+ *  - 默认分享封面图：/images/share-cover.png
  */
 
-const POSTER_WIDTH  = 750;   // 逻辑像素（设计稿 750px 宽）
+const POSTER_WIDTH = 750;   // 逻辑像素
 const POSTER_HEIGHT = 1200;
 
 /**
  * 构建"分享给好友"的消息卡片参数
  * @param {object} opts
  * @param {string} opts.title       分享标题
- * @param {string} [opts.path]      落地页路径（默认首页）
- * @param {string} [opts.imageUrl]  自定义封面图（可选）
- * @returns {object}  onShareAppMessage 返回值对象
+ * @param {string} [opts.path]      落地页路径
+ * @param {string} [opts.imageUrl]  自定义封面图
+ * @returns {object}
  */
 function buildShareMsg(opts = {}) {
   return {
-    title:    opts.title    || '国学助手 · 传承千年智慧',
-    path:     opts.path     || '/pages/home/index',
+    title: opts.title || '国学AI助手 · 传承千年智慧',
+    path: opts.path || '/pages/home/index',
     imageUrl: opts.imageUrl || '/images/share-cover.png',
   };
 }
 
 /**
- * 构建"分享到朋友圈"的参数（需要返回 Promise<imageUrl>）
- * 注意：朋友圈分享需要图片，通过 Canvas 绘制
+ * 构建"分享到朋友圈"的参数
+ * 注意：
+ *  - 如果需要带海报图，请先调用 generatePoster() 生成本地图片路径
+ *  - 然后将该路径作为 imageUrl 传入
+ *
  * @param {object} opts
- * @param {string} opts.quote      名句正文
- * @param {string} opts.author     作者/出处
- * @param {string} opts.insight    今日启示（可选）
- * @returns {Promise<{title, query, imageUrl}>}
+ * @param {string} [opts.quote]
+ * @param {string} [opts.author]
+ * @param {string} [opts.imageUrl]
+ * @param {string} [opts.query]
+ * @returns {object}
  */
-async function buildShareTimeline(opts = {}) {
-  const title = `「${opts.quote || '国学助手'}」— ${opts.author || ''}`;
+function buildShareTimeline(opts = {}) {
+  const quote = opts.quote || '国学AI助手';
+  const author = opts.author ? ` — ${opts.author}` : '';
+
   return {
-    title,
-    query:    'from=timeline',
+    title: `「${quote}」${author}`,
+    query: opts.query || 'from=timeline',
+    imageUrl: opts.imageUrl || '',
   };
 }
 
 /**
- * 使用 Canvas 2D 绘制海报并保存到相册
- * 设计：深棕色古典背景，居中名句，下方小程序码
- *
- * @param {object} pageCtx    Page 实例（this），用于 wx.createSelectorQuery
+ * 一步生成朋友圈分享参数（先画海报，再返回 imageUrl）
+ * @param {object} pageCtx
  * @param {object} opts
- * @param {string} opts.quote        名句原文
- * @param {string} opts.author       作者/出处
- * @param {string} opts.translation  白话文（可选）
- * @param {string} opts.insight      启示（可选）
- * @param {string} [opts.canvasId]   Canvas 组件 id（默认 'posterCanvas'）
- * @returns {Promise<string>}   保存成功后返回本地临时路径
+ * @returns {Promise<{title:string, query:string, imageUrl:string}>}
+ */
+async function generateTimelineShare(pageCtx, opts = {}) {
+  const imageUrl = await generatePoster(pageCtx, opts);
+  return buildShareTimeline({
+    ...opts,
+    imageUrl,
+    query: opts.query || 'from=timeline',
+  });
+}
+
+/**
+ * 绘制海报并返回临时图片路径
+ * @param {object} pageCtx  Page 实例（this）
+ * @param {object} opts
+ * @param {string} opts.quote
+ * @param {string} opts.author
+ * @param {string} [opts.translation]
+ * @param {string} [opts.insight]
+ * @param {string} [opts.canvasId]
+ * @param {string} [opts.qrImageUrl]   小程序码/二维码图片地址（可选，默认 /images/mini.png）
+ * @param {string} [opts.brandName]    顶部品牌名
+ * @param {string} [opts.brandSlogan]  顶部品牌副标题
+ * @param {string} [opts.brandMark]    顶部圆徽章文字，默认“文”
+ * @returns {Promise<string>}
+ */
+async function generatePoster(pageCtx, opts = {}) {
+  return drawPoster(pageCtx, opts);
+}
+
+/**
+ * 使用 Canvas 2D 绘制海报
+ * @param {object} pageCtx
+ * @param {object} opts
+ * @returns {Promise<string>}
  */
 async function drawPoster(pageCtx, opts = {}) {
   const canvasId = opts.canvasId || 'posterCanvas';
-  const dpr      = wx.getWindowInfo().pixelRatio || 2;
+  const dpr = (wx.getWindowInfo && wx.getWindowInfo().pixelRatio) || 2;
 
   return new Promise((resolve, reject) => {
-    const query = pageCtx.createSelectorQuery();
-    query.select(`#${canvasId}`)
+    const query = _createQuery(pageCtx);
+
+    query
+      .select(`#${canvasId}`)
       .fields({ node: true, size: true })
       .exec(async (res) => {
         if (!res || !res[0] || !res[0].node) {
-          reject(new Error('Canvas 节点不存在'));
+          reject(new Error(`Canvas 节点不存在：#${canvasId}`));
           return;
         }
-        const canvas = res[0].node;
-        const ctx    = canvas.getContext('2d');
 
-        // 设置画布物理像素
-        canvas.width  = POSTER_WIDTH  * dpr;
+        const canvas = res[0].node;
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = POSTER_WIDTH * dpr;
         canvas.height = POSTER_HEIGHT * dpr;
         ctx.scale(dpr, dpr);
 
         try {
-          await _renderPoster(ctx, canvas, opts, dpr);
+          await _renderPoster(ctx, canvas, opts);
 
-          // 导出图片
-          wx.canvasToTempFilePath({
-            canvas,
-            fileType:  'png',
-            quality:   1,
-            success(r) {
-              resolve(r.tempFilePath);
-            },
-            fail(e) {
-              reject(e);
-            }
-          });
+          // 给绘制管线一点缓冲，避免导出时图片资源尚未提交
+          setTimeout(() => {
+            wx.canvasToTempFilePath({
+              canvas,
+              fileType: 'png',
+              quality: 1,
+              success(r) {
+                resolve(r.tempFilePath);
+              },
+              fail(e) {
+                reject(e);
+              },
+            });
+          }, 80);
         } catch (e) {
           reject(e);
         }
@@ -101,197 +145,473 @@ async function drawPoster(pageCtx, opts = {}) {
 }
 
 /**
- * 内部：在 Canvas 上绘制海报内容
+ * 内部：绘制海报主体
  */
-async function _renderPoster(ctx, canvas, opts, dpr) {
+async function _renderPoster(ctx, canvas, opts = {}) {
   const W = POSTER_WIDTH;
   const H = POSTER_HEIGHT;
 
-  // ── 1. 背景 ──────────────────────────────────
-  // 古典渐变背景
-  const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0,   '#3D1A08');
-  grad.addColorStop(0.5, '#5C2810');
-  grad.addColorStop(1,   '#2C0E04');
-  ctx.fillStyle = grad;
+  const quote = (opts.quote || '知之者不如好之者，好之者不如乐之者').trim();
+  const author = (opts.author || '《论语》').trim();
+  const translation = (opts.translation || '').trim();
+  const insight = (opts.insight || '').trim();
+
+  const brandName = opts.brandName || '国学AI助手';
+  const brandSlogan = opts.brandSlogan || '传承千年智慧 · 让经典更易懂';
+  const brandMark = opts.brandMark || '文';
+  const qrImageUrl = opts.qrImageUrl || '/images/mini.png';
+
+  ctx.clearRect(0, 0, W, H);
+
+  // ========== 1. 背景 ==========
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#1F130D');
+  bg.addColorStop(0.36, '#3A2218');
+  bg.addColorStop(0.72, '#2B180F');
+  bg.addColorStop(1, '#160C08');
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
-  // 装饰边框
-  ctx.strokeStyle = 'rgba(196,136,46,0.6)';
-  ctx.lineWidth   = 2;
-  ctx.strokeRect(24, 24, W - 48, H - 48);
-  ctx.strokeStyle = 'rgba(196,136,46,0.25)';
-  ctx.lineWidth   = 1;
-  ctx.strokeRect(32, 32, W - 64, H - 64);
+  const topGlow = ctx.createRadialGradient(W / 2, 130, 10, W / 2, 130, 340);
+  topGlow.addColorStop(0, 'rgba(233,196,106,0.24)');
+  topGlow.addColorStop(0.45, 'rgba(233,196,106,0.10)');
+  topGlow.addColorStop(1, 'rgba(233,196,106,0)');
+  ctx.fillStyle = topGlow;
+  ctx.fillRect(0, 0, W, 360);
 
-  // 装饰角花
-  _drawCornerDecor(ctx, 24, 24, 40);
-  _drawCornerDecor(ctx, W - 24, 24, 40, true);
-  _drawCornerDecor(ctx, 24, H - 24, 40, false, true);
-  _drawCornerDecor(ctx, W - 24, H - 24, 40, true, true);
+  const bottomGlow = ctx.createRadialGradient(W / 2, H - 120, 20, W / 2, H - 120, 280);
+  bottomGlow.addColorStop(0, 'rgba(201,141,61,0.14)');
+  bottomGlow.addColorStop(1, 'rgba(201,141,61,0)');
+  ctx.fillStyle = bottomGlow;
+  ctx.fillRect(0, H - 360, W, 360);
 
-  // ── 2. 顶部 Logo 区 ──────────────────────────────────
-  ctx.fillStyle = 'rgba(196,136,46,0.9)';
-  ctx.font      = `bold 52px serif`;
+  _drawFlowLines(ctx, W, H);
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(216,177,91,0.24)';
+  ctx.lineWidth = 1.2;
+  _drawRoundRect(ctx, 20, 20, W - 40, H - 40, 24);
+  ctx.stroke();
+  ctx.restore();
+
+  // ========== 2. 顶部品牌区 ==========
+  _drawTopBrand(ctx, W, {
+    brandName,
+    brandSlogan,
+    brandMark,
+  });
+
+  // ========== 3. 主名句卡 ==========
+  const cardX = 46;
+  const cardW = W - 92;
+  const quoteCardY = 220;
+
+  const quoteFont = 'bold 42px serif';
+  let quoteLines = _wrapText(ctx, quote, cardW - 116, quoteFont);
+  quoteLines = _limitLines(ctx, quoteLines, 3, cardW - 116, quoteFont);
+
+  const quoteLineHeight = 56;
+  const authorH = author ? 42 : 0;
+  const quoteCardH = 122 + quoteLines.length * quoteLineHeight + authorH;
+
+  _drawPaperCard(ctx, cardX, quoteCardY, cardW, quoteCardH, 28);
+  _drawTag(ctx, cardX + cardW / 2, quoteCardY + 34, '每日国学');
+
+  // 装饰引号
+  ctx.save();
+  ctx.fillStyle = 'rgba(194,147,62,0.20)';
+  ctx.font = 'bold 108px serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('“', cardX + 32, quoteCardY + 106);
+  ctx.textAlign = 'right';
+  ctx.fillText('”', cardX + cardW - 32, quoteCardY + quoteCardH - 26);
+  ctx.restore();
+
+  // 主名句
+  ctx.save();
+  ctx.fillStyle = '#2A1A12';
+  ctx.font = quoteFont;
   ctx.textAlign = 'center';
-  ctx.fillText('文', W / 2, 120);
 
-  ctx.fillStyle = 'rgba(253,246,227,0.95)';
-  ctx.font      = `bold 32px serif`;
-  ctx.fillText('国学助手', W / 2, 168);
-
-  ctx.fillStyle = 'rgba(196,136,46,0.7)';
-  ctx.font      = `20px serif`;
-  ctx.fillText('传承千年智慧 · 探索文化精髓', W / 2, 200);
-
-  // 分割线
-  _drawDivider(ctx, W, 220);
-
-  // ── 3. 主名句 ──────────────────────────────────
-  const quote = opts.quote || '';
-  ctx.fillStyle = 'rgba(253,246,227,0.98)';
-
-  // 自动换行绘制名句
-  const quoteLines = _wrapText(ctx, quote, W - 120, `bold 44px serif`);
-  ctx.font      = `bold 44px serif`;
-  ctx.textAlign = 'center';
-  let qY = 300;
-  // 添加书名号装饰
-  if (quoteLines.length === 1) {
-    ctx.fillStyle = 'rgba(196,136,46,0.8)';
-    ctx.font      = `bold 48px serif`;
-    ctx.fillText('「', W / 2 - _measureText(ctx, quoteLines[0], `bold 44px serif`) / 2 - 36, qY);
-    ctx.fillText('」', W / 2 + _measureText(ctx, quoteLines[0], `bold 44px serif`) / 2 + 8, qY);
-  }
-  ctx.fillStyle = 'rgba(253,246,227,0.98)';
-  ctx.font      = `bold 44px serif`;
-  for (const line of quoteLines) {
+  let qY = quoteCardY + 92;
+  quoteLines.forEach((line) => {
     ctx.fillText(line, W / 2, qY);
-    qY += 60;
+    qY += quoteLineHeight;
+  });
+
+  if (author) {
+    ctx.fillStyle = '#8C6239';
+    ctx.font = '26px serif';
+    ctx.fillText(`—— ${author}`, W / 2, qY + 6);
+  }
+  ctx.restore();
+
+  let currentY = quoteCardY + quoteCardH + 22;
+
+  // 为避免内容区域顶到二维码卡片，根据卡片数量限制行数
+  const hasTranslation = !!translation;
+  const hasInsight = !!insight;
+  const transMaxLines = hasInsight ? 2 : 4;
+  const insightMaxLines = hasTranslation ? 2 : 4;
+
+  // ========== 4. 白话文卡 ==========
+  if (hasTranslation) {
+    let transLines = _wrapText(ctx, translation, cardW - 72, '22px sans-serif');
+    transLines = _limitLines(ctx, transLines, transMaxLines, cardW - 72, '22px sans-serif');
+
+    const transH = 66 + transLines.length * 32 + 20;
+
+    _drawGlassCard(ctx, cardX, currentY, cardW, transH, 24);
+    _drawSectionLabel(ctx, cardX + 28, currentY + 34, '白话文');
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(248,238,215,0.92)';
+    ctx.font = '22px sans-serif';
+    ctx.textAlign = 'left';
+
+    let y = currentY + 74;
+    transLines.forEach((line) => {
+      ctx.fillText(line, cardX + 28, y);
+      y += 32;
+    });
+    ctx.restore();
+
+    currentY += transH + 16;
   }
 
-  // 作者
-  if (opts.author) {
-    ctx.fillStyle = 'rgba(196,136,46,0.9)';
-    ctx.font      = `26px serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(`—— ${opts.author}`, W / 2, qY + 20);
-    qY += 60;
+  // ========== 5. 今日启示卡 ==========
+  if (hasInsight) {
+    let insLines = _wrapText(ctx, insight, cardW - 72, '22px sans-serif');
+    insLines = _limitLines(ctx, insLines, insightMaxLines, cardW - 72, '22px sans-serif');
+
+    const insH = 66 + insLines.length * 32 + 20;
+
+    _drawInsightCard(ctx, cardX, currentY, cardW, insH, 24);
+    _drawSectionLabel(ctx, cardX + 28, currentY + 34, '今日启示');
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,247,233,0.94)';
+    ctx.font = '22px sans-serif';
+    ctx.textAlign = 'left';
+
+    let y = currentY + 74;
+    insLines.forEach((line) => {
+      ctx.fillText(line, cardX + 28, y);
+      y += 32;
+    });
+    ctx.restore();
+
+    currentY += insH + 18;
   }
 
-  // 分割线
-  _drawDivider(ctx, W, qY + 20);
-  qY += 60;
+  // ========== 6. 底部二维码卡 ==========
+  const qrCardH = 220;
+  const qrCardY = H - qrCardH - 44;
 
-  // ── 4. 白话文翻译 ──────────────────────────────────
-  if (opts.translation) {
-    ctx.fillStyle = 'rgba(196,136,46,0.7)';
-    ctx.font      = `22px serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText('【白话文】', W / 2, qY);
-    qY += 36;
+  _drawBottomPanel(ctx, cardX, qrCardY, cardW, qrCardH, 28);
 
-    ctx.fillStyle = 'rgba(253,246,227,0.8)';
-    ctx.font      = `24px serif`;
-    const transLines = _wrapText(ctx, opts.translation, W - 140, `24px serif`);
-    for (const line of transLines) {
-      ctx.fillText(line, W / 2, qY);
-      qY += 38;
-    }
-    qY += 10;
-  }
+  const qrSize = 148;
+  const qrX = cardX + 34;
+  const qrY = qrCardY + 36;
 
-  // ── 5. 今日启示 ──────────────────────────────────
-  if (opts.insight) {
-    // 启示背景框
-    const insH  = 100;
-    const insY  = Math.min(qY + 10, H - 350);
-    ctx.fillStyle = 'rgba(139,37,0,0.4)';
-    _drawRoundRect(ctx, 60, insY, W - 120, insH, 12);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(196,136,46,0.5)';
-    ctx.lineWidth   = 1;
-    ctx.stroke();
-
-    ctx.fillStyle = 'rgba(196,136,46,0.9)';
-    ctx.font      = `22px serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText('◆ 今日启示', W / 2, insY + 30);
-
-    ctx.fillStyle = 'rgba(253,246,227,0.85)';
-    ctx.font      = `22px serif`;
-    const insLines = _wrapText(ctx, opts.insight, W - 160, `22px serif`);
-    let insTextY = insY + 58;
-    for (const line of insLines) {
-      ctx.fillText(line, W / 2, insTextY);
-      insTextY += 32;
-    }
-  }
-
-  // ── 6. 小程序码区域（底部）──────────────────────────────────
-  const qrY = H - 240;
-
-  // 底部背景
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
-  ctx.fillRect(0, qrY - 20, W, H - qrY + 20);
-
-  _drawDivider(ctx, W, qrY - 10);
-
-  // 小程序码占位（实际小程序中需要通过 wx.getUnlimitedQRCode 获取）
-  // 这里绘制一个占位区域，在 JS 中替换
-  const qrSize = 140;
-  const qrX    = W / 2 - qrSize / 2;
+  // 二维码底板
+  ctx.save();
   ctx.fillStyle = '#FFFFFF';
-  _drawRoundRect(ctx, qrX, qrY + 10, qrSize, qrSize, 12);
+  _drawRoundRect(ctx, qrX, qrY, qrSize, qrSize, 20);
+  ctx.fill();
+  ctx.restore();
+
+  // 绘制二维码图片
+  const qrOk = await _safeDrawImage(canvas, ctx, qrImageUrl, qrX + 10, qrY + 10, qrSize - 20, qrSize - 20);
+  if (!qrOk) {
+    ctx.save();
+    ctx.fillStyle = '#8B5A2B';
+    ctx.font = '18px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('小程序码', qrX + qrSize / 2, qrY + qrSize / 2 + 6);
+    ctx.restore();
+  }
+
+  // 右侧内容
+  const infoX = qrX + qrSize + 34;
+
+  ctx.save();
+  ctx.textAlign = 'left';
+
+  ctx.fillStyle = '#F8ECD0';
+  ctx.font = 'bold 34px serif';
+  ctx.fillText(brandName, infoX, qrY + 38);
+
+  ctx.fillStyle = 'rgba(233,215,180,0.88)';
+  ctx.font = '22px sans-serif';
+  ctx.fillText('每日经典 · 古文翻译 · 智能释义', infoX, qrY + 80);
+
+  ctx.fillStyle = 'rgba(216,177,91,0.95)';
+  ctx.font = '24px sans-serif';
+  ctx.fillText('长按识别小程序码', infoX, qrY + 124);
+
+  const btnW = 180;
+  const btnH = 44;
+  const btnY = qrY + 146;
+
+  const btnGrad = ctx.createLinearGradient(infoX, btnY, infoX + btnW, btnY);
+  btnGrad.addColorStop(0, '#D9A441');
+  btnGrad.addColorStop(1, '#F2CC7B');
+  ctx.fillStyle = btnGrad;
+  _drawRoundRect(ctx, infoX, btnY, btnW, btnH, 22);
   ctx.fill();
 
-  // 二维码内的提示文字（实际会被小程序码图片覆盖）
-  ctx.fillStyle = '#8B2500';
-  ctx.font      = `18px sans-serif`;
+  ctx.fillStyle = '#3C210F';
+  ctx.font = 'bold 22px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('扫码打开', W / 2, qrY + 90);
+  ctx.fillText('立即体验', infoX + btnW / 2, btnY + 29);
 
-  // 小程序名
-  ctx.fillStyle = 'rgba(253,246,227,0.9)';
-  ctx.font      = `bold 24px serif`;
-  ctx.textAlign = 'center';
-  ctx.fillText('国学助手', W / 2, qrY + 175);
-
-  ctx.fillStyle = 'rgba(196,136,46,0.7)';
-  ctx.font      = `18px sans-serif`;
-  ctx.fillText('长按识别小程序码', W / 2, qrY + 205);
+  ctx.restore();
 }
 
-// ── 工具函数 ──────────────────────────────────────────────────
+// =========================
+// 图片加载与绘制
+// =========================
 
-function _drawDivider(ctx, W, y) {
-  ctx.strokeStyle = 'rgba(196,136,46,0.5)';
-  ctx.lineWidth   = 1;
+function loadImage(canvas, src) {
+  return new Promise((resolve, reject) => {
+    if (!src) {
+      reject(new Error('图片地址为空'));
+      return;
+    }
+
+    const img = canvas.createImage();
+    img.onload = () => resolve(img);
+    img.onerror = (err) => reject(err);
+    img.src = src;
+  });
+}
+
+async function drawImage(canvas, ctx, src, x, y, w, h) {
+  const img = await loadImage(canvas, src);
+  ctx.drawImage(img, x, y, w, h);
+}
+
+/**
+ * 安全绘图：失败不抛异常，只返回 false
+ */
+async function _safeDrawImage(canvas, ctx, src, x, y, w, h) {
+  try {
+    await drawImage(canvas, ctx, src, x, y, w, h);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// =========================
+// 视觉绘制工具
+// =========================
+
+function _drawTopBrand(ctx, W, opts = {}) {
+  const brandName = opts.brandName || '国学AI助手';
+  const brandSlogan = opts.brandSlogan || '传承千年智慧 · 让经典更易懂';
+  const brandMark = opts.brandMark || '文';
+
+  const cx = W / 2;
+  const cy = 92;
+
+  ctx.save();
+
+  const ringGrad = ctx.createLinearGradient(cx - 26, cy - 26, cx + 26, cy + 26);
+  ringGrad.addColorStop(0, '#F3D38B');
+  ringGrad.addColorStop(1, '#B9852F');
+
+  ctx.fillStyle = ringGrad;
   ctx.beginPath();
-  ctx.moveTo(60, y);
-  ctx.lineTo(W - 60, y);
-  ctx.stroke();
-  // 中心装饰菱形
-  ctx.fillStyle = 'rgba(196,136,46,0.7)';
-  ctx.beginPath();
-  ctx.moveTo(W / 2, y - 6);
-  ctx.lineTo(W / 2 + 8, y);
-  ctx.lineTo(W / 2, y + 6);
-  ctx.lineTo(W / 2 - 8, y);
-  ctx.closePath();
+  ctx.arc(cx, cy, 28, 0, Math.PI * 2);
   ctx.fill();
+
+  ctx.fillStyle = '#3A2114';
+  ctx.font = 'bold 28px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(brandMark, cx, cy + 9);
+
+  ctx.fillStyle = '#F7EBD3';
+  ctx.font = 'bold 36px serif';
+  ctx.fillText(brandName, W / 2, 152);
+
+  ctx.fillStyle = 'rgba(223,190,128,0.88)';
+  ctx.font = '20px sans-serif';
+  ctx.fillText(brandSlogan, W / 2, 184);
+
+  const y = 202;
+  ctx.strokeStyle = 'rgba(216,177,91,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(88, y);
+  ctx.lineTo(W - 88, y);
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(216,177,91,0.75)';
+  ctx.beginPath();
+  ctx.arc(W / 2, y, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
 }
 
-function _drawCornerDecor(ctx, x, y, size, flipX = false, flipY = false) {
-  ctx.strokeStyle = 'rgba(196,136,46,0.6)';
-  ctx.lineWidth   = 2;
-  const dx = flipX ? -1 : 1;
-  const dy = flipY ? -1 : 1;
-  ctx.beginPath();
-  ctx.moveTo(x + dx * size, y);
-  ctx.lineTo(x, y);
-  ctx.lineTo(x, y + dy * size);
+function _drawPaperCard(ctx, x, y, w, h, r = 24) {
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.22)';
+  ctx.shadowBlur = 28;
+  ctx.shadowOffsetY = 12;
+
+  const grad = ctx.createLinearGradient(x, y, x, y + h);
+  grad.addColorStop(0, '#F9F1DF');
+  grad.addColorStop(1, '#F2E4C8');
+  ctx.fillStyle = grad;
+
+  _drawRoundRect(ctx, x, y, w, h, r);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(180,136,61,0.25)';
+  ctx.lineWidth = 1.2;
+  _drawRoundRect(ctx, x, y, w, h, r);
   ctx.stroke();
+  ctx.restore();
+
+  ctx.save();
+  const hl = ctx.createLinearGradient(x, y, x, y + 50);
+  hl.addColorStop(0, 'rgba(255,255,255,0.52)');
+  hl.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = hl;
+  _drawRoundRect(ctx, x + 1, y + 1, w - 2, 52, r);
+  ctx.fill();
+  ctx.restore();
+}
+
+function _drawGlassCard(ctx, x, y, w, h, r = 24) {
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.16)';
+  ctx.shadowBlur = 20;
+  ctx.shadowOffsetY = 8;
+
+  ctx.fillStyle = 'rgba(255,248,236,0.10)';
+  _drawRoundRect(ctx, x, y, w, h, r);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(235,205,142,0.28)';
+  ctx.lineWidth = 1;
+  _drawRoundRect(ctx, x, y, w, h, r);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function _drawInsightCard(ctx, x, y, w, h, r = 24) {
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.18)';
+  ctx.shadowBlur = 24;
+  ctx.shadowOffsetY = 8;
+
+  const grad = ctx.createLinearGradient(x, y, x + w, y + h);
+  grad.addColorStop(0, 'rgba(104,52,23,0.78)');
+  grad.addColorStop(1, 'rgba(69,30,15,0.90)');
+  ctx.fillStyle = grad;
+
+  _drawRoundRect(ctx, x, y, w, h, r);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(223,182,97,0.28)';
+  ctx.lineWidth = 1;
+  _drawRoundRect(ctx, x, y, w, h, r);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function _drawBottomPanel(ctx, x, y, w, h, r = 24) {
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.26)';
+  ctx.shadowBlur = 24;
+  ctx.shadowOffsetY = 10;
+
+  const grad = ctx.createLinearGradient(x, y, x, y + h);
+  grad.addColorStop(0, 'rgba(39,22,15,0.96)');
+  grad.addColorStop(1, 'rgba(24,13,10,0.98)');
+  ctx.fillStyle = grad;
+
+  _drawRoundRect(ctx, x, y, w, h, r);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(216,177,91,0.24)';
+  ctx.lineWidth = 1;
+  _drawRoundRect(ctx, x, y, w, h, r);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function _drawTag(ctx, cx, y, text) {
+  ctx.save();
+  ctx.font = '20px sans-serif';
+
+  const paddingX = 22;
+  const w = ctx.measureText(text).width + paddingX * 2;
+  const x = cx - w / 2;
+
+  const grad = ctx.createLinearGradient(x, y - 22, x + w, y + 22);
+  grad.addColorStop(0, '#D5A242');
+  grad.addColorStop(1, '#F0CF86');
+
+  ctx.fillStyle = grad;
+  _drawRoundRect(ctx, x, y - 22, w, 36, 18);
+  ctx.fill();
+
+  ctx.fillStyle = '#3C2415';
+  ctx.textAlign = 'center';
+  ctx.fillText(text, cx, y + 2);
+
+  ctx.restore();
+}
+
+function _drawSectionLabel(ctx, x, y, text) {
+  ctx.save();
+  ctx.fillStyle = 'rgba(230,189,99,0.95)';
+  ctx.font = 'bold 22px serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(text, x, y);
+
+  const lineW = 88;
+  ctx.strokeStyle = 'rgba(230,189,99,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x + 68, y - 6);
+  ctx.lineTo(x + 68 + lineW, y - 6);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function _drawFlowLines(ctx, W, H) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(216,177,91,0.07)';
+  ctx.lineWidth = 1;
+
+  for (let i = 0; i < 5; i++) {
+    const startY = 240 + i * 120;
+    ctx.beginPath();
+    ctx.moveTo(40, startY);
+    ctx.bezierCurveTo(
+      W * 0.28, startY - 30,
+      W * 0.68, startY + 36,
+      W - 40, startY - 8
+    );
+    ctx.stroke();
+  }
+
+  ctx.restore();
 }
 
 function _drawRoundRect(ctx, x, y, w, h, r) {
@@ -308,12 +628,18 @@ function _drawRoundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+// =========================
+// 文本工具
+// =========================
+
 function _wrapText(ctx, text, maxWidth, font) {
   if (!text) return [];
   ctx.font = font;
+
   const chars = text.split('');
   const lines = [];
   let cur = '';
+
   for (const ch of chars) {
     const test = cur + ch;
     if (ctx.measureText(test).width > maxWidth && cur.length > 0) {
@@ -323,8 +649,28 @@ function _wrapText(ctx, text, maxWidth, font) {
       cur = test;
     }
   }
+
   if (cur) lines.push(cur);
   return lines;
+}
+
+/**
+ * 截断过长文本，末尾加省略号
+ */
+function _limitLines(ctx, lines, maxLines, maxWidth, font) {
+  if (!Array.isArray(lines)) return [];
+  if (lines.length <= maxLines) return lines;
+
+  const result = lines.slice(0, maxLines);
+  let last = result[maxLines - 1] || '';
+
+  ctx.font = font;
+  while (last && ctx.measureText(`${last}…`).width > maxWidth) {
+    last = last.slice(0, -1);
+  }
+
+  result[maxLines - 1] = `${last}…`;
+  return result;
 }
 
 function _measureText(ctx, text, font) {
@@ -332,51 +678,74 @@ function _measureText(ctx, text, font) {
   return ctx.measureText(text).width;
 }
 
-/**
- * 绘制海报并返回临时图片路径（含小程序码，如果云端获取失败则使用占位）
- * @param {object} pageCtx  Page 实例
- * @param {object} opts     { quote, author, translation, insight }
- * @returns {Promise<string>} 临时文件路径
- */
-async function generatePoster(pageCtx, opts = {}) {
-  return drawPoster(pageCtx, opts);
-}
+// =========================
+// 权限与保存
+// =========================
 
 /**
  * 保存图片到相册
- * @param {string} filePath  本地临时路径
+ * @param {string} filePath
  * @returns {Promise<void>}
  */
 function savePosterToAlbum(filePath) {
   return new Promise((resolve, reject) => {
+    if (!filePath) {
+      reject(new Error('图片路径不能为空'));
+      return;
+    }
+
     wx.saveImageToPhotosAlbum({
       filePath,
       success() {
-        wx.showToast({ title: '已保存到相册', icon: 'success', duration: 2000 });
+        wx.showToast({
+          title: '已保存到相册',
+          icon: 'success',
+          duration: 2000,
+        });
         resolve();
       },
       fail(e) {
-        if (e.errMsg && e.errMsg.includes('auth deny')) {
+        const errMsg = (e && e.errMsg) || '';
+
+        if (errMsg.includes('auth deny') || errMsg.includes('authorize no response')) {
           wx.showModal({
             title: '需要相册权限',
-            content: '请在设置中开启"相册"权限，以便保存海报',
+            content: '请在设置中开启“保存到相册”权限，以便保存海报',
             confirmText: '去设置',
             success(r) {
-              if (r.confirm) wx.openSetting();
-            }
+              if (r.confirm) {
+                wx.openSetting();
+              }
+            },
           });
-        } else {
-          wx.showToast({ title: '保存失败，请重试', icon: 'none' });
+        } else if (!errMsg.includes('cancel')) {
+          wx.showToast({
+            title: '保存失败，请重试',
+            icon: 'none',
+          });
         }
+
         reject(e);
-      }
+      },
     });
   });
+}
+
+// =========================
+// 查询工具
+// =========================
+
+function _createQuery(pageCtx) {
+  if (pageCtx && typeof pageCtx.createSelectorQuery === 'function') {
+    return pageCtx.createSelectorQuery();
+  }
+  return wx.createSelectorQuery().in(pageCtx);
 }
 
 module.exports = {
   buildShareMsg,
   buildShareTimeline,
+  generateTimelineShare,
   generatePoster,
   savePosterToAlbum,
 };

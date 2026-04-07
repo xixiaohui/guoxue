@@ -80,7 +80,7 @@
   
   /* ── 搜索栏 ─────────────────────────────── */
   .search-bar {
-    margin: -20rpx 24rpx 0;
+    margin: 20rpx 24rpx 0;
     background: #FFFBF0;
     border-radius: 20rpx;
     padding: 12rpx 16rpx;
