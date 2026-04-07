@@ -5,5 +5,7 @@
   "backgroundColor": "#FDF6E3",
   "enablePullDownRefresh": true,
   "backgroundTextStyle": "dark",
-  "usingComponents": {}
+  "usingComponents": {
+    "pdf-file-service": "/components/pdf-file-service/index"
+  }
 }

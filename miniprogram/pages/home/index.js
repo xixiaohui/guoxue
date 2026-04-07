@@ -2,6 +2,7 @@ const api = require('../../utils/api');
 const { FALLBACK_DAILY_LIST, TAB_PAGES, STORAGE_KEYS } = require('../../utils/constants');
 // const monetize = require('../../utils/monetize');
 const shareUtil = require('../../utils/share');
+const { downloadPdf } = require('../../utils/pdf');
 
 // 从 fallback 中取下一条，尽量避免短时间重复
 function _getNextFallback(currentQuote) {
@@ -91,7 +92,20 @@ Page({
     posterPath: '',
 
     showAd: false,
-    adUnitId: 'adunit-67efd80bac46e2ad'
+    adUnitId: 'adunit-67efd80bac46e2ad',
+
+    pdfList: [
+      {
+        id: 1,
+        name: '论语导读.pdf',
+        url: 'https://files.yourdomain.com/pdfs/lunyu.pdf'
+      },
+      {
+        id: 2,
+        name: '诗经精选.pdf',
+        url: 'https://files.yourdomain.com/pdfs/shijing.pdf'
+      }
+    ]
   },
 
   onLoad() {
@@ -467,6 +481,22 @@ Page({
       urls: [path],
       current: path
     });
+  },
+
+  onPdfLoaded(e) {
+    console.log('文件列表已加载', e.detail.files);
+  },
+
+  onPdfDownloaded(e) {
+    console.log('下载完成', e.detail);
+  },
+
+  onPdfOpened(e) {
+    console.log('文档已打开', e.detail);
+  },
+
+  onPdfError(e) {
+    console.error('PDF组件错误', e.detail);
   },
 
   adLoad() {

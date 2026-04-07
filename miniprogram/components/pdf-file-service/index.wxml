@@ -1,0 +1,64 @@
+<view class="pdf-wrap">
+  <view class="pdf-head">
+    <view class="pdf-title">{{title}}</view>
+    <view class="pdf-subtitle">共 {{files.length}} 份文档</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="state-box">
+    <text class="state-text">正在加载文档列表...</text>
+  </view>
+
+  <view wx:elif="{{!loading && files.length === 0}}" class="state-box">
+    <text class="state-text">{{emptyText}}</text>
+    <button class="retry-btn" bindtap="reload">重新加载</button>
+  </view>
+
+  <block wx:else>
+    <view wx:for="{{files}}" wx:key="url" class="pdf-card">
+      <view class="pdf-main">
+        <view class="pdf-icon">PDF</view>
+
+        <view class="pdf-info">
+          <view class="pdf-name">{{item.name}}</view>
+
+          <view class="pdf-meta">
+            <text>{{item.sizeText}}</text>
+            <text class="dot">·</text>
+            <text>{{item.mtimeText}}</text>
+          </view>
+
+          <view wx:if="{{item.downloaded}}" class="downloaded-tag">
+            已下载
+          </view>
+
+          <view wx:if="{{progressMap[item.url] >= 0 && progressMap[item.url] < 100}}" class="progress-wrap">
+            <view class="progress-bar">
+              <view class="progress-inner" style="width: {{progressMap[item.url]}}%;"></view>
+            </view>
+            <text class="progress-text">{{progressMap[item.url]}}%</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="pdf-actions">
+        <button
+          class="btn btn-open"
+          data-url="{{item.url}}"
+          data-name="{{item.name}}"
+          bindtap="handleOpen"
+        >
+          打开
+        </button>
+
+        <button
+          class="btn btn-download"
+          data-url="{{item.url}}"
+          data-name="{{item.name}}"
+          bindtap="handleDownload"
+        >
+          下载
+        </button>
+      </view>
+    </view>
+  </block>
+</view>
