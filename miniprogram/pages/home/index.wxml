@@ -1,209 +1,159 @@
 <view class="home-page">
 
-<!-- Hero Banner -->
-<view class="hero">
-  <view class="hero-left">
-    <text class="hero-logo-char">文</text>
-  </view>
-  <view class="hero-right">
-    <text class="hero-title">国学AI助手</text>
-    <text class="hero-sub">传承千年智慧 · 探索文化精髓</text>
-  </view>
-  <view class="hero-deco">道可道，非常道</view>
-</view>
-
-<!-- 每日经典 -->
-<view class="section">
-  <view class="section-head">
-    <view class="section-label-wrap">
-      <view class="label-bar"></view>
-      <text class="section-label">今日经典</text>
+  <!-- Hero Banner -->
+  <view class="hero">
+    <view class="hero-left">
+      <text class="hero-logo-char">文</text>
     </view>
-    <view class="head-actions">
-      <view
-        class="action-pill {{refreshing ? 'pill-spinning' : ''}}"
-        bindtap="refreshDaily"
-        hover-class="pill-hover"
-        hover-stay-time="80"
-      >
-        <text class="pill-icon">↺</text>
-        <text class="pill-text">换一条</text>
-      </view>
+    <view class="hero-right">
+      <text class="hero-title">国学AI助手</text>
+      <text class="hero-sub">传承千年智慧 · 探索文化精髓</text>
+    </view>
+    <view class="hero-deco">道可道，非常道</view>
+  </view>
 
-      <view
-        class="action-pill share-pill"
-        bindtap="showShareMenu"
-        hover-class="pill-hover"
-        hover-stay-time="80"
-      >
-        <text class="pill-icon">⤴</text>
-        <text class="pill-text">分享</text>
+  <!-- 每日经典 -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">今日经典</text>
+      </view>
+      <view class="head-actions">
+        <view class="action-pill {{refreshing ? 'pill-spinning' : ''}}" bindtap="refreshDaily" hover-class="pill-hover" hover-stay-time="80">
+          <text class="pill-icon">↺</text>
+          <text class="pill-text">换一条</text>
+        </view>
+
+        <view class="action-pill share-pill" bindtap="showShareMenu" hover-class="pill-hover" hover-stay-time="80">
+          <text class="pill-icon">⤴</text>
+          <text class="pill-text">分享</text>
+        </view>
       </view>
     </view>
-  </view>
 
-  <!-- 骨架屏 -->
-  <view class="daily-card skeleton-card" wx:if="{{dailyLoading}}">
-    <view class="sk-line sk-w60 sk-h28 sk-mb10"></view>
-    <view class="sk-line sk-w90 sk-h36 sk-mb8"></view>
-    <view class="sk-line sk-w80 sk-h36 sk-mb16"></view>
-    <view class="sk-line sk-w40 sk-h22 sk-mb18"></view>
-    <view class="sk-divider"></view>
-    <view class="sk-line sk-w100 sk-h22 sk-mb8"></view>
-    <view class="sk-line sk-w85 sk-h22 sk-mb8"></view>
-  </view>
-
-  <!-- 实际内容 -->
-  <view
-    class="daily-card {{refreshing ? 'card-fade' : ''}}"
-    wx:else
-    bindtap="goDiscussDaily"
-    hover-class="card-hover"
-    hover-stay-time="100"
-  >
-    <view class="daily-badge">今日名句</view>
-
-    <view class="daily-quote-row">
-      <text class="q-mark q-open">「</text>
-      <text class="daily-quote">{{daily.quote}}</text>
-      <text class="q-mark q-close">」</text>
+    <!-- 骨架屏 -->
+    <view class="daily-card skeleton-card" wx:if="{{dailyLoading}}">
+      <view class="sk-line sk-w60 sk-h28 sk-mb10"></view>
+      <view class="sk-line sk-w90 sk-h36 sk-mb8"></view>
+      <view class="sk-line sk-w80 sk-h36 sk-mb16"></view>
+      <view class="sk-line sk-w40 sk-h22 sk-mb18"></view>
+      <view class="sk-divider"></view>
+      <view class="sk-line sk-w100 sk-h22 sk-mb8"></view>
+      <view class="sk-line sk-w85 sk-h22 sk-mb8"></view>
     </view>
 
-    <text class="daily-author" wx:if="{{daily.author}}">—— {{daily.author}}</text>
+    <!-- 实际内容 -->
+    <view class="daily-card {{refreshing ? 'card-fade' : ''}}" wx:else bindtap="goDiscussDaily" hover-class="card-hover" hover-stay-time="100">
+      <view class="daily-badge">今日名句</view>
 
-    <view class="daily-sep"></view>
-
-    <text class="daily-translation" wx:if="{{daily.translation}}">
-      {{daily.translation}}
-    </text>
-
-    <view class="daily-insight-box" wx:if="{{daily.insight}}">
-      <text class="insight-dot">◆</text>
-      <text class="insight-text">{{daily.insight}}</text>
-    </view>
-  </view>
-</view>
-
-<!-- 功能导航 -->
-<view class="section">
-  <view class="section-head">
-    <view class="section-label-wrap">
-      <view class="label-bar"></view>
-      <text class="section-label">功能导航</text>
-    </view>
-  </view>
-
-  <view class="func-grid">
-    <view
-      class="func-item"
-      wx:for="{{funcs}}"
-      wx:key="id"
-      bindtap="goFunc"
-      data-func="{{item}}"
-      hover-class="func-hover"
-      hover-stay-time="100"
-    >
-      <view class="func-icon-wrap" style="background:{{item.bg}}">
-        <text class="func-char">{{item.char}}</text>
+      <view class="daily-quote-row">
+        <text class="q-mark q-open">「</text>
+        <text class="daily-quote">{{daily.quote}}</text>
+        <text class="q-mark q-close">」</text>
       </view>
-      <text class="func-name">{{item.name}}</text>
-      <text class="func-desc">{{item.desc}}</text>
-    </view>
-  </view>
-</view>
 
-<!-- 热门话题 -->
-<view class="section">
-  <view class="section-head">
-    <view class="section-label-wrap">
-      <view class="label-bar"></view>
-      <text class="section-label">热门话题</text>
-    </view>
-  </view>
+      <text class="daily-author" wx:if="{{daily.author}}">—— {{daily.author}}</text>
 
-  <scroll-view
-    scroll-x
-    show-scrollbar="{{false}}"
-    class="hot-scroll"
-    enhanced="{{true}}"
-    bounces="{{false}}"
-  >
-    <view class="hot-row">
-      <view
-        class="hot-chip"
-        wx:for="{{hotTopics}}"
-        wx:key="index"
-        bindtap="goHotTopic"
-        data-topic="{{item.text}}"
-        data-page="{{item.page}}"
-        hover-class="hot-hover"
-        hover-stay-time="80"
-      >
-        <text class="hot-fire">🔥</text>
-        <text class="hot-text">{{item.text}}</text>
+      <view class="daily-sep"></view>
+
+      <text class="daily-translation" wx:if="{{daily.translation}}">
+        {{daily.translation}}
+      </text>
+
+      <view class="daily-insight-box" wx:if="{{daily.insight}}">
+        <text class="insight-dot">◆</text>
+        <text class="insight-text">{{daily.insight}}</text>
       </view>
     </view>
-  </scroll-view>
-</view>
-
-<!-- 国学分类 -->
-<view class="section">
-  <view class="section-head">
-    <view class="section-label-wrap">
-      <view class="label-bar"></view>
-      <text class="section-label">国学分类</text>
-    </view>
   </view>
 
-  <view class="cat-grid">
-    <view
-      class="cat-card"
-      wx:for="{{categories}}"
-      wx:key="id"
-      bindtap="goCategory"
-      data-cat="{{item}}"
-      hover-class="cat-hover"
-      hover-stay-time="100"
-    >
-      <view class="cat-icon-wrap" style="background:{{item.bg}}">
-        <text class="cat-icon">{{item.icon}}</text>
+  <!-- 功能导航 -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">功能导航</text>
       </view>
-      <text class="cat-name">{{item.name}}</text>
-      <text class="cat-desc">{{item.desc}}</text>
+    </view>
+
+    <view class="func-grid">
+      <view class="func-item" wx:for="{{funcs}}" wx:key="id" bindtap="goFunc" data-func="{{item}}" hover-class="func-hover" hover-stay-time="100">
+        <view class="func-icon-wrap" style="background:{{item.bg}}">
+          <text class="func-char">{{item.char}}</text>
+        </view>
+        <text class="func-name">{{item.name}}</text>
+        <text class="func-desc">{{item.desc}}</text>
+      </view>
     </view>
   </view>
-</view>
 
-<!-- pdf下载 -->
-<view class="section">
-  <view class="section-head">
-    <view class="section-label-wrap">
-      <view class="label-bar"></view>
-      <text class="section-label">国学下载</text>
+  <!-- 热门话题 -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">热门话题</text>
+      </view>
+    </view>
+
+    <scroll-view scroll-x show-scrollbar="{{false}}" class="hot-scroll" enhanced="{{true}}" bounces="{{false}}">
+      <view class="hot-row">
+        <view class="hot-chip" wx:for="{{hotTopics}}" wx:key="index" bindtap="goHotTopic" data-topic="{{item.text}}" data-page="{{item.page}}" hover-class="hot-hover" hover-stay-time="80">
+          <text class="hot-fire">🔥</text>
+          <text class="hot-text">{{item.text}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 国学分类 -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">国学分类</text>
+      </view>
+    </view>
+
+    <view class="cat-grid">
+      <view class="cat-card" wx:for="{{categories}}" wx:key="id" bindtap="goCategory" data-cat="{{item}}" hover-class="cat-hover" hover-stay-time="100">
+        <view class="cat-icon-wrap" style="background:{{item.bg}}">
+          <text class="cat-icon">{{item.icon}}</text>
+        </view>
+        <text class="cat-name">{{item.name}}</text>
+        <text class="cat-desc">{{item.desc}}</text>
+      </view>
     </view>
   </view>
 
-  <view class="page">
-    <pdf-file-service
-      title="国学PDF文库"
-      apiUrl="https://www.readmeet.club/api/files"
-      bind:loaded="onPdfLoaded"
-      bind:downloaded="onPdfDownloaded"
-      bind:opened="onPdfOpened"
-      bind:error="onPdfError"
-    />
+  <view class="section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">文库下载</text>
+      </view>
+    </view>
+
+    <view class="cat-grid">
+      <view class="cat-card" bindtap="goGuoxueDownload" hover-class="cat-hover" hover-stay-time="100">
+        <view class="cat-icon-wrap" style="background:linear-gradient(135deg,#FF9A5C,#0b3bd8)">
+          <text class="cat-icon">📖</text>
+        </view>
+        <text class="cat-name">国学文库.pdf</text>
+        <text class="cat-desc">免费下载</text>
+      </view>
+    </view>
   </view>
 
-</view>
 
+  <!-- 底部 -->
+  <view class="home-footer">
+    <text class="footer-txt">传承国学精髓 · 智慧赋能人生</text>
+  </view>
 
-<!-- 底部 -->
-<view class="home-footer">
-  <text class="footer-txt">传承国学精髓 · 智慧赋能人生</text>
-</view>
-
-<!-- 原生广告：开发者工具不显示，真机再显示 -->
-<!-- <ad
+  <!-- 原生广告：开发者工具不显示，真机再显示 -->
+  <!-- <ad
   wx:if="{{showAd}}"
   unit-id="{{adUnitId}}"
   bindload="adLoad"
@@ -211,63 +161,40 @@
   bindclose="adClose"
 ></ad> -->
 
-<view class="safe-bottom"></view>
+  <view class="safe-bottom"></view>
 </view>
 
 <!-- 海报弹窗 -->
 <view wx:if="{{showPoster}}" class="poster-mask" bindtap="closePoster" catchtouchmove="noop">
-<view class="poster-container" catchtap="noop" catchtouchmove="noop">
+  <view class="poster-container" catchtap="noop" catchtouchmove="noop">
 
-  <view class="poster-close" bindtap="closePoster">✕</view>
-  <view class="poster-title">精美海报</view>
-  <view class="poster-sub">长按图片保存或识别小程序码</view>
+    <view class="poster-close" bindtap="closePoster">✕</view>
+    <view class="poster-title">精美海报</view>
+    <view class="poster-sub">长按图片保存或识别小程序码</view>
 
-  <view class="poster-canvas-wrap">
-    <canvas
-      id="posterCanvas"
-      canvas-id="posterCanvas"
-      type="2d"
-      class="poster-canvas"
-      style="width:750rpx;height:1200rpx;"
-    ></canvas>
+    <view class="poster-canvas-wrap">
+      <canvas id="posterCanvas" canvas-id="posterCanvas" type="2d" class="poster-canvas" style="width:750rpx;height:1200rpx;"></canvas>
 
-    <view class="poster-loading" wx:if="{{posterLoading}}">
-      <view class="poster-loading-spin">⟳</view>
-      <text class="poster-loading-txt">海报绘制中...</text>
+      <view class="poster-loading" wx:if="{{posterLoading}}">
+        <view class="poster-loading-spin">⟳</view>
+        <text class="poster-loading-txt">海报绘制中...</text>
+      </view>
+
+      <image wx:if="{{posterPath}}" class="poster-preview" src="{{posterPath}}" mode="widthFix" show-menu-by-longpress="{{true}}" bindlongpress="savePoster"></image>
     </view>
 
-    <image
-      wx:if="{{posterPath}}"
-      class="poster-preview"
-      src="{{posterPath}}"
-      mode="widthFix"
-      show-menu-by-longpress="{{true}}"
-      bindlongpress="savePoster"
-    ></image>
+    <view class="poster-actions" wx:if="{{posterPath}}">
+      <view class="poster-btn poster-btn-save" catchtap="savePoster" hover-class="btn-hover" hover-stay-time="80">
+        <text>💾 保存到相册</text>
+      </view>
+
+      <view class="poster-btn poster-btn-share" catchtap="noop" hover-class="btn-hover" hover-stay-time="80">
+        <button open-type="share" class="poster-share-inner">
+          <text>📤 发送给好友</text>
+        </button>
+      </view>
+    </view>
+
+    <view class="poster-hint" wx:if="{{posterPath}}">长按图片可直接保存</view>
   </view>
-
-  <view class="poster-actions" wx:if="{{posterPath}}">
-    <view
-      class="poster-btn poster-btn-save"
-      catchtap="savePoster"
-      hover-class="btn-hover"
-      hover-stay-time="80"
-    >
-      <text>💾 保存到相册</text>
-    </view>
-
-    <view
-      class="poster-btn poster-btn-share"
-      catchtap="noop"
-      hover-class="btn-hover"
-      hover-stay-time="80"
-    >
-      <button open-type="share" class="poster-share-inner">
-        <text>📤 发送给好友</text>
-      </button>
-    </view>
-  </view>
-
-  <view class="poster-hint" wx:if="{{posterPath}}">长按图片可直接保存</view>
-</view>
 </view>

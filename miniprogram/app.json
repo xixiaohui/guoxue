@@ -7,7 +7,8 @@
     "pages/history/index",
     "pages/philosophers/index",
     "pages/detail/index",
-    "pages/vip/index"
+    "pages/vip/index",
+    "pages/guoxuedownload/index"
   ],
   "window": {
     "backgroundColor": "#F5EDD6",

@@ -334,6 +334,10 @@ Page({
     }
   },
 
+  goGuoxueDownload() {
+    wx.navigateTo({ url: '/pages/guoxuedownload/index' });
+  },
+
   goDiscussDaily() {
     wx.navigateTo({ url: '/pages/translate/index' });
   },
@@ -483,25 +487,6 @@ Page({
     });
   },
 
-  onPdfLoaded(e) {
-    console.log('文件列表已加载', e.detail.files);
-  },
-
-  onPdfDownloaded(e) {
-    console.log('下载完成', e.detail);
-  },
-
-  onPdfOpened(e) {
-    console.log('文档已打开', e.detail);
-  },
-
-  onPdfError(e) {
-    console.error('PDF组件错误', e.detail);
-  },
-
-  adLoad() {
-    console.log('[Home] Banner 广告加载成功');
-  },
 
   adError(err) {
     console.warn('[Home] Banner 广告加载失败', err);

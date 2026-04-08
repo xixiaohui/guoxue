@@ -1,63 +1,168 @@
-<view class="pdf-wrap">
-  <view class="pdf-head">
-    <view class="pdf-title">{{title}}</view>
-    <view class="pdf-subtitle">共 {{files.length}} 份文档</view>
+<view class="pdf-page">
+  <view class="page-header">
+    <view class="page-title">{{title}}</view>
+    <view class="page-desc">精选国学 PDF 文档，支持搜索、筛选与本地缓存</view>
+    <view class="page-count">
+      共 {{files.length}} 份文档
+      <text wx:if="{{!loading && filteredFiles.length !== files.length}}">
+        · 当前显示 {{filteredFiles.length}} 份
+      </text>
+    </view>
   </view>
 
-  <view wx:if="{{loading}}" class="state-box">
-    <text class="state-text">正在加载文档列表...</text>
+  <!-- 搜索框 -->
+  <view class="search-bar">
+    <view class="search-box">
+      <view class="search-icon"></view>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="搜索文档名称"
+        value="{{keyword}}"
+        bindinput="handleSearchInput"
+        confirm-type="search"
+      />
+      <view wx:if="{{keyword}}" class="search-clear" bindtap="clearKeyword">×</view>
+    </view>
   </view>
 
-  <view wx:elif="{{!loading && files.length === 0}}" class="state-box">
-    <text class="state-text">{{emptyText}}</text>
-    <button class="retry-btn" bindtap="reload">重新加载</button>
+  <!-- 筛选 -->
+  <view class="filter-tabs">
+    <view
+      class="filter-tab {{activeFilter === 'all' ? 'active' : ''}}"
+      data-filter="all"
+      bindtap="handleFilterChange"
+    >
+      全部
+    </view>
+
+    <view
+      class="filter-tab {{activeFilter === 'cached' ? 'active' : ''}}"
+      data-filter="cached"
+      bindtap="handleFilterChange"
+    >
+      已缓存
+    </view>
+
+    <view
+      class="filter-tab {{activeFilter === 'needAd' ? 'active' : ''}}"
+      data-filter="needAd"
+      bindtap="handleFilterChange"
+    >
+      需广告
+    </view>
   </view>
 
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="state-card">
+    <view class="state-icon loading-icon"></view>
+    <view class="state-title">正在加载文档列表</view>
+    <view class="state-desc">请稍候，正在获取最新 PDF 文件</view>
+  </view>
+
+  <!-- 接口空数据 -->
+  <view wx:elif="{{!loading && files.length === 0}}" class="state-card">
+    <view class="state-icon empty-icon"></view>
+    <view class="state-title">{{emptyText}}</view>
+    <view class="state-desc">暂时还没有可阅读的文档</view>
+    <button class="state-btn" bindtap="reload">重新加载</button>
+  </view>
+
+  <!-- 搜索/筛选后无结果 -->
+  <view wx:elif="{{!loading && files.length > 0 && filteredFiles.length === 0}}" class="state-card">
+    <view class="state-icon empty-icon"></view>
+    <view class="state-title">没有匹配的文档</view>
+    <view class="state-desc">试试更换关键词，或切换筛选条件</view>
+    <button class="state-btn secondary-btn" bindtap="resetFilters">重置筛选</button>
+  </view>
+
+  <!-- 列表 -->
   <block wx:else>
-    <view wx:for="{{files}}" wx:key="url" class="pdf-card">
-      <view class="pdf-main">
-        <view class="pdf-icon">PDF</view>
-
-        <view class="pdf-info">
-          <view class="pdf-name">{{item.name}}</view>
-
-          <view class="pdf-meta">
-            <text>{{item.sizeText}}</text>
-            <text class="dot">·</text>
-            <text>{{item.mtimeText}}</text>
-          </view>
-
-          <view wx:if="{{item.downloaded}}" class="downloaded-tag">
-            已下载
-          </view>
-
-          <view wx:if="{{progressMap[item.url] >= 0 && progressMap[item.url] < 100}}" class="progress-wrap">
-            <view class="progress-bar">
-              <view class="progress-inner" style="width: {{progressMap[item.url]}}%;"></view>
+    <view wx:for="{{filteredFiles}}" wx:key="url" class="doc-card">
+      <view class="doc-card-inner">
+        <view class="doc-left">
+          <view class="doc-cover">
+            <view class="doc-cover-top"></view>
+            <view class="doc-cover-text">PDF</view>
+            <view class="doc-cover-lines">
+              <view class="cover-line"></view>
+              <view class="cover-line short"></view>
+              <view class="cover-line"></view>
             </view>
-            <text class="progress-text">{{progressMap[item.url]}}%</text>
           </view>
         </view>
-      </view>
 
-      <view class="pdf-actions">
-        <button
-          class="btn btn-open"
-          data-url="{{item.url}}"
-          data-name="{{item.name}}"
-          bindtap="handleOpen"
-        >
-          打开
-        </button>
+        <view class="doc-body">
+          <view class="doc-title-row">
+            <view class="doc-title">{{item.name}}</view>
 
-        <button
-          class="btn btn-download"
-          data-url="{{item.url}}"
-          data-name="{{item.name}}"
-          bindtap="handleDownload"
-        >
-          下载
-        </button>
+            <view wx:if="{{item.downloaded}}" class="status-badge success">
+              已缓存可直接打开
+            </view>
+            <view wx:else class="status-badge warning">
+              需观看广告
+            </view>
+          </view>
+
+          <view class="doc-meta-row">
+            <view class="meta-chip">
+              <text class="meta-label">大小</text>
+              <text class="meta-value">{{item.sizeText}}</text>
+            </view>
+
+            <view class="meta-chip">
+              <text class="meta-label">更新</text>
+              <text class="meta-value">{{item.mtimeText}}</text>
+            </view>
+          </view>
+
+          <view wx:if="{{item.downloaded}}" class="doc-tip success-tip">
+            本地已缓存，再次打开无需观看广告
+          </view>
+          <view wx:else class="doc-tip warning-tip">
+            首次打开前需完整观看激励视频广告
+          </view>
+
+          <view wx:if="{{progressMap[item.url] >= 0 && progressMap[item.url] < 100}}" class="download-panel">
+            <view class="download-top">
+              <text class="download-label">下载中</text>
+              <text class="download-percent">{{progressMap[item.url]}}%</text>
+            </view>
+            <view class="download-bar">
+              <view class="download-bar-inner" style="width: {{progressMap[item.url]}}%;"></view>
+            </view>
+          </view>
+
+          <view class="doc-actions">
+            <button
+              class="action-btn primary"
+              data-url="{{item.url}}"
+              data-name="{{item.name}}"
+              bindtap="handleOpen"
+            >
+              {{item.downloaded ? '直接打开' : '打开文档'}}
+            </button>
+
+            <button
+              class="action-btn secondary"
+              data-url="{{item.url}}"
+              data-name="{{item.name}}"
+              bindtap="handleDownload"
+            >
+              下载文档
+            </button>
+
+            <button
+              wx:if="{{item.downloaded}}"
+              class="action-btn ghost-danger"
+              data-url="{{item.url}}"
+              data-name="{{item.name}}"
+              bindtap="handleDeleteCache"
+            >
+              删除缓存
+            </button>
+          </view>
+        </view>
       </view>
     </view>
   </block>

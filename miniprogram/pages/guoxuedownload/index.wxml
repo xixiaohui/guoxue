@@ -1,0 +1,28 @@
+<view>
+
+  <view class="section">
+   
+    <view class="page">
+      <pdf-file-service
+        title="国学PDF文库"
+        apiUrl="https://www.readmeet.club/api/files"
+        enableRewardAd="{{true}}"
+        rewardAdUnitId="adunit-513a37c7d48cdf7f"
+        rewardForCachedOpen="{{false}}"
+        adFailBehavior="block"
+        openAdConfirmContent="观看完整广告后可打开文档"
+        downloadAdConfirmContent="观看完整广告后可下载文档"
+        bind:loaded="onPdfLoaded"
+        bind:opened="onPdfOpened"
+        bind:downloaded="onPdfDownloaded"
+        bind:cachedeleted="onPdfCacheDeleted"
+        bind:adload="onAdLoad"
+        bind:adreward="onAdReward"
+        bind:adcancel="onAdCancel"
+        bind:aderror="onAdError"
+        bind:error="onPdfError"
+      />
+    </view>
+  </view>
+
+</view>

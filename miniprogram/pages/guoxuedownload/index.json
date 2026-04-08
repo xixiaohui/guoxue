@@ -6,6 +6,6 @@
   "enablePullDownRefresh": true,
   "backgroundTextStyle": "dark",
   "usingComponents": {
-    
+    "pdf-file-service": "/components/pdf-file-service/index"
   }
 }
