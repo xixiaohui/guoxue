@@ -1,0 +1,207 @@
+/* pages/chinesepoetry_search/index.wxss - 诗词搜索 */
+
+.page {
+  min-height: 100vh;
+  padding-bottom: 40rpx;
+}
+
+/* ── 搜索栏 ─────────────────────────────── */
+.search-bar {
+  margin: 24rpx 24rpx 0;
+  background: #FFFBF0;
+  border-radius: 20rpx;
+  padding: 12rpx 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(139, 37, 0, 0.12);
+  border: 1rpx solid #E8C48A;
+  box-sizing: border-box;
+}
+
+.search-inner {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  width: 100%;
+}
+
+.search-icon {
+  font-size: 28rpx;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 26rpx;
+  color: #2C1810;
+  height: 56rpx;
+  min-width: 0;
+}
+
+.search-placeholder {
+  color: #B09070;
+  font-size: 24rpx;
+}
+
+.search-clear {
+  flex-shrink: 0;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #EFE3C8;
+  color: #8C7B61;
+  font-size: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-btn {
+  background: linear-gradient(90deg, #8B2500, #A8381A);
+  border-radius: 20rpx;
+  padding: 8rpx 24rpx;
+  flex-shrink: 0;
+}
+
+.search-btn-hover {
+  opacity: 0.8;
+}
+
+.search-btn-text {
+  font-size: 24rpx;
+  color: #FFF8E7;
+  font-weight: 500;
+}
+
+/* ── 初始引导 ─────────────────────────────── */
+.welcome {
+  margin: 120rpx 60rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.welcome-icon {
+  font-size: 72rpx;
+}
+
+.welcome-text {
+  font-size: 26rpx;
+  color: #8C7B61;
+  letter-spacing: 2rpx;
+}
+
+/* ── 结果区 ─────────────────────────────── */
+.result-head {
+  display: flex;
+  align-items: center;
+  padding: 30rpx 28rpx 18rpx;
+}
+
+.label-bar {
+  width: 8rpx;
+  height: 30rpx;
+  background: linear-gradient(180deg, #C4882E, #8B2500);
+  border-radius: 4rpx;
+  margin-right: 12rpx;
+}
+
+.section-label {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #4A2E18;
+  letter-spacing: 2rpx;
+  flex: 1;
+}
+
+.result-count {
+  font-size: 22rpx;
+  color: #8C7B61;
+}
+
+.empty-tip {
+  background: #FFFBF0;
+  border: 1rpx dashed #D8C08A;
+  border-radius: 16rpx;
+  padding: 36rpx 20rpx;
+  margin: 0 24rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #8C7B61;
+}
+
+/* ── 诗词卡片 ─────────────────────────────── */
+.poem-card {
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  padding: 22rpx 24rpx;
+  margin: 0 24rpx 18rpx;
+  box-shadow: 0 2rpx 10rpx rgba(139, 37, 0, 0.05);
+}
+
+.card-hover {
+  background: #F8EFD9 !important;
+  transform: translateY(2rpx);
+}
+
+.poem-card-top {
+  display: flex;
+  align-items: center;
+}
+
+.poem-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #4A2E18;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.poem-type {
+  flex-shrink: 0;
+  font-size: 20rpx;
+  color: #8B2500;
+  background: #F8EFD9;
+  border: 1rpx solid #E0C890;
+  border-radius: 18rpx;
+  padding: 2rpx 14rpx;
+  margin-left: 12rpx;
+}
+
+.poem-author {
+  display: block;
+  font-size: 24rpx;
+  color: #C4882E;
+  margin-top: 8rpx;
+}
+
+.poem-preview {
+  display: block;
+  font-size: 24rpx;
+  color: #6B5B45;
+  margin-top: 10rpx;
+  line-height: 1.6;
+}
+
+/* ── 分页状态 ─────────────────────────────── */
+.list-status {
+  padding: 20rpx 0;
+  text-align: center;
+}
+
+.status-text {
+  font-size: 22rpx;
+  color: #B09070;
+}
+
+/* ── 页脚 ─────────────────────────────── */
+.footer {
+  text-align: center;
+  font-size: 20rpx;
+  color: #A08C6B;
+  padding: 36rpx 0 24rpx;
+  letter-spacing: 2rpx;
+}

@@ -1,0 +1,110 @@
+<!--pages/chinesepoetry_detail/index.wxml - 诗词/诗人详情页-->
+<view class="page">
+
+  <!-- 顶部标题区 -->
+  <view class="hero">
+    <view class="hero-kind">{{kind === 'author' ? '诗人' : '诗词'}}</view>
+    <text class="hero-title">{{title || (kind === 'author' ? '佚名诗人' : '无题')}}</text>
+    <view class="hero-meta">
+      <text class="meta-item" wx:if="{{dynasty}}">{{dynasty}}</text>
+      <text class="meta-item" wx:if="{{kind === 'poem' && author}}">{{author}}</text>
+      <text class="meta-item" wx:if="{{type}}">{{type}}</text>
+    </view>
+    <view class="seed-tip" wx:if="{{fromSeed && !loading}}">内容来自列表页数据，可能与权威版本略有出入</view>
+  </view>
+
+  <!-- 诗词正文 -->
+  <view class="content-card" wx:if="{{kind === 'poem'}}">
+    <view class="content-inner">
+      <text class="poem-content">{{content}}</text>
+    </view>
+  </view>
+
+  <!-- 诗人介绍 -->
+  <view class="author-card" wx:if="{{kind === 'author'}}">
+    <view class="author-top">
+      <view class="author-avatar">{{authorChar}}</view>
+      <view class="author-info">
+        <text class="author-name">{{title}}</text>
+        <text class="author-dynasty">{{dynasty || '诗人'}}{{countText && poemCount ? ' · 共 ' + countText + ' 首' : ''}}</text>
+      </view>
+    </view>
+    <view class="author-divider"></view>
+    <text class="author-desc">{{description || '暂无详细介绍'}}</text>
+  </view>
+
+  <!-- 诗人全部诗词（分页展示，/search?type=author） -->
+  <view class="author-poems" wx:if="{{kind === 'author'}}">
+    <view class="poem-section-head">
+      <view class="poem-label-bar"></view>
+      <text class="poem-section-label">全部诗词</text>
+      <text class="poem-section-count" wx:if="{{authorPoems.length}}">已展示 {{authorPoems.length}} 首</text>
+    </view>
+
+    <view class="poem-loading" wx:if="{{authorPoemsLoading}}">
+      <text class="poem-loading-text">正在加载…</text>
+    </view>
+
+    <block wx:elif="{{authorPoems.length > 0}}">
+      <view class="poem-card" wx:for="{{authorPoems}}" wx:key="id" bindtap="goAuthorPoem"
+        data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
+        <view class="poem-card-top">
+          <text class="poem-title">{{item.title || '无题'}}</text>
+          <text class="poem-type" wx:if="{{item.type}}">{{item.type}}</text>
+        </view>
+        <text class="poem-author">{{item.dynasty ? item.dynasty + ' · ' : ''}}{{item.author || '佚名'}}</text>
+        <text class="poem-preview">{{item.preview}}</text>
+      </view>
+
+      <view class="load-more" wx:if="{{authorPoemsHasMore}}" bindtap="loadMoreAuthorPoems"
+        hover-class="card-hover" hover-stay-time="80">
+        <text>{{authorPoemsLoadingMore ? '加载中…' : '加载更多 ›'}}</text>
+      </view>
+      <view class="poem-end" wx:else>
+        <text>—— 已展示全部 {{authorPoems.length}} 首 ——</text>
+      </view>
+    </block>
+
+    <view class="empty-tip" wx:elif="{{authorPoemsLoaded}}">暂未收录该作者诗词，去看看其他诗人吧</view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="action-bar">
+    <view class="action-btn" wx:if="{{kind === 'poem'}}" bindtap="toggleFavorite" hover-class="action-hover" hover-stay-time="80">
+      <text class="action-icon">{{isFavorited ? '★' : '☆'}}</text>
+      <text class="action-text">{{isFavorited ? '已收藏' : '收藏'}}</text>
+    </view>
+    <view class="action-btn" bindtap="copyContent" hover-class="action-hover" hover-stay-time="80">
+      <text class="action-icon">📋</text>
+      <text class="action-text">复制</text>
+    </view>
+    <view class="action-btn" wx:if="{{kind === 'poem'}}" bindtap="createPoster" hover-class="action-hover" hover-stay-time="80">
+      <text class="action-icon">🖼</text>
+      <text class="action-text">海报</text>
+    </view>
+    <view class="action-btn" bindtap="goBack" hover-class="action-hover" hover-stay-time="80">
+      <text class="action-icon">‹</text>
+      <text class="action-text">返回</text>
+    </view>
+  </view>
+
+  <view class="footer">国文之学 · 诗词天地</view>
+
+  <!-- 海报生成画布（移出屏幕，供 Canvas 2D 绘制） -->
+  <canvas type="2d" id="posterCanvas" class="poster-canvas"></canvas>
+
+  <!-- 海报预览弹层 -->
+  <view class="poster-mask" wx:if="{{showPoster}}" catchtap="closePoster">
+    <view class="poster-panel" catchtap="noop">
+      <view class="poster-loading" wx:if="{{posterLoading}}">
+        <text class="poster-loading-icon">📜</text>
+        <text class="poster-loading-text">正在生成海报…</text>
+      </view>
+      <image wx:elif="{{posterPath}}" class="poster-img" src="{{posterPath}}" mode="widthFix" show-menu-by-longpress></image>
+      <view class="poster-btns" wx:if="{{posterPath}}">
+        <view class="poster-btn save" bindtap="savePoster" hover-class="poster-btn-hover" hover-stay-time="80">保存到相册</view>
+        <view class="poster-btn cancel" bindtap="closePoster" hover-class="poster-btn-hover" hover-stay-time="80">关闭</view>
+      </view>
+    </view>
+  </view>
+</view>

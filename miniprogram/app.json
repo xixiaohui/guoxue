@@ -7,14 +7,17 @@
     "pages/history/index",
     "pages/philosophers/index",
     "pages/detail/index",
-    "pages/vip/index",
-    "pages/guoxuedownload/index"
+    "pages/guoxuedownload/index",
+    "pages/chinesepoetry/index",
+    "pages/chinesepoetry_detail/index",
+    "pages/chinesepoetry_search/index",
+    "pages/chinesepoetry_all/index"
   ],
   "window": {
     "backgroundColor": "#F5EDD6",
     "backgroundTextStyle": "dark",
     "navigationBarBackgroundColor": "#8B2500",
-    "navigationBarTitleText": "国学AI助手",
+    "navigationBarTitleText": "国文之学",
     "navigationBarTextStyle": "white"
   },
   "tabBar": {
@@ -29,7 +32,12 @@
         "iconPath": "images/tab_home.png",
         "selectedIconPath": "images/tab_home_active.png"
       },
-      
+      {
+        "pagePath": "pages/chinesepoetry/index",
+        "text": "诗词",
+        "iconPath": "images/tab_poetry.png",
+        "selectedIconPath": "images/tab_poetry_active.png"
+      },
       {
         "pagePath": "pages/classics/index",
         "text": "典籍",

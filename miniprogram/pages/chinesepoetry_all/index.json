@@ -1,0 +1,8 @@
+{
+  "navigationBarBackgroundColor": "#8B2500",
+  "navigationBarTitleText": "全部诗词",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F5EDD6",
+  "backgroundTextStyle": "dark",
+  "enablePullDownRefresh": true
+}

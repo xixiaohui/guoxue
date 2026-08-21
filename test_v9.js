@@ -232,7 +232,7 @@ prohibited.forEach(text => {
 
 // VIP page text compliance
 const vipWxml = readFile('miniprogram/pages/vip/index.wxml');
-check('VIP页: 标题不含AI字样', !vipWxml.includes('国学AI助手'));
+check('VIP页: 标题不含AI字样', !vipWxml.includes('国文之学'));
 
 // ─── [10] 数据完整性 ──────────────────────────────
 console.log('\n📊 [10] 数据完整性');

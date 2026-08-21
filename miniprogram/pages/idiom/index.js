@@ -66,9 +66,7 @@ Page({
   onLoad() {
     this._loadDailyIdiom();
     monetize.preloadRewardedAd();
-    monetize.getQuotaStatus().then(s => {
-      if (!s.isVip) this._bannerAd = monetize.createBannerAd();
-    }).catch(() => {});
+    this._bannerAd = monetize.createBannerAd();
   },
 
   onUnload() {

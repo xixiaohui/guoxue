@@ -1,0 +1,464 @@
+/* pages/chinesepoetry_detail/index.wxss - 诗词/诗人详情页样式 */
+.page {
+  background: #F5EDD6;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  padding-bottom: 160rpx;
+}
+
+/* ── 顶部标题区 ─────────────────────────────── */
+.hero {
+  background: linear-gradient(160deg, #6B1F0A 0%, #8B2500 55%, #A8381A 100%);
+  padding: 44rpx 40rpx 56rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  right: -60rpx;
+  top: -60rpx;
+  width: 260rpx;
+  height: 260rpx;
+  background: radial-gradient(circle, rgba(255, 220, 150, 0.16), transparent 70%);
+}
+
+.hero-kind {
+  font-size: 20rpx;
+  color: #FFD97D;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1rpx solid rgba(255, 217, 125, 0.4);
+  border-radius: 20rpx;
+  padding: 4rpx 20rpx;
+  letter-spacing: 4rpx;
+}
+
+.hero-title {
+  display: block;
+  font-size: 42rpx;
+  font-weight: 700;
+  color: #FFF8E7;
+  letter-spacing: 3rpx;
+  margin-top: 20rpx;
+  text-align: center;
+}
+
+.hero-meta {
+  display: flex;
+  align-items: center;
+  margin-top: 16rpx;
+  gap: 12rpx;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.meta-item {
+  font-size: 24rpx;
+  color: rgba(255, 248, 231, 0.85);
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 16rpx;
+  padding: 4rpx 18rpx;
+}
+
+.seed-tip {
+  margin-top: 16rpx;
+  font-size: 20rpx;
+  color: rgba(255, 248, 231, 0.55);
+  text-align: center;
+}
+
+/* ── 诗词正文 ─────────────────────────────── */
+.content-card {
+  margin: 26rpx 24rpx 0;
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(139, 37, 0, 0.06);
+}
+
+.content-inner {
+  padding: 40rpx 36rpx;
+  background:
+    repeating-linear-gradient(transparent, transparent 76rpx, #F0E3C0 76rpx, #F0E3C0 78rpx);
+  border-radius: 20rpx;
+}
+
+.poem-content {
+  font-size: 32rpx;
+  color: #4A2E18;
+  line-height: 78rpx;
+  letter-spacing: 2rpx;
+  white-space: pre-wrap;
+  display: block;
+}
+
+/* ── 诗人介绍 ─────────────────────────────── */
+.author-card {
+  margin: 26rpx 24rpx 0;
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  padding: 34rpx 32rpx;
+  box-shadow: 0 4rpx 16rpx rgba(139, 37, 0, 0.06);
+}
+
+.author-top {
+  display: flex;
+  align-items: center;
+}
+
+.author-avatar {
+  width: 110rpx;
+  height: 110rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C4882E, #8B2500);
+  color: #FFF8E7;
+  font-size: 48rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.author-info {
+  margin-left: 24rpx;
+  min-width: 0;
+}
+
+.author-name {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #4A2E18;
+}
+
+.author-dynasty {
+  display: block;
+  font-size: 24rpx;
+  color: #8C7B61;
+  margin-top: 8rpx;
+}
+
+.author-divider {
+  height: 1rpx;
+  background: #E8D5A3;
+  margin: 24rpx 0;
+}
+
+.author-desc {
+  display: block;
+  font-size: 26rpx;
+  color: #6B5B45;
+  line-height: 1.8;
+  letter-spacing: 1rpx;
+}
+
+/* ── 诗人全部诗词（分页列表）───────────────── */
+.author-poems {
+  margin: 26rpx 24rpx 0;
+}
+
+.poem-section-head {
+  display: flex;
+  align-items: center;
+  padding: 6rpx 4rpx 18rpx;
+}
+
+.poem-label-bar {
+  width: 8rpx;
+  height: 30rpx;
+  background: linear-gradient(180deg, #C4882E, #8B2500);
+  border-radius: 4rpx;
+  margin-right: 12rpx;
+}
+
+.poem-section-label {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #4A2E18;
+  letter-spacing: 2rpx;
+  flex: 1;
+}
+
+.poem-section-count {
+  font-size: 22rpx;
+  color: #8C7B61;
+}
+
+.poem-card {
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  padding: 22rpx 24rpx;
+  margin-bottom: 18rpx;
+  box-shadow: 0 2rpx 10rpx rgba(139, 37, 0, 0.05);
+}
+
+.card-hover {
+  background: #F8EFD9 !important;
+  transform: translateY(2rpx);
+}
+
+.poem-card-top {
+  display: flex;
+  align-items: center;
+}
+
+.poem-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #4A2E18;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.poem-type {
+  flex-shrink: 0;
+  font-size: 20rpx;
+  color: #8B2500;
+  background: #F8EFD9;
+  border: 1rpx solid #E0C890;
+  border-radius: 18rpx;
+  padding: 2rpx 14rpx;
+  margin-left: 12rpx;
+}
+
+.poem-author {
+  display: block;
+  font-size: 24rpx;
+  color: #C4882E;
+  margin-top: 8rpx;
+}
+
+.poem-preview {
+  display: block;
+  font-size: 24rpx;
+  color: #6B5B45;
+  margin-top: 10rpx;
+  line-height: 1.6;
+}
+
+.poem-loading {
+  background: #FFFBF0;
+  border: 1rpx dashed #D8C08A;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  text-align: center;
+}
+
+.poem-loading-text {
+  font-size: 24rpx;
+  color: #8C7B61;
+}
+
+.load-more {
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #8B2500;
+}
+
+.poem-end {
+  padding: 22rpx 0;
+  text-align: center;
+  font-size: 22rpx;
+  color: #A08C6B;
+  letter-spacing: 2rpx;
+}
+
+.empty-tip {
+  background: #FFFBF0;
+  border: 1rpx dashed #D8C08A;
+  border-radius: 16rpx;
+  padding: 36rpx 20rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #8C7B61;
+}
+
+/* ── 操作栏 ─────────────────────────────── */
+.action-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #FFFBF0;
+  border-top: 1rpx solid #E8D5A3;
+  display: flex;
+  padding: 16rpx 40rpx calc(16rpx + env(safe-area-inset-bottom));
+  box-shadow: 0 -4rpx 16rpx rgba(139, 37, 0, 0.08);
+  z-index: 10;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  height: 76rpx;
+  border-radius: 38rpx;
+  margin: 0 10rpx;
+}
+
+.action-btn:first-child {
+  background: #F8EFD9;
+  border: 1rpx solid #E0C890;
+}
+
+.action-btn:nth-child(2) {
+  background: linear-gradient(90deg, #C4882E, #D99A3D);
+}
+
+.action-btn:nth-child(3) {
+  background: linear-gradient(90deg, #2E6B5C, #20584A);
+}
+
+.action-btn:last-child {
+  background: linear-gradient(90deg, #8B2500, #A8381A);
+}
+
+.action-hover {
+  opacity: 0.85;
+}
+
+.action-icon {
+  font-size: 30rpx;
+  color: #4A2E18;
+}
+
+.action-text {
+  font-size: 26rpx;
+  color: #4A2E18;
+  font-weight: 500;
+}
+
+.action-btn:nth-child(2) .action-icon,
+.action-btn:nth-child(2) .action-text,
+.action-btn:nth-child(3) .action-icon,
+.action-btn:nth-child(3) .action-text,
+.action-btn:last-child .action-icon,
+.action-btn:last-child .action-text {
+  color: #FFF8E7;
+}
+
+/* ── 页脚 ─────────────────────────────── */
+.footer {
+  text-align: center;
+  font-size: 20rpx;
+  color: #A08C6B;
+  padding: 36rpx 0 24rpx;
+  letter-spacing: 2rpx;
+}
+
+/* ── 海报 ─────────────────────────────── */
+.poster-canvas {
+  position: fixed;
+  left: -2000rpx;
+  top: 0;
+  width: 750rpx;
+  height: 1200rpx;
+  pointer-events: none;
+}
+
+.poster-mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(20, 10, 5, 0.7);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx;
+  box-sizing: border-box;
+}
+
+.poster-panel {
+  width: 100%;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.poster-loading {
+  background: rgba(255, 251, 240, 0.96);
+  border-radius: 20rpx;
+  width: 100%;
+  padding: 80rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.poster-loading-icon {
+  font-size: 64rpx;
+  animation: poster-swing 1.4s infinite;
+}
+
+.poster-loading-text {
+  font-size: 26rpx;
+  color: #8C7B61;
+}
+
+@keyframes poster-swing {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(8deg); }
+}
+
+.poster-img {
+  width: 100%;
+  border-radius: 16rpx;
+  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.poster-btns {
+  display: flex;
+  width: 100%;
+  gap: 24rpx;
+  margin-top: 30rpx;
+}
+
+.poster-btn {
+  flex: 1;
+  height: 84rpx;
+  border-radius: 42rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.poster-btn.save {
+  background: linear-gradient(90deg, #C4882E, #D99A3D);
+  color: #FFF8E7;
+}
+
+.poster-btn.cancel {
+  background: rgba(255, 251, 240, 0.16);
+  border: 1rpx solid rgba(255, 251, 240, 0.35);
+  color: #FFF8E7;
+}
+
+.poster-btn-hover {
+  opacity: 0.85;
+}

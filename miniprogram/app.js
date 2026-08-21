@@ -1,4 +1,4 @@
-// app.js - 国学AI助手（生产级 · v4.0 · wx.cloud.extend.AI 直调架构）
+// app.js - 国文之学（生产级 · v4.0 · wx.cloud.extend.AI 直调架构）
 App({
   onLaunch() {
     // ── 云环境初始化 ──────────────────────────────
@@ -23,7 +23,6 @@ App({
       env: ENV_ID,
       userInfo: null,
       quotaStatus: null,
-      isVip: false,
       theme: {
         primary: '#8B2500',
         secondary: '#C4882E',
@@ -70,8 +69,7 @@ App({
       const data = res.result;
       if (data && data.success) {
         this.globalData.quotaStatus = data;
-        this.globalData.isVip       = !!data.isVip;
-        console.log('[App] quotaStatus:', { isVip: data.isVip, remaining: data.remaining });
+        console.log('[App] quotaStatus:', { remaining: data.remaining });
       }
     }).catch(err => {
       console.warn('[App] quota status load failed:', err.message || err);
@@ -95,7 +93,7 @@ App({
 
   globalData: {
     env: '', userInfo: null,
-    quotaStatus: null, isVip: false,
+    quotaStatus: null,
     statusBarHeight: 0, windowHeight: 0, pixelRatio: 2
   }
 });

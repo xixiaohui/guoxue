@@ -11,9 +11,6 @@ const MONETIZE = {
   FREE_DAILY_LIMIT: 100,
   REWARDED_AD_ID: 'adunit-513a37c7d48cdf7f',
   BANNER_AD_ID: 'adunit-49f0f4a3d03930f8',
-  VIP_PRICE_1MONTH: 9.9,
-  VIP_PRICE_3MONTH: 24.9,
-  VIP_PRICE_12MONTH: 79,
 };
 
 // ─── 本地存储键名 ────────────────────────────────────

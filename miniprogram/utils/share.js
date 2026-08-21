@@ -17,6 +17,11 @@
 const POSTER_WIDTH = 750;   // 逻辑像素
 const POSTER_HEIGHT = 1200;
 
+// 微信 Canvas 物理像素高度上限（超限会抛 "set height out of range"）
+const CANVAS_MAX_HEIGHT = 16384;
+// 诗词海报正文最大行数（超出后省略，防止高度越界）
+const MAX_CONTENT_LINES = 120;
+
 /**
  * 构建"分享给好友"的消息卡片参数
  * @param {object} opts
@@ -27,7 +32,7 @@ const POSTER_HEIGHT = 1200;
  */
 function buildShareMsg(opts = {}) {
   return {
-    title: opts.title || '国学AI助手 · 传承千年智慧',
+    title: opts.title || '国文之学 · 传承千年智慧',
     path: opts.path || '/pages/home/index',
     imageUrl: opts.imageUrl || '/images/share-cover.png',
   };
@@ -47,7 +52,7 @@ function buildShareMsg(opts = {}) {
  * @returns {object}
  */
 function buildShareTimeline(opts = {}) {
-  const quote = opts.quote || '国学AI助手';
+  const quote = opts.quote || '国文之学';
   const author = opts.author ? ` — ${opts.author}` : '';
 
   return {
@@ -156,7 +161,7 @@ async function _renderPoster(ctx, canvas, opts = {}) {
   const translation = (opts.translation || '').trim();
   const insight = (opts.insight || '').trim();
 
-  const brandName = opts.brandName || '国学AI助手';
+  const brandName = opts.brandName || '国文之学';
   const brandSlogan = opts.brandSlogan || '传承千年智慧 · 让经典更易懂';
   const brandMark = opts.brandMark || '文';
   const qrImageUrl = opts.qrImageUrl || '/images/mini.png';
@@ -369,6 +374,285 @@ async function _renderPoster(ctx, canvas, opts = {}) {
   ctx.restore();
 }
 
+/**
+ * 生成「诗词海报」—— 完整展示诗词正文，海报高度随内容自适应（不截断）
+ * @param {object} pageCtx  Page 实例（this）
+ * @param {object} opts
+ * @param {string} opts.title     诗题
+ * @param {string} [opts.author]  作者
+ * @param {string} [opts.dynasty] 朝代
+ * @param {string} [opts.type]    体裁
+ * @param {string} opts.content   诗词正文（多行以 \n 分隔）
+ * @param {string} [opts.canvasId]   默认 posterCanvas
+ * @param {string} [opts.qrImageUrl] 小程序码/二维码（默认 /images/mini.png）
+ * @returns {Promise<string>} 海报临时文件路径
+ */
+async function generatePoemPoster(pageCtx, opts = {}) {
+  const canvasId = opts.canvasId || 'posterCanvas';
+  const dpr = (wx.getWindowInfo && wx.getWindowInfo().pixelRatio) || 2;
+  const query = _createQuery(pageCtx);
+
+  return new Promise((resolve, reject) => {
+    query
+      .select(`#${canvasId}`)
+      .fields({ node: true, size: true })
+      .exec(async (res) => {
+        if (!res || !res[0] || !res[0].node) {
+          reject(new Error(`Canvas 节点不存在：#${canvasId}`));
+          return;
+        }
+
+        const canvas = res[0].node;
+        const ctx = canvas.getContext('2d');
+
+        // 先用正文换行数估算海报高度（完整展示不截断）
+        let layout = _measurePoemLayout(ctx, opts);
+
+        // 高度越界保护：Canvas 物理高度上限 16384，超出时二分收缩正文行数
+        const maxLogicalH = Math.floor(CANVAS_MAX_HEIGHT / dpr) - 8;
+        if (layout.height > maxLogicalH) {
+          let lo = 1;
+          let hi = layout.lines.length;
+          let best = 1;
+          while (lo <= hi) {
+            const mid = (lo + hi) >> 1;
+            const candidate = _measurePoemLayout(ctx, Object.assign({}, opts, { maxLines: mid }));
+            if (candidate.height <= maxLogicalH) {
+              best = mid;
+              lo = mid + 1;
+            } else {
+              hi = mid - 1;
+            }
+          }
+          layout = _measurePoemLayout(ctx, Object.assign({}, opts, { maxLines: best }));
+        }
+
+        canvas.width = POSTER_WIDTH * dpr;
+        canvas.height = layout.height * dpr;
+        ctx.scale(dpr, dpr);
+
+        try {
+          await _renderPoemPoster(ctx, canvas, opts, layout);
+
+          setTimeout(() => {
+            wx.canvasToTempFilePath({
+              canvas,
+              fileType: 'png',
+              quality: 1,
+              success(r) {
+                resolve(r.tempFilePath);
+              },
+              fail(e) {
+                reject(e);
+              },
+            });
+          }, 80);
+        } catch (e) {
+          reject(e);
+        }
+      });
+  });
+}
+
+/**
+ * 估算诗词海报布局：正文按宽度换行得到全部行，并计算总高度
+ * 无品牌区，空间全部留给正文展示
+ * @param {object} opts
+ * @param {number} [opts.maxLines] 正文最大行数（默认 MAX_CONTENT_LINES），超出后省略
+ * @returns {{height:number, lines:string[], titleLines:string[], contentLineH:number, contentH:number}}
+ */
+function _measurePoemLayout(ctx, opts = {}) {
+  const W = POSTER_WIDTH;
+  const content = (opts.content || '').trim();
+  const title = (opts.title || '无题').trim();
+
+  const contentFont = '34px serif';
+  const contentLineH = 60;
+  const contentMaxW = W - 72 - 80;   // 卡片左右留 36、内部左右留 40，正文行宽更大
+
+  const lines = _wrapPoemLines(ctx, content, contentMaxW, contentFont);
+  const maxLines = opts.maxLines || MAX_CONTENT_LINES;
+  if (lines.length > maxLines) {
+    lines.length = maxLines;
+    lines[maxLines - 1] = '……（以下省略）';
+  }
+  const contentH = Math.max(lines.length, 1) * contentLineH;
+
+  const titleLines = _wrapText(ctx, title, W - 140, 'bold 42px serif');
+
+  let height = 0;
+  height += 80;                             // 顶部留白（标题作者与画布顶部保持美观留白）
+  height += titleLines.length * 56;         // 标题
+  height += 24;                             // 标题与作者行间距
+  height += 40;                             // 朝代 · 体裁 · 作者
+  height += 36;                             // 分隔间距
+  height += 60 + contentH + 60;             // 正文卡片（上下内边距 60）
+  height += 44;                             // 卡片与底部间隔
+  height += 190;                            // 底部二维码卡
+  height += 24;                             // 底部留白
+
+  return { height, lines, titleLines, contentLineH, contentH };
+}
+
+/**
+ * 绘制诗词海报（完整正文，动态高度）
+ */
+async function _renderPoemPoster(ctx, canvas, opts = {}, layout = {}) {
+  const W = POSTER_WIDTH;
+  const H = layout.height || POSTER_HEIGHT;
+  const lines = layout.lines || [];
+  const contentLineH = layout.contentLineH || 48;
+
+  const title = (opts.title || '无题').trim();
+  const author = (opts.author || '').trim();
+  const dynasty = (opts.dynasty || '').trim();
+  const type = (opts.type || '').trim();
+  const qrImageUrl = opts.qrImageUrl || '/images/mini.png';
+
+  const brandName = '国文之学';
+
+  // ========== 背景 ==========
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#1F130D');
+  bg.addColorStop(0.4, '#3A2218');
+  bg.addColorStop(0.75, '#2B180F');
+  bg.addColorStop(1, '#160C08');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  const topGlow = ctx.createRadialGradient(W / 2, 130, 10, W / 2, 130, 340);
+  topGlow.addColorStop(0, 'rgba(233,196,106,0.24)');
+  topGlow.addColorStop(0.45, 'rgba(233,196,106,0.10)');
+  topGlow.addColorStop(1, 'rgba(233,196,106,0)');
+  ctx.fillStyle = topGlow;
+  ctx.fillRect(0, 0, W, 360);
+
+  const bottomGlow = ctx.createRadialGradient(W / 2, H - 120, 20, W / 2, H - 120, 280);
+  bottomGlow.addColorStop(0, 'rgba(201,141,61,0.14)');
+  bottomGlow.addColorStop(1, 'rgba(201,141,61,0)');
+  ctx.fillStyle = bottomGlow;
+  ctx.fillRect(0, H - 360, W, 360);
+
+  _drawFlowLines(ctx, W, H);
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(216,177,91,0.24)';
+  ctx.lineWidth = 1.2;
+  _drawRoundRect(ctx, 20, 20, W - 40, H - 40, 24);
+  ctx.stroke();
+  ctx.restore();
+
+  let y = 80;
+
+  // ========== 标题 ==========
+  ctx.save();
+  ctx.fillStyle = '#F7EBD3';
+  ctx.font = 'bold 42px serif';
+  ctx.textAlign = 'center';
+  layout.titleLines.forEach((line) => {
+    ctx.fillText(line, W / 2, y);
+    y += 56;
+  });
+  ctx.restore();
+  y += 24;
+
+  // ========== 朝代 · 体裁 · 作者 ==========
+  const meta = [dynasty, type, author].filter(Boolean).join(' · ');
+  if (meta) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(223,190,128,0.9)';
+    ctx.font = '28px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(meta, W / 2, y);
+    ctx.restore();
+  }
+  y += 40;
+  y += 36;
+
+  // ========== 正文卡片（完整展示，区域更大） ==========
+  const cardX = 36;
+  const cardW = W - 72;
+  const cardY = y;
+  const cardH = 60 + layout.contentH + 60;
+
+  _drawPaperCard(ctx, cardX, cardY, cardW, cardH, 28);
+
+  if (lines.length) {
+    ctx.save();
+    ctx.fillStyle = '#2A1A12';
+    ctx.font = '34px serif';
+    ctx.textAlign = 'center';
+    let textY = cardY + 60 + contentLineH - 10;
+    lines.forEach((line) => {
+      if (line) {
+        ctx.fillText(line, W / 2, textY);
+      }
+      textY += contentLineH;
+    });
+    ctx.restore();
+  }
+
+  y += cardH + 44;
+
+  // ========== 底部二维码卡 ==========
+  const qrCardH = 190;
+  _drawBottomPanel(ctx, cardX, y, cardW, qrCardH, 28);
+
+  const qrSize = 130;
+  const qrX = cardX + 30;
+  const qrY = y + 30;
+
+  ctx.save();
+  ctx.fillStyle = '#FFFFFF';
+  _drawRoundRect(ctx, qrX, qrY, qrSize, qrSize, 18);
+  ctx.fill();
+  ctx.restore();
+
+  const qrOk = await _safeDrawImage(canvas, ctx, qrImageUrl, qrX + 8, qrY + 8, qrSize - 16, qrSize - 16);
+  if (!qrOk) {
+    ctx.save();
+    ctx.fillStyle = '#8B5A2B';
+    ctx.font = '18px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('小程序码', qrX + qrSize / 2, qrY + qrSize / 2 + 6);
+    ctx.restore();
+  }
+
+  const infoX = qrX + qrSize + 28;
+  ctx.save();
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#F8ECD0';
+  ctx.font = 'bold 30px serif';
+  ctx.fillText(brandName, infoX, qrY + 36);
+  ctx.fillStyle = 'rgba(233,215,180,0.88)';
+  ctx.font = '20px sans-serif';
+  ctx.fillText('长按识别 · 进入诗词天地', infoX, qrY + 74);
+  ctx.fillStyle = 'rgba(216,177,91,0.95)';
+  ctx.font = '20px sans-serif';
+  ctx.fillText('每天一首经典诗词', infoX, qrY + 104);
+  ctx.restore();
+}
+
+/**
+ * 诗词正文按行拆分并换行（保留空行占位，不做截断）
+ */
+function _wrapPoemLines(ctx, text, maxWidth, font) {
+  const lines = [];
+  if (!text) return lines;
+
+  const paras = String(text).split('\n');
+  for (const para of paras) {
+    if (!para.trim()) {
+      lines.push('');
+      continue;
+    }
+    const sub = _wrapText(ctx, para, maxWidth, font);
+    if (!sub.length) lines.push('');
+    else lines.push(...sub);
+  }
+  return lines;
+}
+
 // =========================
 // 图片加载与绘制
 // =========================
@@ -409,7 +693,7 @@ async function _safeDrawImage(canvas, ctx, src, x, y, w, h) {
 // =========================
 
 function _drawTopBrand(ctx, W, opts = {}) {
-  const brandName = opts.brandName || '国学AI助手';
+  const brandName = opts.brandName || '国文之学';
   const brandSlogan = opts.brandSlogan || '传承千年智慧 · 让经典更易懂';
   const brandMark = opts.brandMark || '文';
 
@@ -747,5 +1031,6 @@ module.exports = {
   buildShareTimeline,
   generateTimelineShare,
   generatePoster,
+  generatePoemPoster,
   savePosterToAlbum,
 };

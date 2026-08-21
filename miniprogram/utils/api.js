@@ -43,7 +43,7 @@ async function consumeQuota() {
     }
     return {
       allowed:   true,
-      reason:    d.isUnlimited ? (d.isVip ? 'vip' : 'ad_bonus') : 'free',
+      reason:    d.isUnlimited ? 'ad_bonus' : 'free',
       remaining: d.remaining || 0,
     };
   } catch (e) {
@@ -73,7 +73,7 @@ async function getQuotaStatus(forceRefresh = false) {
   } catch (e) {
     console.warn('[api] getQuotaStatus failed:', e.message);
   }
-  return { canUse: true, remaining: 10, isVip: false, hasAdBonus: false, freeLimit: 10 };
+  return { canUse: true, remaining: 10, hasAdBonus: false, freeLimit: 10 };
 }
 
 // ─── 内部：配额检查 + AI 调用（无缓存版，用于翻译等实时场景）─────
@@ -81,7 +81,7 @@ async function _invoke(type, messages, needQuota, opts = {}) {
   if (needQuota) {
     const quota = await consumeQuota();
     if (!quota.allowed) {
-      const e = new Error('今日免费次数已用完，请观看广告或升级会员');
+      const e = new Error('今日免费次数已用完，请观看广告解锁');
       e.code = 'QUOTA_EXCEEDED';
       e.remaining = 0;
       throw e;
@@ -113,7 +113,7 @@ async function _invokeWithCache(contentType, cacheKey, buildPrompt, aiOpts, aiTy
   if (needQuota) {
     const quota = await consumeQuota();
     if (!quota.allowed) {
-      const e = new Error('今日免费次数已用完，请观看广告或升级会员');
+      const e = new Error('今日免费次数已用完，请观看广告解锁');
       e.code = 'QUOTA_EXCEEDED';
       e.remaining = 0;
       throw e;
@@ -154,7 +154,7 @@ async function chatStream(messages, onChunk, onDone, onError) {
   }
   const quota = await consumeQuota();
   if (!quota.allowed) {
-    const e = new Error('今日免费次数已用完，请观看广告或升级会员');
+    const e = new Error('今日免费次数已用完，请观看广告解锁');
     e.code = 'QUOTA_EXCEEDED';
     onError && onError(e);
     return;

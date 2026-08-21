@@ -1,0 +1,95 @@
+<!--pages/chinesepoetry_all/index.wxml - 诗词/诗人/朝代/体裁 全部列表（分页）-->
+<view class="page">
+
+  <!-- 页头 -->
+  <view class="page-header">
+    <view class="header-inner">
+      <text class="header-title">{{title}}</text>
+      <text class="header-sub">{{subtitle}}</text>
+    </view>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="list-loading" wx:if="{{loading}}">
+    <text class="list-loading-text">加载中…</text>
+  </view>
+
+  <!-- 空态 -->
+  <view class="empty-tip" wx:elif="{{items.length === 0}}">暂无内容，稍后再来看看吧</view>
+
+  <!-- 内容列表 -->
+  <view class="list" wx:elif="{{items.length > 0}}">
+
+    <!-- 全部诗词 -->
+    <block wx:if="{{kind === 'poems'}}">
+      <view class="poem-card" wx:for="{{items}}" wx:key="id" bindtap="goPoem"
+        data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
+        <view class="poem-card-top">
+          <text class="poem-title">{{item.title || '无题'}}</text>
+          <text class="poem-type" wx:if="{{item.type}}">{{item.type}}</text>
+        </view>
+        <text class="poem-author">{{item.dynasty ? item.dynasty + ' · ' : ''}}{{item.author || '佚名'}}</text>
+        <text class="poem-preview">{{item.preview}}</text>
+      </view>
+    </block>
+
+    <!-- 全部诗人 -->
+    <block wx:elif="{{kind === 'authors'}}">
+      <view class="author-item" wx:for="{{items}}" wx:key="id" bindtap="goAuthor"
+        data-author="{{item}}" hover-class="card-hover" hover-stay-time="80">
+        <view class="author-avatar">{{item.char}}</view>
+        <view class="author-info">
+          <text class="author-name">{{item.name}}</text>
+          <text class="author-meta">{{item.dynasty || '诗人'}}{{item.countText ? ' · 共 ' + item.countText + ' 首' : ''}}</text>
+        </view>
+        <text class="row-arrow">›</text>
+      </view>
+    </block>
+
+    <!-- 全部朝代 -->
+    <block wx:elif="{{kind === 'dynasties'}}">
+      <view class="cat-item" wx:for="{{items}}" wx:key="id">
+        <view class="cat-left">
+          <text class="cat-name">{{item.name}}</text>
+          <text class="cat-desc" wx:if="{{item.start_year || item.startYear}}">{{item.start_year || item.startYear}}-{{item.end_year || item.endYear || ''}}年</text>
+        </view>
+        <view class="cat-nums">
+          <view class="cat-num-block">
+            <text class="cat-num">{{item.countText}}</text>
+            <text class="cat-num-label">首诗词</text>
+          </view>
+          <view class="cat-num-block">
+            <text class="cat-num">{{item.authorCount}}</text>
+            <text class="cat-num-label">位诗人</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 全部体裁 -->
+    <block wx:elif="{{kind === 'types'}}">
+      <view class="cat-item" wx:for="{{items}}" wx:key="id">
+        <view class="cat-left">
+          <text class="cat-name">{{item.name}}</text>
+        </view>
+        <view class="cat-nums">
+          <view class="cat-num-block">
+            <text class="cat-num">{{item.countText}}</text>
+            <text class="cat-num-label">首诗词</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 分页状态 -->
+    <view class="load-more" wx:if="{{hasMore}}" bindtap="loadMore"
+      hover-class="card-hover" hover-stay-time="80">
+      <text>{{loadingMore ? '加载中…' : '加载更多 ›'}}</text>
+    </view>
+    <view class="list-end" wx:else>
+      <text>—— 已展示全部 ——</text>
+    </view>
+  </view>
+
+  <view class="footer">数据来源：chinesepoetry.space · 国文之学</view>
+</view>

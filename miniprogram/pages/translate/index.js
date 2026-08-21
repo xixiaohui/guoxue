@@ -73,12 +73,7 @@ Page({
   onLoad() {
     this.setData({ history: storage.getTranslateHistory() });
     monetize.preloadRewardedAd();
-    this._bannerAd = null;
-    monetize.getQuotaStatus().then(s => {
-      if (!s.isVip) {
-        this._bannerAd = monetize.createBannerAd();
-      }
-    }).catch(() => {});
+    this._bannerAd = monetize.createBannerAd();
   },
 
   onShow() {

@@ -107,7 +107,7 @@ Page({
   onLoad() {
     // monetize.preloadRewardedAd();
     // monetize.getQuotaStatus().then(s => {
-    //   if (!s.isVip) this._bannerAd = monetize.createBannerAd();
+    //   this._bannerAd = monetize.createBannerAd();
     // }).catch(() => {});
   },
 

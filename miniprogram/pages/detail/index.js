@@ -19,12 +19,8 @@ Page({
 
     this.setData({ title, content, category });
 
-    // Banner广告（非VIP）
-    monetize.getQuotaStatus().then(s => {
-      if (!s.isVip) {
-        this._bannerAd = monetize.createBannerAd();
-      }
-    }).catch(() => {});
+    // Banner广告
+    this._bannerAd = monetize.createBannerAd();
 
     // 若有内容且有分类，自动请求 AI 赏析
     if (content && category) {

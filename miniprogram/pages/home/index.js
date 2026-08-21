@@ -74,14 +74,14 @@ Page({
     ],
 
     funcs: [
-      { id: 'classics',     name: '诗词典籍',  desc: '经典赏析鉴读', char: '詩', bg: 'linear-gradient(135deg,#9B6FD5,#6A3DA8)', page: '/pages/classics/index',     isTab: true  },
+      { id: 'classics',     name: '诗词典籍',  desc: '经典赏析鉴读', char: '詩', bg: 'linear-gradient(135deg,#9B6FD5,#6A3DA8)', page: '/pages/chinesepoetry/index',     isTab: true  },
       { id: 'idiom',        name: '成语故事',  desc: '典故溯源解析', char: '成', bg: 'linear-gradient(135deg,#F0B840,#C48A10)', page: '/pages/idiom/index',         isTab: false },
       { id: 'history',      name: '历史探秘',  desc: '朝代人物探究', char: '史', bg: 'linear-gradient(135deg,#5BC8F5,#1A7ED5)', page: '/pages/history/index',      isTab: true  },
       { id: 'philosophers', name: '诸子百家',  desc: '百家争鸣精华', char: '道', bg: 'linear-gradient(135deg,#FF8FA3,#C03060)', page: '/pages/philosophers/index',  isTab: true  }
     ],
 
     categories: [
-      { id: 1, name: '诗词歌赋', desc: '唐诗宋词，韵律之美', icon: '📜', bg: 'linear-gradient(135deg,#FF9A5C,#E05820)', page: '/pages/classics/index', isTab: true },
+      { id: 1, name: '诗词歌赋', desc: '唐诗宋词，韵律之美', icon: '📜', bg: 'linear-gradient(135deg,#FF9A5C,#E05820)', page: '/pages/chinesepoetry/index', isTab: true },
       { id: 2, name: '经史子集', desc: '四部典籍，学问源流', icon: '📚', bg: 'linear-gradient(135deg,#52C878,#1A8040)', page: '/pages/classics/index', isTab: true },
       { id: 3, name: '成语典故', desc: '字里乾坤，故事传承', icon: '🏮', bg: 'linear-gradient(135deg,#F7C948,#C48A10)', page: '/pages/idiom/index', isTab: false },
       { id: 4, name: '历史文化', desc: '朝代更迭，人文风华', icon: '🏯', bg: 'linear-gradient(135deg,#9B8FD5,#5A3DA8)', page: '/pages/history/index', isTab: true }
@@ -344,10 +344,6 @@ Page({
 
   goTranslate() {
     wx.navigateTo({ url: '/pages/translate/index' });
-  },
-
-  goVip() {
-    wx.navigateTo({ url: '/pages/vip/index' });
   },
 
   onShareAppMessage() {

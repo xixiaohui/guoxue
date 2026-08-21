@@ -1,0 +1,645 @@
+/* pages/chinesepoetry/index.wxss - 诗词天地样式 */
+.page {
+  background: #F5EDD6;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* ── 页头 ─────────────────────────────── */
+.page-header {
+  background: linear-gradient(160deg, #6B1F0A 0%, #8B2500 55%, #A8381A 100%);
+  padding: 40rpx 30rpx 52rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.header-title {
+  display: block;
+  font-size: 42rpx;
+  font-weight: 700;
+  color: #FFF8E7;
+  letter-spacing: 6rpx;
+}
+
+.header-sub {
+  display: block;
+  font-size: 24rpx;
+  color: rgba(255, 248, 231, 0.65);
+  margin-top: 8rpx;
+  letter-spacing: 4rpx;
+}
+
+/* ── 搜索栏 ─────────────────────────────── */
+.search-bar {
+  margin: -24rpx 24rpx 0;
+  background: #FFFBF0;
+  border-radius: 20rpx;
+  padding: 12rpx 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(139, 37, 0, 0.12);
+  border: 1rpx solid #E8C48A;
+  width: calc(100% - 48rpx);
+  box-sizing: border-box;
+  position: relative;
+  z-index: 5;
+}
+
+.search-inner {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  width: 100%;
+}
+
+.search-icon {
+  font-size: 28rpx;
+  flex-shrink: 0;
+}
+
+.search-input-placeholder {
+  flex: 1;
+  font-size: 26rpx;
+  color: #B09070;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-bar-hover {
+  opacity: 0.85;
+}
+
+.search-btn {
+  background: linear-gradient(90deg, #8B2500, #A8381A);
+  border-radius: 20rpx;
+  padding: 8rpx 24rpx;
+  flex-shrink: 0;
+}
+
+.search-btn-hover {
+  opacity: 0.8 !important;
+}
+
+.search-btn-text {
+  font-size: 24rpx;
+  color: #FFF8E7;
+  font-weight: 500;
+}
+
+/* ── 通用区块 ─────────────────────────────── */
+.section {
+  margin: 28rpx 24rpx 0;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  padding: 6rpx 4rpx 18rpx;
+}
+
+.label-bar {
+  width: 8rpx;
+  height: 30rpx;
+  background: linear-gradient(180deg, #C4882E, #8B2500);
+  border-radius: 4rpx;
+  margin-right: 12rpx;
+}
+
+.section-label {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #4A2E18;
+  letter-spacing: 2rpx;
+  flex: 1;
+}
+
+.section-extra {
+  font-size: 24rpx;
+  color: #8B2500;
+  padding: 6rpx 8rpx;
+}
+
+.link-hover {
+  opacity: 0.6;
+}
+
+/* ── 空态 ─────────────────────────────── */
+.empty-tip {
+  background: #FFFBF0;
+  border: 1rpx dashed #D8C08A;
+  border-radius: 16rpx;
+  padding: 36rpx 20rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #8C7B61;
+}
+
+/* ── 每日一句卡片 ─────────────────────────────── */
+.quote-card {
+  margin: 28rpx 24rpx 0;
+  background: linear-gradient(150deg, #8B2500, #A8381A 60%, #C4632A);
+  border-radius: 24rpx;
+  padding: 28rpx 28rpx 24rpx;
+  box-shadow: 0 8rpx 24rpx rgba(139, 37, 0, 0.28);
+  position: relative;
+  overflow: hidden;
+}
+
+.quote-card::after {
+  content: '';
+  position: absolute;
+  right: -40rpx;
+  top: -40rpx;
+  width: 200rpx;
+  height: 200rpx;
+  background: radial-gradient(circle, rgba(255, 220, 150, 0.18), transparent 70%);
+}
+
+.quote-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quote-badge {
+  font-size: 22rpx;
+  color: #FFD97D;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1rpx solid rgba(255, 217, 125, 0.4);
+  border-radius: 20rpx;
+  padding: 4rpx 18rpx;
+  letter-spacing: 2rpx;
+}
+
+.quote-refresh {
+  font-size: 22rpx;
+  color: rgba(255, 248, 231, 0.8);
+  padding: 6rpx 10rpx;
+}
+
+.quote-content {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #FFF8E7;
+  line-height: 1.7;
+  letter-spacing: 2rpx;
+  margin-top: 22rpx;
+}
+
+.quote-meta {
+  display: flex;
+  align-items: center;
+  margin-top: 14rpx;
+}
+
+.quote-author {
+  font-size: 24rpx;
+  color: #FFD97D;
+}
+
+.quote-source {
+  font-size: 22rpx;
+  color: rgba(255, 248, 231, 0.7);
+  margin-left: 10rpx;
+}
+
+/* ── 节气卡片 ─────────────────────────────── */
+.solar-card {
+  margin: 28rpx 24rpx 0;
+  background: #FFFBF0;
+  border: 1rpx solid #E8C48A;
+  border-radius: 24rpx;
+  display: flex;
+  overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(139, 37, 0, 0.08);
+}
+
+.solar-left {
+  width: 150rpx;
+  background: linear-gradient(160deg, #3E7C4F, #2E6B3F);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24rpx 0;
+  flex-shrink: 0;
+}
+
+.solar-term {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #FFF8E7;
+  letter-spacing: 4rpx;
+}
+
+.solar-label {
+  font-size: 20rpx;
+  color: rgba(255, 248, 231, 0.75);
+  margin-top: 8rpx;
+  letter-spacing: 2rpx;
+}
+
+.solar-right {
+  flex: 1;
+  padding: 22rpx 24rpx;
+  min-width: 0;
+}
+
+.solar-desc {
+  display: block;
+  font-size: 24rpx;
+  color: #6B5B45;
+  line-height: 1.6;
+}
+
+.solar-poem {
+  margin-top: 14rpx;
+  background: #F8EFD9;
+  border-left: 6rpx solid #C4882E;
+  border-radius: 0 12rpx 12rpx 0;
+  padding: 14rpx 18rpx;
+}
+
+.solar-poem-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #4A2E18;
+}
+
+.solar-poem-preview {
+  display: block;
+  font-size: 22rpx;
+  color: #6B5B45;
+  margin-top: 6rpx;
+  line-height: 1.5;
+}
+
+.solar-go {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: #8B2500;
+}
+
+.solar-go-arrow {
+  font-size: 30rpx;
+}
+
+/* ── 分类 ─────────────────────────────── */
+.chip-block {
+  background: #FFFBF0;
+  border: 1rpx solid #E8C48A;
+  border-radius: 20rpx;
+  padding: 18rpx 20rpx;
+}
+
+.chip-label {
+  font-size: 22rpx;
+  color: #8C7B61;
+  margin: 4rpx 0 10rpx;
+}
+
+.chip-scroll {
+  width: 100%;
+  white-space: nowrap;
+  margin-bottom: 12rpx;
+}
+
+.chip-row {
+  display: inline-flex;
+  gap: 14rpx;
+  padding-bottom: 4rpx;
+}
+
+.chip {
+  display: inline-block;
+  padding: 10rpx 26rpx;
+  background: #F5EDD6;
+  border: 1rpx solid #E0C890;
+  border-radius: 30rpx;
+  font-size: 24rpx;
+  color: #6B5B45;
+  flex-shrink: 0;
+}
+
+.chip-active {
+  background: linear-gradient(135deg, #8B2500, #A8381A);
+  border-color: #8B2500;
+  color: #FFF8E7;
+  font-weight: 600;
+}
+
+.chip-hover {
+  opacity: 0.75;
+}
+
+.category-result {
+  margin-top: 18rpx;
+}
+
+.category-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 6rpx 4rpx 12rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #4A2E18;
+}
+
+.category-count {
+  font-size: 22rpx;
+  font-weight: 400;
+  color: #8C7B61;
+}
+
+/* ── 诗词卡片 ─────────────────────────────── */
+.poem-card {
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  padding: 22rpx 24rpx;
+  margin-bottom: 18rpx;
+  box-shadow: 0 2rpx 10rpx rgba(139, 37, 0, 0.05);
+}
+
+.card-hover {
+  background: #F8EFD9 !important;
+  transform: translateY(2rpx);
+}
+
+.poem-card-top {
+  display: flex;
+  align-items: center;
+}
+
+.poem-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #4A2E18;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.poem-type {
+  flex-shrink: 0;
+  font-size: 20rpx;
+  color: #8B2500;
+  background: #F8EFD9;
+  border: 1rpx solid #E0C890;
+  border-radius: 18rpx;
+  padding: 2rpx 14rpx;
+  margin-left: 12rpx;
+}
+
+.poem-author {
+  display: block;
+  font-size: 24rpx;
+  color: #C4882E;
+  margin-top: 8rpx;
+}
+
+.poem-preview {
+  display: block;
+  font-size: 24rpx;
+  color: #6B5B45;
+  margin-top: 10rpx;
+  line-height: 1.6;
+}
+
+.poem-loading {
+  background: #FFFBF0;
+  border: 1rpx dashed #D8C08A;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  text-align: center;
+}
+
+.poem-loading-text {
+  font-size: 24rpx;
+  color: #8C7B61;
+}
+
+.load-more {
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #8B2500;
+}
+
+/* ── 推荐理由 ─────────────────────────────── */
+.recommend-reason {
+  background: #F8EFD9;
+  border-radius: 14rpx;
+  padding: 14rpx 20rpx;
+  margin-bottom: 16rpx;
+}
+
+.recommend-reason-text {
+  font-size: 24rpx;
+  color: #8B2500;
+  letter-spacing: 1rpx;
+}
+
+/* ── 诗人风采 ─────────────────────────────── */
+.author-scroll {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.author-row {
+  display: inline-flex;
+  gap: 18rpx;
+  padding-bottom: 6rpx;
+}
+
+.author-card {
+  width: 200rpx;
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  padding: 26rpx 16rpx;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.author-hover {
+  background: #F8EFD9 !important;
+  transform: translateY(2rpx);
+}
+
+.author-avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C4882E, #8B2500);
+  color: #FFF8E7;
+  font-size: 40rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.author-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #4A2E18;
+  margin-top: 14rpx;
+}
+
+.author-dynasty {
+  font-size: 20rpx;
+  color: #8C7B61;
+  margin-top: 6rpx;
+}
+
+/* ── 统计 ─────────────────────────────── */
+.stats-row {
+  margin: 36rpx 24rpx 0;
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  display: flex;
+  padding: 26rpx 10rpx;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.stat-num {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #8B2500;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: #8C7B61;
+  margin-top: 6rpx;
+}
+
+.stat-more {
+  font-size: 18rpx;
+  color: #C4A87C;
+  margin-top: 8rpx;
+}
+
+.stat-hover {
+  opacity: 0.6;
+}
+
+/* ── 页脚 ─────────────────────────────── */
+.footer {
+  text-align: center;
+  font-size: 20rpx;
+  color: #A08C6B;
+  padding: 36rpx 0 48rpx;
+  letter-spacing: 2rpx;
+}
+
+/* ── 骨架屏（加载占位，防止动态内容导致页面跳动）────────── */
+@keyframes skeleton-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.skeleton {
+  background: #E8D5A3;
+  border-radius: 8rpx;
+  animation: skeleton-breathe 1.6s ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 26rpx;
+}
+
+.skeleton-w30 { width: 30%; }
+.skeleton-w40 { width: 40%; }
+.skeleton-w50 { width: 50%; }
+.skeleton-w60 { width: 60%; }
+.skeleton-w70 { width: 70%; }
+.skeleton-w90 { width: 90%; }
+
+.skeleton-mt { margin-top: 16rpx; }
+
+/* 诗词卡片骨架（外层为卡片外观，内部线条呼吸闪烁） */
+.skeleton-card {
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  padding: 22rpx 24rpx;
+  margin-bottom: 18rpx;
+}
+
+.skeleton-chip {
+  width: 120rpx;
+  height: 56rpx;
+  border-radius: 30rpx;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.skeleton-circle {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+}
+
+.skeleton-block-solar {
+  height: 120rpx;
+  border-radius: 12rpx;
+}
+
+/* 诗人卡片骨架 */
+.skeleton-author {
+  width: 200rpx;
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  padding: 26rpx 16rpx;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* 深色卡片（每日一句 / 节气左栏）内的骨架线条用半透明白 */
+.quote-card .skeleton,
+.solar-left .skeleton {
+  background: rgba(255, 248, 231, 0.25);
+}
+
+/* 统计数字加载占位 */
+.stat-num-skeleton {
+  color: transparent;
+  background: #E8D5A3;
+  border-radius: 8rpx;
+  padding: 0 24rpx;
+  animation: skeleton-breathe 1.6s ease-in-out infinite;
+}
+
+/* 固定最小高度：骨架与真实内容切换时高度更接近，减少跳动 */
+.quote-card,
+.solar-card {
+  min-height: 230rpx;
+}

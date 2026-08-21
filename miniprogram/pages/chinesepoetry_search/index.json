@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "诗词搜索",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "usingComponents": {}
+}

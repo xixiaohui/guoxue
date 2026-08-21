@@ -18,10 +18,9 @@
         <text class="model-btn-icon">{{currentModel === 'deepseek' ? '🧠' : '🔥'}}</text>
         <text class="model-btn-label">{{currentModel === 'deepseek' ? 'DeepSeek' : '混元'}}</text>
       </view>
-      <!-- 配额/会员徽章 -->
+      <!-- 配额徽章 -->
       <view
-        class="quota-badge {{quotaStatus && quotaStatus.isVip ? 'badge-vip' : (quotaStatus && quotaStatus.hasAdBonus ? 'badge-bonus' : 'badge-free')}}"
-        bindtap="goVip"
+        class="quota-badge {{quotaStatus && quotaStatus.hasAdBonus ? 'badge-bonus' : 'badge-free'}}"
         wx:if="{{quotaBadge}}"
       >{{quotaBadge}}</view>
       <view class="nav-btn" bindtap="showHistoryPanel">
@@ -33,18 +32,16 @@
     </view>
   </view>
 
-  <!-- 配额提示条（非VIP显示） -->
+  <!-- 配额提示条 -->
   <view
     class="quota-bar {{quotaStatus && quotaStatus.remaining <= 1 ? 'quota-bar-warn' : ''}}"
-    wx:if="{{showQuotaBar && quotaStatus && !quotaStatus.isVip}}"
-    bindtap="goVip"
+    wx:if="{{showQuotaBar && quotaStatus}}"
   >
     <text class="quota-bar-text">
-      <text wx:if="{{quotaStatus.remaining <= 0}}">❗ 今日免费次数已用完 · 点击解锁</text>
-      <text wx:elif="{{quotaStatus.remaining === 1}}">⚡ 最后1次免费机会 · 点击升级会员</text>
-      <text wx:else>💬 今日剩余 {{quotaStatus.remaining}} 次免费 · 升级会员无限使用</text>
+      <text wx:if="{{quotaStatus.remaining <= 0}}">❗ 今日免费次数已用完 · 观看广告可解锁</text>
+      <text wx:elif="{{quotaStatus.remaining === 1}}">⚡ 最后1次免费机会</text>
+      <text wx:else>💬 今日剩余 {{quotaStatus.remaining}} 次免费</text>
     </text>
-    <text class="quota-bar-arrow">›</text>
   </view>
 
   <!-- 消息区（使用 scroll-view 实现平滑滚动） -->
@@ -65,18 +62,6 @@
       </view>
       <text class="welcome-name">文渊先生</text>
       <text class="welcome-desc">融贯经史，博古通今。无论诗词赏析、古文翻译，还是历史人文，皆可一问。</text>
-
-      <!-- 会员提示卡 -->
-      <view class="vip-promo-card" bindtap="goVip" wx:if="{{quotaStatus && !quotaStatus.isVip && !quotaStatus.hasAdBonus}}">
-        <view class="promo-left">
-          <view class="promo-crown">👑</view>
-          <view>
-            <view class="promo-title">升级会员</view>
-            <view class="promo-sub">无限对话 · 去广告 · 语音朗读</view>
-          </view>
-        </view>
-        <view class="promo-price">9.9元/月 ›</view>
-      </view>
 
       <!-- 快捷话题 -->
       <view class="quick-grid">

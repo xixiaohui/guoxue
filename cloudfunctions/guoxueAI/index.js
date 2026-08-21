@@ -1,5 +1,5 @@
 /**
- * 国学AI助手 - 云函数 guoxueAI v4.0
+ * 国文之学 - 云函数 guoxueAI v4.0
  *
  * ★ 架构说明 ★
  * AI 模型调用 (wx.cloud.extend.AI) 只能在【小程序端】使用，
@@ -8,8 +8,7 @@
  * 因此本云函数职责单一：
  *   1. 配额检查 & 消费  (checkAndConsume)
  *   2. 激励广告授予     (adBonus)
- *   3. 会员激活         (activateVip)
- *   4. 状态查询         (getStatus)
+ *   3. 状态查询         (getStatus)
  *
  * AI 调用在小程序端 utils/ai.js 中通过
  *   wx.cloud.extend.AI.createModel("hunyuan-exp")
@@ -20,7 +19,6 @@
  *   _id / openid       string   用户标识
  *   date               string   "YYYY-MM-DD" 当日日期
  *   used               number   当日已用次数
- *   vip_expire         number   会员到期时间戳(ms)，0=非会员
  *   ad_bonus_expire    number   广告奖励到期时间戳(ms)
  *   total_used         number   历史累计调用
  *   created_at         number
@@ -50,8 +48,6 @@ exports.main = async (event, context) => {
       case 'getStatus':        return await getStatus(OPENID);
       case 'checkAndConsume':  return await checkAndConsume(OPENID);
       case 'adBonus':          return await grantAdBonus(OPENID);
-      case 'activateVip':      return await activateVip(OPENID, event.months || 1, event.tradeNo);
-      case 'checkVip':         return await checkVip(OPENID);
       // 兼容旧版调用（前端可能仍发 consume）
       case 'consume':          return await checkAndConsume(OPENID);
       default:                 return _err('未知操作类型: ' + type);
@@ -69,19 +65,17 @@ async function getStatus(openid) {
   const now   = Date.now();
 
   const used       = doc.date === today ? (doc.used || 0) : 0;
-  const isVip      = (doc.vip_expire || 0) > now;
   const hasAdBonus = (doc.ad_bonus_expire || 0) > now;
-  const isUnlimited = isVip || hasAdBonus;
+  const isUnlimited = hasAdBonus;
   const remaining  = isUnlimited ? 999 : Math.max(0, FREE_DAILY_LIMIT - used);
 
-  console.log(`[getStatus] uid=${openid.slice(0,8)} used=${used} vip=${isVip} ad=${hasAdBonus}`);
+  console.log(`[getStatus] uid=${openid.slice(0,8)} used=${used} ad=${hasAdBonus}`);
 
   return _ok({
-    isVip, hasAdBonus, isUnlimited,
+    hasAdBonus, isUnlimited,
     used, remaining,
     canUse:       remaining > 0,
     freeLimit:    FREE_DAILY_LIMIT,
-    vipExpire:    doc.vip_expire    || 0,
     adBonusExpire:doc.ad_bonus_expire || 0,
     totalUsed:    doc.total_used    || 0,
   });
@@ -93,11 +87,10 @@ async function checkAndConsume(openid) {
   const today = _today();
   const now   = Date.now();
 
-  const isVip      = (doc.vip_expire || 0) > now;
   const hasAdBonus = (doc.ad_bonus_expire || 0) > now;
 
-  // VIP / 广告奖励 → 不消耗配额，仅记录总次数
-  if (isVip || hasAdBonus) {
+  // 广告奖励 → 不消耗配额，仅记录总次数
+  if (hasAdBonus) {
     _updateAsync(openid, { total_used: _cmd.inc(1), updated_at: now });
     return _ok({ consumed: false, isUnlimited: true, remaining: 999, canUse: true });
   }
@@ -140,28 +133,6 @@ async function grantAdBonus(openid) {
   return _ok({ ad_bonus_expire: newExpire, expireText: _fmtTs(newExpire) });
 }
 
-// ─── 4. 激活会员 ──────────────────────────────────────────────
-async function activateVip(openid, months, tradeNo) {
-  months = Math.max(1, parseInt(months) || 1);
-  const now = Date.now();
-  const doc = await _getOrCreate(openid);
-  const base      = (doc.vip_expire || 0) > now ? doc.vip_expire : now;
-  const newExpire = base + months * 30 * 24 * 60 * 60 * 1000;
-
-  await db.collection(COLLECTION).doc(openid).update({
-    data: { vip_expire: newExpire, last_trade_no: tradeNo || '', updated_at: now }
-  });
-  console.log(`[activateVip] uid=${openid.slice(0,8)} months=${months} expire=${_fmtTs(newExpire)}`);
-  return _ok({ vip_expire: newExpire, expireText: _fmtTs(newExpire), months });
-}
-
-// ─── 5. 检查会员状态 ──────────────────────────────────────────
-async function checkVip(openid) {
-  const doc = await _getOrCreate(openid);
-  const now = Date.now();
-  return _ok({ isVip: (doc.vip_expire || 0) > now, vip_expire: doc.vip_expire || 0 });
-}
-
 // ─── 工具：获取或创建用户文档 ────────────────────────────────
 async function _getOrCreate(openid) {
   try {
@@ -172,7 +143,7 @@ async function _getOrCreate(openid) {
     const newDoc = {
       _id: openid, openid,
       date: _today(), used: 0,
-      vip_expire: 0, ad_bonus_expire: 0,
+      ad_bonus_expire: 0,
       total_used: 0, created_at: now, updated_at: now
     };
     try {

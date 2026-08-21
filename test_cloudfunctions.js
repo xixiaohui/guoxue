@@ -88,7 +88,7 @@ function _isRetryable(e) {
 }
 
 console.log('\n══════════════════════════════════════════════════════');
-console.log('  国学AI助手 v5.0 - 架构验证测试');
+console.log('  国文之学 v5.0 - 架构验证测试');
 console.log('  架构：小程序端 wx.cloud.extend.AI 直调模型');
 console.log('       双模型：混元(hunyuan-exp) + DeepSeek');
 console.log('       云函数 guoxueAI 仅管配额');

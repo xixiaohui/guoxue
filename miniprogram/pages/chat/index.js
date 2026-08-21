@@ -22,7 +22,7 @@ Page({
       { id: 'deepseek', name: 'DeepSeek', desc: '深度求索 · 推理强', icon: '🧠' }
     ],
 
-    // ── 配额与会员状态 ──────────────────────────────
+    // ── 配额状态 ──────────────────────────────
     quotaStatus: null,
     quotaBadge: '',
     showQuotaBar: false,
@@ -79,7 +79,7 @@ Page({
       this.setData({
         quotaStatus: status,
         quotaBadge: badge,
-        showQuotaBar: !status.isVip
+        showQuotaBar: true
       });
     } catch (e) {
       // 网络异常，不影响使用
@@ -305,22 +305,8 @@ Page({
     });
   },
 
-  // ── 语音朗读（VIP专属） ──────────────────────────────────────
+  // ── 语音朗读 ──────────────────────────────────────────────
   speakMsg(e) {
-    const { quotaStatus } = this.data;
-    if (!quotaStatus || !quotaStatus.isVip) {
-      wx.showModal({
-        title: '👑 VIP专属功能',
-        content: '语音朗读是会员专属功能\n\n开通9.9元/月会员，享受AI语音朗读国学经典',
-        confirmText: '开通会员',
-        cancelText: '取消',
-        confirmColor: '#8B2500',
-        success: res => {
-          if (res.confirm) wx.navigateTo({ url: '/pages/vip/index' });
-        }
-      });
-      return;
-    }
     const content = e.currentTarget.dataset.content;
     if (!content) return;
     this.setData({ speaking: true, speakMsgId: e.currentTarget.dataset.id });
@@ -366,11 +352,6 @@ Page({
     });
   },
 
-  // ── 跳转会员页 ──────────────────────────────────────────────
-  goVip() {
-    wx.navigateTo({ url: '/pages/vip/index' });
-  },
-
   // ── 空操作（防止弹窗穿透） ──────────────────────────────────
   noop() {},
 
@@ -383,7 +364,6 @@ Page({
 
 function _defaultBadge(status) {
   if (!status) return '';
-  if (status.isVip) return '👑 VIP';
   if (status.hasAdBonus) return '⚡ 无限';
   if (typeof status.remaining === 'number') return `剩余 ${status.remaining} 次`;
   return '';

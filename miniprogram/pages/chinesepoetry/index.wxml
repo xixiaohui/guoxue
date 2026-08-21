@@ -1,0 +1,261 @@
+<!--pages/chinesepoetry/index.wxml - 诗词天地（内容模块分区）-->
+<view class="page">
+
+  <!-- 页头 -->
+  <view class="page-header">
+    <view class="header-inner">
+      <text class="header-title">诗词天地</text>
+      <text class="header-sub">唐宋元明清 · 千年诗韵</text>
+    </view>
+  </view>
+
+  <!-- 搜索栏 → 独立搜索页 -->
+  <view class="search-bar" bindtap="goSearch" hover-class="search-bar-hover" hover-stay-time="80">
+    <view class="search-inner">
+      <text class="search-icon">🔍</text>
+      <text class="search-input-placeholder">搜索诗词名句、作者…</text>
+      <view class="search-btn">
+        <text class="search-btn-text">搜索</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 模块一：每日一句 /quote（首次加载骨架占位，避免内容长出导致跳动） -->
+  <view class="quote-card" wx:if="{{quoteLoading && !quote.content}}">
+    <view class="skeleton skeleton-line skeleton-w40"></view>
+    <view class="skeleton skeleton-line skeleton-w90 skeleton-mt"></view>
+    <view class="skeleton skeleton-line skeleton-w60 skeleton-mt"></view>
+  </view>
+  <view class="quote-card" wx:elif="{{quote.content}}">
+    <view class="quote-top">
+      <text class="quote-badge">每日一句</text>
+      <view class="quote-refresh" bindtap="refreshQuote" hover-class="link-hover" hover-stay-time="80">换一句 ↻</view>
+    </view>
+    <text class="quote-content">「{{quote.content}}」</text>
+    <view class="quote-meta">
+      <text class="quote-author">{{quote.author}}</text>
+      <text class="quote-source" wx:if="{{quote.source}}">——《{{quote.source}}》</text>
+    </view>
+  </view>
+
+  <!-- 模块二：节气推荐 /solar-term -->
+  <view class="solar-card" wx:if="{{solarLoading && !solar.termName}}">
+    <view class="solar-left">
+      <view class="skeleton skeleton-circle"></view>
+      <view class="skeleton skeleton-line skeleton-w60 skeleton-mt"></view>
+    </view>
+    <view class="solar-right">
+      <view class="skeleton skeleton-line skeleton-w90"></view>
+      <view class="skeleton skeleton-line skeleton-w60 skeleton-mt"></view>
+      <view class="skeleton skeleton-line skeleton-w90 skeleton-mt"></view>
+      <view class="skeleton skeleton-block-solar skeleton-mt"></view>
+    </view>
+  </view>
+  <view class="solar-card" wx:elif="{{solar.termName}}">
+    <view class="solar-left">
+      <text class="solar-term">{{solar.termName}}</text>
+      <text class="solar-label">节气 · 诗词</text>
+    </view>
+    <view class="solar-right">
+      <text class="solar-desc">{{solar.termDescription}}</text>
+      <view class="solar-poem" wx:if="{{solar.poem}}" bindtap="goDetail" data-poem="{{solar.poem}}"
+        hover-class="card-hover" hover-stay-time="80">
+        <text class="solar-poem-title">{{solar.poem.title ? '《' + solar.poem.title + '》' : '无名篇'}} {{solar.poem.dynasty}} · {{solar.poem.author || '佚名'}}</text>
+        <text class="solar-poem-preview">{{solar.poem.preview}}</text>
+        <view class="solar-go">
+          <text>{{solar.reason || '查看全诗'}}</text>
+          <text class="solar-go-arrow">›</text>
+        </view>
+      </view>
+      <view class="solar-poem" wx:else>
+        <text class="solar-poem-preview">{{solar.reason}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 模块三：分类浏览 /categories + /poems/random -->
+  <view class="section">
+    <view class="section-head">
+      <view class="label-bar"></view>
+      <text class="section-label">分类浏览</text>
+      <view class="section-extra" wx:if="{{activeDynasty || activeType}}" bindtap="resetFilter"
+        hover-class="link-hover" hover-stay-time="80">重置</view>
+    </view>
+
+    <view class="chip-block">
+      <block wx:if="{{dynasties.length === 0}}">
+        <view class="chip-label">朝代</view>
+        <view class="chip-row">
+          <view class="skeleton skeleton-chip" wx:for="{{[1,2,3,4,5]}}" wx:key="*this"></view>
+        </view>
+        <view class="chip-label">体裁</view>
+        <view class="chip-row">
+          <view class="skeleton skeleton-chip" wx:for="{{[1,2,3,4,5]}}" wx:key="*this"></view>
+        </view>
+      </block>
+      <block wx:else>
+        <view class="chip-label">朝代</view>
+        <scroll-view scroll-x show-scrollbar="{{false}}" class="chip-scroll" enhanced="{{true}}" bounces="{{false}}">
+          <view class="chip-row">
+            <view class="chip {{activeDynasty === item.name ? 'chip-active' : ''}}" wx:for="{{dynasties}}" wx:key="id"
+              bindtap="selectFilter" data-kind="dynasty" data-name="{{item.name}}"
+              hover-class="chip-hover" hover-stay-time="80">{{item.name}}</view>
+          </view>
+        </scroll-view>
+        <view class="chip-label">体裁</view>
+        <scroll-view scroll-x show-scrollbar="{{false}}" class="chip-scroll" enhanced="{{true}}" bounces="{{false}}">
+          <view class="chip-row">
+            <view class="chip {{activeType === item.name ? 'chip-active' : ''}}" wx:for="{{types}}" wx:key="id"
+              bindtap="selectFilter" data-kind="type" data-name="{{item.name}}"
+              hover-class="chip-hover" hover-stay-time="80">{{item.name}}</view>
+          </view>
+        </scroll-view>
+      </block>
+    </view>
+
+    <!-- 分类结果 -->
+    <view class="category-result" wx:if="{{activeDynasty || activeType}}">
+      <view class="category-title">
+        <text>{{activeDynasty || '全部朝代'}}{{activeType ? ' · ' + activeType : ''}}</text>
+        <text class="category-count">{{categoryPoems.length}} 首</text>
+      </view>
+      <view class="poem-loading" wx:if="{{categoryLoading}}">
+        <text class="poem-loading-text">正在精选…</text>
+      </view>
+      <view class="empty-tip" wx:elif="{{categoryUnavailable}}">该分类暂不可用，换个分类试试</view>
+      <block wx:elif="{{categoryPoems.length > 0}}">
+        <view class="poem-card" wx:for="{{categoryPoems}}" wx:key="id" bindtap="goDetail"
+          data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
+          <view class="poem-card-top">
+            <text class="poem-title">{{item.title || '无题'}}</text>
+            <text class="poem-type" wx:if="{{item.type}}">{{item.type}}</text>
+          </view>
+          <text class="poem-author">{{item.dynasty ? item.dynasty + ' · ' : ''}}{{item.author || '佚名'}}</text>
+          <text class="poem-preview">{{item.preview}}</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 模块四：为你推荐 /recommend -->
+  <view class="section">
+    <view class="section-head">
+      <view class="label-bar"></view>
+      <text class="section-label">为你推荐</text>
+      <view class="section-extra" bindtap="refreshRecommend" hover-class="link-hover" hover-stay-time="80">换一批</view>
+    </view>
+    <view class="recommend-reason" wx:if="{{recommendReason}}">
+      <text class="recommend-reason-text">{{recommendReason}}</text>
+    </view>
+    <block wx:if="{{!recommendLoaded && recommendPoems.length === 0}}">
+      <view class="skeleton-card" wx:for="{{[1,2,3]}}" wx:key="*this">
+        <view class="skeleton skeleton-line skeleton-w50"></view>
+        <view class="skeleton skeleton-line skeleton-w30 skeleton-mt"></view>
+        <view class="skeleton skeleton-line skeleton-w90 skeleton-mt"></view>
+        <view class="skeleton skeleton-line skeleton-w70 skeleton-mt"></view>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="poem-card" wx:for="{{recommendPoems}}" wx:key="id" bindtap="goDetail"
+        data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
+        <view class="poem-card-top">
+          <text class="poem-title">{{item.title || '无题'}}</text>
+          <text class="poem-type" wx:if="{{item.type}}">{{item.type}}</text>
+        </view>
+        <text class="poem-author">{{item.dynasty ? item.dynasty + ' · ' : ''}}{{item.author || '佚名'}}</text>
+        <text class="poem-preview">{{item.preview}}</text>
+      </view>
+      <view class="load-more" bindtap="refreshRecommend" hover-class="card-hover" hover-stay-time="80">
+        <text>{{recommendLoading ? '加载中…' : '再来一批 ›'}}</text>
+      </view>
+    </block>
+  </view>
+
+  <!-- 模块五：诗词精选 /poems -->
+  <view class="section">
+    <view class="section-head">
+      <view class="label-bar"></view>
+      <text class="section-label">诗词精选</text>
+    </view>
+    <block wx:if="{{poemsLoading && poems.length === 0}}">
+      <view class="skeleton-card" wx:for="{{[1,2,3]}}" wx:key="*this">
+        <view class="skeleton skeleton-line skeleton-w50"></view>
+        <view class="skeleton skeleton-line skeleton-w30 skeleton-mt"></view>
+        <view class="skeleton skeleton-line skeleton-w90 skeleton-mt"></view>
+        <view class="skeleton skeleton-line skeleton-w70 skeleton-mt"></view>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="poem-card" wx:for="{{poems}}" wx:key="id" bindtap="goDetail"
+        data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
+        <view class="poem-card-top">
+          <text class="poem-title">{{item.title || '无题'}}</text>
+          <text class="poem-type" wx:if="{{item.type}}">{{item.type}}</text>
+        </view>
+        <text class="poem-author">{{item.dynasty ? item.dynasty + ' · ' : ''}}{{item.author || '佚名'}}</text>
+        <text class="poem-preview">{{item.preview}}</text>
+      </view>
+    </block>
+  </view>
+
+  <!-- 模块六：诗人风采 /authors -->
+  <view class="section">
+    <view class="section-head">
+      <view class="label-bar"></view>
+      <text class="section-label">诗人风采</text>
+    </view>
+    <block wx:if="{{authorsLoading && authors.length === 0}}">
+      <scroll-view scroll-x show-scrollbar="{{false}}" class="author-scroll" enhanced="{{true}}" bounces="{{false}}">
+        <view class="author-row">
+          <view class="skeleton-author" wx:for="{{[1,2,3,4]}}" wx:key="*this">
+            <view class="skeleton skeleton-circle"></view>
+            <view class="skeleton skeleton-line skeleton-w60 skeleton-mt"></view>
+            <view class="skeleton skeleton-line skeleton-w40 skeleton-mt"></view>
+          </view>
+        </view>
+      </scroll-view>
+    </block>
+    <block wx:else>
+      <scroll-view scroll-x show-scrollbar="{{false}}" class="author-scroll" enhanced="{{true}}" bounces="{{false}}">
+        <view class="author-row">
+          <view class="author-card" wx:for="{{authors}}" wx:key="id" bindtap="goAuthorDetail"
+            data-author="{{item}}" hover-class="author-hover" hover-stay-time="80">
+            <view class="author-avatar">{{item.char}}</view>
+            <text class="author-name">{{item.name}}</text>
+            <text class="author-dynasty">{{item.dynasty || '诗人'}}{{item.countText ? ' · ' + item.countText + '首' : ''}}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </block>
+  </view>
+
+  <!-- 数据统计（/categories 汇总）→ 点击进入对应全部列表页 -->
+  <view class="stats-row" wx:if="{{totalPoemsText}}">
+    <view class="stat-item" bindtap="goStatList" data-kind="poems"
+      hover-class="stat-hover" hover-stay-time="80">
+      <text class="stat-num {{dynasties.length === 0 ? 'stat-num-skeleton' : ''}}">{{dynasties.length ? totalPoemsText : '———'}}</text>
+      <text class="stat-label">首诗词</text>
+      <text class="stat-more">查看全部 ›</text>
+    </view>
+    <view class="stat-item" bindtap="goStatList" data-kind="authors"
+      hover-class="stat-hover" hover-stay-time="80">
+      <text class="stat-num {{dynasties.length === 0 ? 'stat-num-skeleton' : ''}}">{{dynasties.length ? totalAuthorsText : '———'}}</text>
+      <text class="stat-label">位诗人</text>
+      <text class="stat-more">查看全部 ›</text>
+    </view>
+    <view class="stat-item" bindtap="goStatList" data-kind="dynasties"
+      hover-class="stat-hover" hover-stay-time="80">
+      <text class="stat-num {{dynasties.length === 0 ? 'stat-num-skeleton' : ''}}">{{dynasties.length ? dynasties.length : '———'}}</text>
+      <text class="stat-label">个朝代</text>
+      <text class="stat-more">查看全部 ›</text>
+    </view>
+    <view class="stat-item" bindtap="goStatList" data-kind="types"
+      hover-class="stat-hover" hover-stay-time="80">
+      <text class="stat-num {{dynasties.length === 0 ? 'stat-num-skeleton' : ''}}">{{dynasties.length ? types.length : '———'}}</text>
+      <text class="stat-label">种体裁</text>
+      <text class="stat-more">查看全部 ›</text>
+    </view>
+  </view>
+
+  <view class="footer">数据来源：chinesepoetry.space · 国文之学</view>
+</view>

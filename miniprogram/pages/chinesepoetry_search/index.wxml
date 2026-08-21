@@ -1,0 +1,61 @@
+<!--pages/chinesepoetry_search/index.wxml - 诗词搜索-->
+<view class="page">
+
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-inner">
+      <text class="search-icon">🔍</text>
+      <input class="search-input" value="{{keyword}}" bindinput="onInput"
+        placeholder="搜索诗词名句、作者…" placeholder-class="search-placeholder"
+        confirm-type="search" bindconfirm="onSearch" />
+      <view class="search-clear" wx:if="{{keyword}}" bindtap="onClear" hover-class="search-btn-hover" hover-stay-time="80">✕</view>
+      <view class="search-btn" bindtap="onSearch" hover-class="search-btn-hover" hover-stay-time="80">
+        <text class="search-btn-text">搜索</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 初始引导 -->
+  <view class="welcome" wx:if="{{!searched}}">
+    <text class="welcome-icon">📜</text>
+    <text class="welcome-text">输入关键词，搜索诗词名句、作者</text>
+  </view>
+
+  <!-- 搜索结果 -->
+  <block wx:else>
+    <view class="result-head">
+      <view class="label-bar"></view>
+      <text class="section-label">搜索结果</text>
+      <text class="result-count">{{poems.length}} 条</text>
+    </view>
+
+    <view class="empty-tip" wx:if="{{poems.length === 0 && !loading}}">未找到相关诗词，换个关键词试试</view>
+
+    <block wx:else>
+      <view class="poem-card" wx:for="{{poems}}" wx:key="id" bindtap="goDetail"
+        data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
+        <view class="poem-card-top">
+          <text class="poem-title">{{item.title || '无题'}}</text>
+          <text class="poem-type" wx:if="{{item.type}}">{{item.type}}</text>
+        </view>
+        <text class="poem-author">{{item.dynasty ? item.dynasty + ' · ' : ''}}{{item.author || '佚名'}}</text>
+        <text class="poem-preview">{{item.preview}}</text>
+      </view>
+
+      <view class="list-status" wx:if="{{loading}}">
+        <text class="status-text">搜索中…</text>
+      </view>
+      <view class="list-status" wx:elif="{{loadingMore}}">
+        <text class="status-text">加载更多…</text>
+      </view>
+      <view class="list-status" wx:elif="{{hasMore}}">
+        <text class="status-text">上拉加载更多</text>
+      </view>
+      <view class="list-status" wx:elif="{{poems.length > 0}}">
+        <text class="status-text">已显示全部结果</text>
+      </view>
+    </block>
+  </block>
+
+  <view class="footer">数据来源：chinesepoetry.space · 国文之学</view>
+</view>
