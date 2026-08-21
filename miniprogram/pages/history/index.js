@@ -1,16 +1,10 @@
-// pages/history/index.js - 历史探秘页 v8.0（云数据库缓存版）
-const api = require('../../utils/api');
-// const monetize = require('../../utils/monetize');
+// pages/history/index.js - 历史探秘页（静态内容版）
 
 Page({
   data: {
-    searchText: '',
-    aiResult: '',
-    aiResultSections: [],
-    isLoading: false,
     activeDynasty: 'tang',
     activeTitle: '唐宋',
-    currentQuery: '',
+    noData: false,
 
     dynasties: [
       { id: 'xia',    name: '夏商周', years: '前2070-前221', emoji: '🏺' },
@@ -75,11 +69,10 @@ Page({
 
   onLoad() {
     this.loadDynastyEvents('tang');
-    // monetize.preloadRewardedAd();
   },
 
   // ── 加载朝代事件 ──────────────────────────────
-  async loadDynastyEvents(dynasty) {
+  loadDynastyEvents(dynasty) {
     const events = this.data.dynastyEvents[dynasty];
     const nameMap = {
       xia: '夏商周', qin: '秦汉', weijin: '魏晋南北朝',
@@ -88,140 +81,29 @@ Page({
     const name = nameMap[dynasty] || dynasty;
 
     if (events && events.length > 0) {
-      this.setData({ timelineEvents: events, activeTitle: name, aiResult: '', aiResultSections: [] });
+      this.setData({ timelineEvents: events, activeTitle: name, noData: false });
     } else {
-      this.setData({ isLoading: true, timelineEvents: [], activeTitle: name, aiResult: '', aiResultSections: [] });
-      try {
-        const res = await api.queryHistory(`${name}时期的重大历史事件，请列举6个最重要的，每个含年代、名称和简介`);
-        const sections = this._parseSections(res.content);
-        this.setData({
-          aiResult: res.content,
-          aiResultSections: sections,
-          isLoading: false,
-          currentQuery: `${name}时期的重大历史事件`
-        });
-      } catch (e) {
-        this.setData({ isLoading: false });
-        api.showError('历史数据加载失败，请重试');
-      }
+      this.setData({ timelineEvents: [], activeTitle: name, noData: true });
     }
   },
 
   selectDynasty(e) {
     const { id } = e.currentTarget.dataset;
     if (id === this.data.activeDynasty) return;
-    this.setData({ activeDynasty: id, aiResult: '', aiResultSections: [] });
+    this.setData({ activeDynasty: id });
     this.loadDynastyEvents(id);
-  },
-
-  // ── 搜索 ──────────────────────────────
-  onSearch(e) {
-    this.setData({ searchText: e.detail.value });
-  },
-
-  async doSearch() {
-    const text = this.data.searchText.trim();
-    if (!text || this.data.isLoading) return;
-    this._doSearch(text);
-  },
-
-  async _doSearch(text) {
-    this.setData({ isLoading: true, aiResult: '', aiResultSections: [], currentQuery: text });
-    try {
-      const res = await api.queryHistory(text);
-      const sections = res.sections || this._parseSections(res.content);
-      this.setData({ aiResult: res.content, aiResultSections: sections, isLoading: false });
-      wx.pageScrollTo({ selector: '.ai-result-section', duration: 400 });
-    } catch (e) {
-      this.setData({ isLoading: false });
-      api.showError(e.message || '查询失败，请重试');
-    }
-  },
-
-  closeResult() {
-    this.setData({ aiResult: '', aiResultSections: [], isLoading: false, currentQuery: '' });
-  },
-
-  copyAiResult() {
-    wx.setClipboardData({
-      data: this.data.aiResult,
-      success: () => wx.showToast({ title: '已复制', icon: 'success' })
-    });
-  },
-
-  // ── 点击时间轴事件 ──────────────────────────────
-  async exploreEvent(e) {
-    const event = e.currentTarget.dataset.event;
-    const query = `${event.name}（${event.year}）的历史背景、经过和影响`;
-    this.setData({ isLoading: true, aiResult: '', aiResultSections: [], currentQuery: event.name });
-    try {
-      const res = await api.queryHistory(query);
-      const sections = res.sections || this._parseSections(res.content);
-      this.setData({ aiResult: res.content, aiResultSections: sections, isLoading: false });
-      wx.pageScrollTo({ selector: '.ai-result-section', duration: 400 });
-    } catch (err) {
-      this.setData({ isLoading: false });
-      api.showError('查询失败，请重试');
-    }
-  },
-
-  // ── 探索名人 ──────────────────────────────
-  async exploreFigure(e) {
-    const figure = e.currentTarget.dataset.figure;
-    const query = `${figure.dynasty}${figure.name}的生平事迹、主要贡献和历史评价`;
-    this.setData({ isLoading: true, aiResult: '', aiResultSections: [], currentQuery: figure.name });
-    try {
-      const res = await api.queryHistory(query);
-      const sections = res.sections || this._parseSections(res.content);
-      this.setData({ aiResult: res.content, aiResultSections: sections, isLoading: false });
-      wx.pageScrollTo({ selector: '.ai-result-section', duration: 400 });
-    } catch (e) {
-      this.setData({ isLoading: false });
-    }
-  },
-
-  // ── 历史趣闻 ──────────────────────────────
-  async exploreTrivia(e) {
-    const trivia = e.currentTarget.dataset.trivia;
-    this.setData({ isLoading: true, aiResult: '', aiResultSections: [], currentQuery: trivia.title });
-    try {
-      const res = await api.queryHistory(trivia.query);
-      const sections = res.sections || this._parseSections(res.content);
-      this.setData({ aiResult: res.content, aiResultSections: sections, isLoading: false });
-      wx.pageScrollTo({ selector: '.ai-result-section', duration: 400 });
-    } catch (e) {
-      this.setData({ isLoading: false });
-    }
-  },
-
-  // ── 分段解析 ──────────────────────────────
-  _parseSections(text) {
-    if (!text) return [];
-    const sections = [];
-    const re = /【([^】]+)】\s*([\s\S]*?)(?=【|$)/g;
-    let m;
-    while ((m = re.exec(text)) !== null) {
-      const content = m[2].trim();
-      if (content) sections.push({ label: m[1], content });
-    }
-    if (sections.length === 0 && text.trim()) {
-      sections.push({ label: '历史详情', content: text.trim() });
-    }
-    return sections;
   },
 
   // ── 分享 ──────────────────────────────
   onShareAppMessage() {
-    const q = this.data.currentQuery || '';
     return {
-      title: q ? `【${q}】历史探秘 · 国学助手` : '历史探秘 · 朝代人物探究',
+      title: '历史探秘 · 朝代人物探究',
       path:  '/pages/history/index',
     };
   },
   onShareTimeline() {
-    const q = this.data.currentQuery || '';
     return {
-      title: q ? `【${q}】探究历史真相` : '国学助手 · 历史探秘',
+      title: '国学助手 · 历史探秘',
       query: 'from=timeline',
     };
   },

@@ -211,15 +211,18 @@ async function getPoemDetail(id) {
 
 // ─── 接口：作者 ──────────────────────────────────────────────
 
-/** GET /authors 作者列表（实测 id 为字符串，无分页元数据）
- * 过滤空名/「无名氏」等无展示价值的作者，保留其余供横向滚动展示 */
+/** GET /authors 作者列表（实测 id 为字符串，无分页元数据，page 参数生效）
+ * 过滤空名/「无名氏」等无展示价值的作者，保留其余供横向滚动展示。
+ * ⚠️ hasMore 必须用「原始条数（过滤前）」判断：每页可能含被过滤的「无名氏」，
+ * 若用过滤后条数（< pageSize）判断会提前终止分页，导致无法加载全部诗人。 */
 async function getAuthors(options = {}) {
   const { page = 1, pageSize = 20 } = options;
   const d = await request('/authors', { data: { page, pageSize } });
-  const authors = (Array.isArray(d.authors) ? d.authors : [])
+  const raw = Array.isArray(d.authors) ? d.authors : [];
+  const authors = raw
     .map(normalizeAuthor)
     .filter((a) => a && a.name && a.name !== '无名氏');
-  return { authors, page, pageSize, hasMore: authors.length >= pageSize };
+  return { authors, page, pageSize, hasMore: raw.length >= pageSize };
 }
 
 /** GET /authors/:id 作者详情（实测仅返回 dynasty/description/poemCount，缺 id/name） */

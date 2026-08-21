@@ -1,18 +1,11 @@
-// pages/classics/index.js - 诗词典籍页 v8.0（云数据库缓存版）
-const api = require('../../utils/api');
+// pages/classics/index.js - 诗词典籍页（静态内容版）
 const storage = require('../../utils/storage');
-// const monetize = require('../../utils/monetize');
 
 Page({
   data: {
-    searchText: '',
-    searchResult: '',
-    searchSections: [],
-    isSearching: false,
     activeTab: 'poem',
     showModal: false,
     currentPoem: {},
-    poemLoading: false,
     isFavorited: false,
 
     tabs: [
@@ -104,55 +97,7 @@ Page({
     ]
   },
 
-  onLoad() {
-    // monetize.preloadRewardedAd();
-    // monetize.getQuotaStatus().then(s => {
-    //   this._bannerAd = monetize.createBannerAd();
-    // }).catch(() => {});
-  },
 
-  onUnload() {
-    if (this._bannerAd) { try { this._bannerAd.destroy(); } catch (e) {} }
-  },
-
-  // ── 搜索 ──────────────────────────────
-  onSearchInput(e) {
-    this.setData({ searchText: e.detail.value });
-  },
-
-  async doSearch() {
-    const text = this.data.searchText.trim();
-    if (!text || this.data.isSearching) return;
-    this._doSearch(text);
-  },
-
-  async _doSearch(text) {
-    this.setData({ isSearching: true, searchResult: '', searchSections: [] });
-    try {
-      const res = await api.analyzePoem(text, { title: text });
-      const raw = res.analysis || '';
-      this.setData({
-        searchResult: raw,
-        searchSections: res.sections || this._parseSections(raw),
-        isSearching: false
-      });
-      wx.pageScrollTo({ selector: '.search-result-section', duration: 400 });
-    } catch (e) {
-      this.setData({ isSearching: false });
-      api.showError(e.message || '搜索失败，请重试');
-    }
-  },
-
-  closeSearch() {
-    this.setData({ searchResult: '', searchSections: [], isSearching: false, searchText: '' });
-  },
-
-  copySearchResult() {
-    wx.setClipboardData({
-      data: this.data.searchResult,
-      success: () => wx.showToast({ title: '已复制', icon: 'success' })
-    });
-  },
 
   // ── Tab切换 ──────────────────────────────
   switchTab(e) {
@@ -163,7 +108,7 @@ Page({
   openPoem(e) {
     const poem = e.currentTarget.dataset.poem;
     const isFav = storage.isPoemFavorited(poem.title, poem.author);
-    this.setData({ showModal: true, currentPoem: poem, poemLoading: false, isFavorited: isFav });
+    this.setData({ showModal: true, currentPoem: poem, isFavorited: isFav });
   },
 
   closeModal() {
@@ -171,26 +116,6 @@ Page({
   },
 
   stopProp() {},
-
-  async analyzePoem() {
-    const poem = this.data.currentPoem;
-    if (poem.analysis) return;
-    if (this.data.poemLoading) return;
-    this._doAnalyzePoem(poem);
-  },
-
-  async _doAnalyzePoem(poem) {
-    this.setData({ poemLoading: true });
-    try {
-      const text = poem.content ? `${poem.title} - ${poem.author}\n${poem.content}` : poem.title;
-      const res = await api.analyzePoem(text, { title: poem.title, author: poem.author, dynasty: poem.dynasty });
-      const updatedPoem = { ...poem, analysis: res.analysis, analysisSections: res.sections || [] };
-      this.setData({ currentPoem: updatedPoem, poemLoading: false });
-    } catch (e) {
-      this.setData({ poemLoading: false });
-      api.showError(e.message || 'AI赏析失败');
-    }
-  },
 
   // ── 收藏/取消收藏 ──────────────────────────────
   toggleFavoritePoem() {
@@ -201,7 +126,7 @@ Page({
     wx.showToast({ title: isFav ? '已收藏' : '已取消收藏', icon: 'success', duration: 1200 });
   },
 
-  // ── 打开典籍（在当前页展示介绍或跳翻译） ──────────────────────────────
+  // ── 打开典籍（在当前页展示介绍） ──────────────────────────────
   openClassic(e) {
     const book = e.currentTarget.dataset.book;
     // 显示典籍简介弹窗
@@ -213,24 +138,8 @@ Page({
         dynasty: book.era,
         content: `${book.desc}\n\n经典名句：\n${(book.highlights || []).join('\n')}`
       },
-      poemLoading: false,
       isFavorited: false
     });
-  },
-
-  // ── 分段解析 ──────────────────────────────
-  _parseSections(text) {
-    const sections = [];
-    const re = /【([^】]+)】\s*([\s\S]*?)(?=【|$)/g;
-    let m;
-    while ((m = re.exec(text)) !== null) {
-      const content = m[2].trim();
-      if (content) sections.push({ label: m[1], content });
-    }
-    if (sections.length === 0 && text.trim()) {
-      sections.push({ label: '详细解析', content: text.trim() });
-    }
-    return sections;
   },
 
   // ── 分享 ──────────────────────────────

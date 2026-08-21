@@ -44,7 +44,7 @@
     </view>
 
     <!-- 实际内容 -->
-    <view class="daily-card {{refreshing ? 'card-fade' : ''}}" wx:else bindtap="goDiscussDaily" hover-class="card-hover" hover-stay-time="100">
+    <view class="daily-card {{refreshing ? 'card-fade' : ''}}" wx:else hover-class="card-hover" hover-stay-time="100">
       <view class="daily-badge">今日名句</view>
 
       <view class="daily-quote-row">

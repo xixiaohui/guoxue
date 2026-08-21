@@ -3,6 +3,8 @@ const poetry = require('../../utils/poetryApi');
 
 // 服务端分页大小（/poems /authors 实测 page 参数生效）
 const PAGE_SIZE = 20;
+// 作者总数 1.3w+：用服务端支持的最大 pageSize（100，>100 会 HTTP 500）减少翻页次数
+const AUTHOR_PAGE_SIZE = 100;
 // 朝代/体裁数据量小（11/17 条），本地分页切片
 const LOCAL_PAGE_SIZE = 10;
 
@@ -85,7 +87,7 @@ Page({
         this.setData({ items, page: nextPage, hasMore: r.hasMore });
       } else if (kind === 'authors') {
         const nextPage = reset ? 1 : this.data.page + 1;
-        const r = await poetry.getAuthors({ page: nextPage, pageSize: PAGE_SIZE });
+        const r = await poetry.getAuthors({ page: nextPage, pageSize: AUTHOR_PAGE_SIZE });
         const items = reset ? r.authors : this._dedupe(this.data.items.concat(r.authors));
         this.setData({ items, page: nextPage, hasMore: r.hasMore });
       } else {

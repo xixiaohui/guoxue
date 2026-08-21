@@ -1,6 +1,4 @@
-const api = require('../../utils/api');
 const { FALLBACK_DAILY_LIST, TAB_PAGES, STORAGE_KEYS } = require('../../utils/constants');
-// const monetize = require('../../utils/monetize');
 const shareUtil = require('../../utils/share');
 const { downloadPdf } = require('../../utils/pdf');
 
@@ -118,10 +116,6 @@ Page({
     });
 
     this._loadDaily();
-
-    // if (monetize && typeof monetize.preloadRewardedAd === 'function') {
-    //   monetize.preloadRewardedAd();
-    // }
   },
 
   onShow() {
@@ -164,7 +158,7 @@ Page({
     });
   },
 
-  async _loadDaily(forceRefresh = false) {
+  _loadDaily(forceRefresh = false) {
     this.setData({ dailyLoading: true });
     this._lastLoadedDay = this._todayKey();
 
@@ -179,51 +173,13 @@ Page({
       } catch (_) {}
     }
 
+    const dailyData = _getNextFallback(this.data.daily && this.data.daily.quote) || this._getRandomFallback();
+    this.setData({ daily: dailyData, dailyLoading: false });
+
     try {
-      const res = await api.getDailyClassic(forceRefresh);
-      const d = res && res.daily;
-
-      const dailyData = (typeof d === 'object' && d !== null && d.quote)
-        ? d
-        : this._parseFallback(String(d || ''));
-
-      this.setData({
-        daily: dailyData,
-        dailyLoading: false
-      });
-
-      try {
-        const todayKey = 'daily_' + this._todayKey();
-        wx.setStorageSync(todayKey, dailyData);
-      } catch (_) {}
-
-    } catch (e) {
-      console.error('[Home] daily failed:', e);
-      this.setData({
-        daily: this._getRandomFallback(),
-        dailyLoading: false
-      });
-    }
-  },
-
-  _parseFallback(text) {
-    if (!text) return this._getRandomFallback();
-
-    const extract = (label) => {
-      const m = text.match(new RegExp(`【${label}】\\s*([\\s\\S]*?)(?=【|$)`));
-      return m ? m[1].trim() : '';
-    };
-
-    const quote = extract('今日经典') || text.substring(0, 80);
-    if (!quote) return this._getRandomFallback();
-
-    return {
-      quote,
-      author: extract('作者朝代') || '',
-      translation: extract('白话赏析') || extract('译文') || '',
-      analysis: extract('意境赏析') || extract('赏析') || '',
-      insight: extract('今日启示') || ''
-    };
+      const todayKey = 'daily_' + this._todayKey();
+      wx.setStorageSync(todayKey, dailyData);
+    } catch (_) {}
   },
 
   _getRandomFallback() {
@@ -248,7 +204,7 @@ Page({
     return `${y}${m}${day}`;
   },
 
-  async refreshDaily() {
+  refreshDaily() {
     if (this.data.refreshing || this.data.dailyLoading) return;
 
     this.setData({ refreshing: true });
@@ -267,28 +223,6 @@ Page({
         });
       }, 240);
     }, 80);
-
-    this._refreshFromAIAsync(next);
-  },
-
-  async _refreshFromAIAsync() {
-    try {
-      const seed = Date.now();
-      const res = await api.getDailyClassic(true, seed);
-      const d = res && res.daily;
-
-      if (
-        d &&
-        typeof d === 'object' &&
-        d.quote &&
-        d.quote !== (this.data.daily && this.data.daily.quote) &&
-        !this.data.dailyLoading
-      ) {
-        this.setData({ daily: d });
-      }
-    } catch (_) {
-      // 静默失败
-    }
   },
 
   goFunc(e) {
@@ -307,7 +241,6 @@ Page({
 
     const pageMap = {
       classics: '/pages/classics/index',
-      translate: '/pages/translate/index',
       idiom: '/pages/idiom/index',
       history: '/pages/history/index',
       philosophers: '/pages/philosophers/index'
@@ -336,14 +269,6 @@ Page({
 
   goGuoxueDownload() {
     wx.navigateTo({ url: '/pages/guoxuedownload/index' });
-  },
-
-  goDiscussDaily() {
-    wx.navigateTo({ url: '/pages/translate/index' });
-  },
-
-  goTranslate() {
-    wx.navigateTo({ url: '/pages/translate/index' });
   },
 
   onShareAppMessage() {

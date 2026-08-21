@@ -1,12 +1,10 @@
 {
   "pages": [
     "pages/home/index",
-    "pages/translate/index",
     "pages/classics/index",
     "pages/idiom/index",
     "pages/history/index",
     "pages/philosophers/index",
-    "pages/detail/index",
     "pages/guoxuedownload/index",
     "pages/chinesepoetry/index",
     "pages/chinesepoetry_detail/index",

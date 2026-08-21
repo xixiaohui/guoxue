@@ -1,16 +1,9 @@
-// pages/idiom/index.js - 成语故事页 v6.0（生产级，丰富内容，无AI问答跳转）
-const api = require('../../utils/api');
+// pages/idiom/index.js - 成语故事页（静态内容版）
 const storage = require('../../utils/storage');
 const { FALLBACK_IDIOM } = require('../../utils/constants');
-const monetize = require('../../utils/monetize');
 
 Page({
   data: {
-    searchText: '',
-    currentIdiom: '',
-    result: '',
-    resultSections: [],
-    isLoading: false,
     dailyIdiomLoading: true,
     dailyIdiom: FALLBACK_IDIOM,
     isFavorited: false,
@@ -65,129 +58,66 @@ Page({
 
   onLoad() {
     this._loadDailyIdiom();
-    monetize.preloadRewardedAd();
-    this._bannerAd = monetize.createBannerAd();
   },
 
-  onUnload() {
-    if (this._bannerAd) { try { this._bannerAd.destroy(); } catch (e) {} }
-  },
-
-  // ── 加载每日成语 ──────────────────────────────
-  async _loadDailyIdiom(forceRefresh = false) {
+  // ── 加载每日成语（内置词库轮换）─────────────────
+  _loadDailyIdiom(forceRefresh = false) {
     this.setData({ dailyIdiomLoading: true });
-    try {
-      const res = await api.getDailyIdiom(forceRefresh);
-      const idiom = res.idiom;
-      if (idiom && idiom.word) {
-        this.setData({
-          dailyIdiom: idiom,
-          dailyIdiomLoading: false,
-          isFavorited: storage.isIdiomFavorited(idiom.word)
-        });
-      } else {
-        this.setData({ dailyIdiomLoading: false });
-      }
-    } catch (e) {
-      const idioms = this.data.knownIdioms;
-      const fb = idioms[new Date().getDate() % idioms.length];
-      this.setData({ dailyIdiom: { ...FALLBACK_IDIOM, ...fb }, dailyIdiomLoading: false });
+    const list = this.data.knownIdioms;
+    const currentWord = (this.data.dailyIdiom && this.data.dailyIdiom.word) || '';
+
+    if (!forceRefresh) {
+      const cacheKey = 'daily_idiom_' + this._todayKey();
+      try {
+        const cached = wx.getStorageSync(cacheKey);
+        if (cached && cached.word) {
+          this.setData({
+            dailyIdiom: cached,
+            dailyIdiomLoading: false,
+            isFavorited: storage.isIdiomFavorited(cached.word)
+          });
+          return;
+        }
+      } catch (_) {}
     }
+
+    const candidates = forceRefresh && currentWord
+      ? list.filter(i => i.word !== currentWord)
+      : list;
+    const pool = candidates.length > 0 ? candidates : list;
+    const idx = forceRefresh
+      ? Math.floor(Math.random() * pool.length)
+      : (new Date().getDate() + new Date().getMonth()) % pool.length;
+    const item = pool[idx] || pool[0];
+
+    const fb = { ...FALLBACK_IDIOM, word: item.word, pinyin: item.pinyin, brief: item.brief };
+    if (item.story) fb.story = item.story;
+
+    this.setData({
+      dailyIdiom: fb,
+      dailyIdiomLoading: false,
+      isFavorited: storage.isIdiomFavorited(fb.word)
+    });
+
+    try { wx.setStorageSync('daily_idiom_' + this._todayKey(), fb); } catch (_) {}
   },
 
   changeDailyIdiom() {
     this._loadDailyIdiom(true);
   },
 
+  _todayKey() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}${m}${day}`;
+  },
+
   // ── 分类筛选 ──────────────────────────────
   selectCategory(e) {
     const id = e.currentTarget.dataset.id;
     this.setData({ activeCategory: id });
-  },
-
-  // ── 搜索 ──────────────────────────────
-  onSearchInput(e) {
-    this.setData({ searchText: e.detail.value });
-  },
-
-  searchIdiom() {
-    const text = this.data.searchText.trim();
-    if (!text) return;
-    this.lookupIdiomByWord(text);
-  },
-
-  lookupIdiom(e) {
-    const idiom = e.currentTarget.dataset.idiom;
-    this.lookupIdiomByWord(idiom);
-  },
-
-  lookupFeatured(e) {
-    const word = e.currentTarget.dataset.word;
-    this.lookupIdiomByWord(word);
-  },
-
-  // ── 核心查询（云数据库缓存版）──────────────────────────────
-  async lookupIdiomByWord(word) {
-    if (!word || this.data.isLoading) return;
-    this._doLookupIdiom(word);
-  },
-
-  async _doLookupIdiom(word) {
-    this.setData({ currentIdiom: word, result: '', resultSections: [], isLoading: true });
-    wx.pageScrollTo({ selector: '.result-section', duration: 400 });
-    try {
-      const res = await api.explainIdiom(word);
-      const text = res.explanation || '';
-      const sections = res.sections || this._parseSections(text);
-      this.setData({ result: text, resultSections: sections, isLoading: false });
-    } catch (e) {
-      this.setData({ isLoading: false });
-      api.showError(e.message || '查询失败，请重试');
-    }
-  },
-
-  // ── 解析分段 ──────────────────────────────
-  _parseSections(text) {
-    const sections = [];
-    const re = /【([^】]+)】\s*([\s\S]*?)(?=【|$)/g;
-    let m;
-    while ((m = re.exec(text)) !== null) {
-      const content = m[2].trim();
-      if (content) sections.push({ label: m[1], content });
-    }
-    if (sections.length === 0 && text.trim()) {
-      sections.push({ label: '解释', content: text.trim() });
-    }
-    return sections;
-  },
-
-  // ── 收藏 ──────────────────────────────
-  toggleFavorite() {
-    const { currentIdiom, result } = this.data;
-    if (!currentIdiom) return;
-    const isFav = storage.toggleFavoriteIdiom({ word: currentIdiom, explanation: result, savedAt: Date.now() });
-    this.setData({ isFavorited: isFav });
-    wx.showToast({ title: isFav ? '已收藏' : '已取消收藏', icon: 'success', duration: 1200 });
-  },
-
-  // ── 复制 ──────────────────────────────
-  copyResult() {
-    wx.setClipboardData({
-      data: this.data.result,
-      success: () => wx.showToast({ title: '已复制', icon: 'success' })
-    });
-  },
-
-  closeResult() {
-    this.setData({ result: '', resultSections: [], currentIdiom: '', isLoading: false });
-  },
-
-  // ── 探索每日成语 ──────────────────────────────
-  lookupDailyIdiom() {
-    const { dailyIdiom } = this.data;
-    if (dailyIdiom && dailyIdiom.word) {
-      this.lookupIdiomByWord(dailyIdiom.word);
-    }
   },
 
   // ── 收藏每日成语 ──────────────────────────────
@@ -201,14 +131,14 @@ Page({
 
   // ── 分享 ──────────────────────────────
   onShareAppMessage() {
-    const w = this.data.currentIdiom || (this.data.dailyIdiom && this.data.dailyIdiom.word) || '';
+    const w = (this.data.dailyIdiom && this.data.dailyIdiom.word) || '';
     return {
       title: w ? `【${w}】成语故事 · 国学助手` : '成语故事 · 字里乾坤',
       path:  '/pages/idiom/index',
     };
   },
   onShareTimeline() {
-    const w = this.data.currentIdiom || (this.data.dailyIdiom && this.data.dailyIdiom.word) || '';
+    const w = (this.data.dailyIdiom && this.data.dailyIdiom.word) || '';
     return {
       title: w ? `【${w}】典故故事，小小成语包含大智慧` : '国学助手 · 成语故事全汇',
       query: 'from=timeline',

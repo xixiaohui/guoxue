@@ -9,68 +9,6 @@
     </view>
   </view>
 
-  <!-- 搜索栏 -->
-  <view class="search-bar">
-    <view class="search-inner">
-      <text class="search-icon">🔍</text>
-      <input
-        class="search-input"
-        value="{{searchText}}"
-        bindinput="onSearchInput"
-        placeholder="输入成语查询详解，如：一鸣惊人…"
-        placeholder-class="search-placeholder"
-        confirm-type="search"
-        bindconfirm="searchIdiom"
-      />
-      <view class="search-btn" bindtap="searchIdiom" hover-class="search-btn-hover" hover-stay-time="80">
-        <text class="search-btn-text">查询</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- AI解析结果 -->
-  <view class="result-section" wx:if="{{result || isLoading}}">
-    <view class="result-header">
-      <view class="result-title-row">
-        <view class="result-dot"></view>
-        <text class="result-title">「{{currentIdiom}}」解析</text>
-      </view>
-      <view class="result-header-actions">
-        <view class="action-btn" wx:if="{{result}}" bindtap="copyResult" hover-class="action-hover" hover-stay-time="80">
-          <text>📋</text>
-        </view>
-        <view class="action-btn close-btn" bindtap="closeResult" hover-class="action-hover" hover-stay-time="80">
-          <text>✕</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- 加载中 -->
-    <view class="result-loading" wx:if="{{isLoading}}">
-      <view class="ai-loading-icon">🤔</view>
-      <text class="ai-loading-text">正在查询成语典故…</text>
-    </view>
-
-    <!-- 分段结果 -->
-    <view class="result-body" wx:elif="{{resultSections.length > 0}}">
-      <view class="seg-block" wx:for="{{resultSections}}" wx:key="index">
-        <view class="seg-label-row">
-          <view class="seg-dot"></view>
-          <text class="seg-label">{{item.label}}</text>
-        </view>
-        <text class="seg-content">{{item.content}}</text>
-      </view>
-      <view class="result-foot-actions">
-        <view class="foot-btn" bindtap="toggleFavorite" hover-class="btn-hover" hover-stay-time="80">
-          <text>{{isFavorited ? '❤️ 已收藏' : '🤍 收藏'}}</text>
-        </view>
-        <view class="foot-btn" bindtap="copyResult" hover-class="btn-hover" hover-stay-time="80">
-          <text>📋 复制</text>
-        </view>
-      </view>
-    </view>
-  </view>
-
   <!-- 每日成语 -->
   <view class="daily-section">
     <view class="section-head">
@@ -119,10 +57,7 @@
         </view>
       </view>
       <view class="daily-actions">
-        <view class="daily-action-btn primary-btn" bindtap="lookupDailyIdiom" hover-class="btn-hover" hover-stay-time="80">
-          <text>✨ 深度解析</text>
-        </view>
-        <view class="daily-action-btn outline-btn" bindtap="toggleDailyFavorite" hover-class="btn-hover" hover-stay-time="80">
+        <view class="daily-action-btn primary-btn" bindtap="toggleDailyFavorite" hover-class="btn-hover" hover-stay-time="80">
           <text>{{isFavorited ? '❤️ 已收藏' : '🤍 收藏'}}</text>
         </view>
       </view>
@@ -168,8 +103,6 @@
       class="featured-item"
       wx:for="{{featuredIdioms}}"
       wx:key="id"
-      bindtap="lookupFeatured"
-      data-word="{{item.word}}"
       hover-class="item-hover"
       hover-stay-time="80"
     >
@@ -182,18 +115,15 @@
       </view>
       <text class="feat-brief">{{item.brief}}</text>
       <text class="feat-story">{{item.story}}</text>
-      <view class="feat-footer">
-        <text class="feat-cta">深度解析 →</text>
-      </view>
     </view>
   </view>
 
-  <!-- 快速查询成语 -->
+  <!-- 常用成语 -->
   <view class="quick-section">
     <view class="section-head">
       <view class="section-label-wrap">
         <view class="label-bar"></view>
-        <text class="section-label">快速查询</text>
+        <text class="section-label">常用成语</text>
       </view>
     </view>
     <view class="quick-grid">
@@ -201,8 +131,6 @@
         class="quick-item"
         wx:for="{{knownIdioms}}"
         wx:key="index"
-        bindtap="lookupIdiom"
-        data-idiom="{{item.word}}"
         hover-class="quick-hover"
         hover-stay-time="80"
       >

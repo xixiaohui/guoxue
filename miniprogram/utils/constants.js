@@ -3,45 +3,15 @@
  * 生产级国学助手 v7.0（无AI问答，五大模块 + 分享海报）
  */
 
-// ─── 云函数名称 ────────────────────────────────────
-const CLOUD_FUNC = 'guoxueAI';
-
-// ─── 变现相关常量 ────────────────────────────────────
-const MONETIZE = {
-  FREE_DAILY_LIMIT: 100,
-  REWARDED_AD_ID: 'adunit-513a37c7d48cdf7f',
-  BANNER_AD_ID: 'adunit-49f0f4a3d03930f8',
-};
-
 // ─── 本地存储键名 ────────────────────────────────────
 const STORAGE_KEYS = {
   DAILY_PREFIX: 'daily_',
   DAILY_IDIOM_PREFIX: 'daily_idiom_',
-  TRANSLATE_HISTORY: 'trans_history',
   FAVORITES_POEM: 'fav_poems',
   FAVORITES_IDIOM: 'fav_idioms',
   USER_PREFS: 'user_prefs',
-  QUOTA_CACHE: 'quota_cache',
   DAILY_HISTORY: 'daily_history',    // 已展示过的经典，避免重复
   DAILY_REFRESH_IDX: 'daily_refresh_idx', // 换一条索引
-};
-
-// ─── AI 请求类型 ────────────────────────────────────
-const AI_TYPES = {
-  TRANSLATE: 'translate',
-  DAILY: 'daily',
-  DAILY_IDIOM: 'daily_idiom',
-  POEM: 'poem',
-  IDIOM: 'idiom',
-  HISTORY: 'history',
-  SEARCH: 'search',
-  PHILOSOPHER: 'philosopher',
-};
-
-// ─── 翻译模式 ────────────────────────────────────
-const TRANSLATE_MODES = {
-  ANCIENT_TO_MODERN: 'ancient_to_modern',
-  MODERN_TO_ANCIENT: 'modern_to_ancient',
 };
 
 // ─── Tab 页路径 ────────────────────────────────────
@@ -298,11 +268,7 @@ const FALLBACK_IDIOM = {
 };
 
 module.exports = {
-  CLOUD_FUNC,
-  MONETIZE,
   STORAGE_KEYS,
-  AI_TYPES,
-  TRANSLATE_MODES,
   TAB_PAGES,
   THEME,
   FALLBACK_DAILY_LIST,

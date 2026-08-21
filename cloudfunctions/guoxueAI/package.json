@@ -1,9 +1,0 @@
-{
-  "name": "guoxueAI",
-  "version": "1.0.0",
-  "description": "国文之学云函数",
-  "main": "index.js",
-  "dependencies": {
-    "wx-server-sdk": "latest"
-  }
-}

@@ -1,4 +1,4 @@
-// app.js - 国文之学（生产级 · v4.0 · wx.cloud.extend.AI 直调架构）
+// app.js - 国文之学（无AI版 · 静态内容架构）
 App({
   onLaunch() {
     // ── 云环境初始化 ──────────────────────────────
@@ -11,18 +11,11 @@ App({
         env: ENV_ID,
         traceUser: true,
       });
-      // 验证 AI 能力是否可用
-      if (!wx.cloud.extend || !wx.cloud.extend.AI) {
-        console.warn('[App] wx.cloud.extend.AI 不可用，请检查基础库版本（需 >= 3.0.1）或云环境配置');
-      } else {
-        console.log('[App] wx.cloud.extend.AI 就绪');
-      }
     }
 
     this.globalData = {
       env: ENV_ID,
       userInfo: null,
-      quotaStatus: null,
       theme: {
         primary: '#8B2500',
         secondary: '#C4882E',
@@ -51,29 +44,6 @@ App({
     } catch (e) {
       console.warn('[App] getSystemInfo failed:', e);
     }
-
-    // ── 异步拉取配额状态（启动时静默获取，供全局使用）──────────────────────────────
-    this._loadQuotaStatus();
-  },
-
-  onShow() {
-    this._loadQuotaStatus();
-  },
-
-  // ── 加载配额状态（调用 guoxueAI 云函数 getStatus）──────────────────────
-  _loadQuotaStatus() {
-    wx.cloud.callFunction({
-      name: 'guoxueAI',
-      data: { type: 'getStatus' }
-    }).then(res => {
-      const data = res.result;
-      if (data && data.success) {
-        this.globalData.quotaStatus = data;
-        console.log('[App] quotaStatus:', { remaining: data.remaining });
-      }
-    }).catch(err => {
-      console.warn('[App] quota status load failed:', err.message || err);
-    });
   },
 
   // ── 版本更新检测 ──────────────────────────────
@@ -93,7 +63,6 @@ App({
 
   globalData: {
     env: '', userInfo: null,
-    quotaStatus: null,
     statusBarHeight: 0, windowHeight: 0, pixelRatio: 2
   }
 });
