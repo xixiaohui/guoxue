@@ -399,23 +399,42 @@ Page({
   },
 
   // ── 分享 ──────────────────────────────
+  /** 提取可分享标题：title 为空时用正文首句兜底，仍无则用「无名诗」 */
+  _safeTitle() {
+    const d = this.data;
+    let title = (d.title || '').trim();
+    if (!title) {
+      const m = (d.content || '').match(/[^\n。！？!?]+[。！？!?]?/);
+      title = (m && m[0] ? m[0].trim() : '').slice(0, 20);
+    }
+    return title || '无名诗';
+  },
+
+  /** 组装分享标题：佚名/空作者不署名，避免「《》—— 佚名」的奇怪文案 */
+  _shareTitle() {
+    const d = this.data;
+    if (d.kind === 'author') {
+      return d.title + ' · ' + (d.dynasty || '诗人');
+    }
+    const title = this._safeTitle();
+    const author = (d.author || '').trim();
+    const authorText = author && author !== '佚名' ? '—— ' + author : '';
+    return '《' + title + '》' + authorText;
+  },
+
   onShareAppMessage() {
     const d = this.data;
     return {
-      title: d.kind === 'author'
-        ? (d.title + ' · ' + (d.dynasty || '诗人'))
-        : ('《' + d.title + '》—— ' + (d.author || '中华诗词')),
-      path: '/pages/chinesepoetry_detail/index?kind=' + d.kind + '&title=' + encodeURIComponent(d.title)
+      title: this._shareTitle(),
+      path: '/pages/chinesepoetry_detail/index?kind=' + d.kind + '&title=' + encodeURIComponent(this._safeTitle())
     };
   },
 
   onShareTimeline() {
     const d = this.data;
     return {
-      title: d.kind === 'author'
-        ? (d.title + ' · ' + (d.dynasty || '诗人'))
-        : ('《' + d.title + '》—— ' + (d.author || '中华诗词')),
-      query: 'kind=' + d.kind + '&title=' + encodeURIComponent(d.title) + '&from=timeline'
+      title: this._shareTitle(),
+      query: 'kind=' + d.kind + '&title=' + encodeURIComponent(this._safeTitle()) + '&from=timeline'
     };
   }
 });

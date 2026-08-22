@@ -2,6 +2,8 @@ const { FALLBACK_DAILY_LIST, TAB_PAGES, STORAGE_KEYS } = require('../../utils/co
 const shareUtil = require('../../utils/share');
 const { downloadPdf } = require('../../utils/pdf');
 const settings = require('../../utils/settings');
+const poetry = require('../../utils/poetryApi');
+const poemCache = require('../../utils/poemCache');
 
 // 从 fallback 中取下一条，尽量避免短时间重复
 function _getNextFallback(currentQuote) {
@@ -62,6 +64,10 @@ Page({
     },
     refreshing: false,
 
+    // 节气诗词（与诗词天地页同源 /solar-term）
+    solar: { termName: '', termDescription: '', poem: null, reason: '' },
+    solarLoading: true,
+
     hotTopics: [
       { text: '李白 · 将进酒赏析', page: 'classics' },
       { text: '道德经核心思想', page: 'philosophers' },
@@ -117,6 +123,7 @@ Page({
     });
 
     this._loadDaily();
+    this._loadSolar();
   },
 
   onShow() {
@@ -271,6 +278,52 @@ Page({
 
   goGuoxueDownload() {
     wx.navigateTo({ url: '/pages/guoxuedownload/index' });
+  },
+
+  goPoetry() {
+    wx.switchTab({ url: '/pages/chinesepoetry/index' });
+  },
+
+  // ── 节气诗词 ──────────────────────────────
+  async _loadSolar() {
+    this.setData({ solarLoading: true });
+    try {
+      const s = await poetry.getSolarTerm();
+      if (!s.termName) throw new Error('empty solar');
+      this.setData({ solar: s });
+    } catch (e) {
+      this.setData({ solar: poetry.FALLBACK_SOLAR });
+    } finally {
+      this.setData({ solarLoading: false });
+    }
+  },
+
+  /** 节气诗词 → 详情 */
+  goSolarPoem(e) {
+    const poem = e.currentTarget.dataset.poem;
+    if (!poem || (!poem.title && !poem.content)) return;
+    poemCache.cachePoem(poem);
+    wx.navigateTo({ url: this._buildPoemUrl(poem) });
+  },
+
+  /** 组装诗词详情 URL（与诗词天地页一致：超长时截断 content 保证跳转可用） */
+  _buildPoemUrl(poem) {
+    const qs = [
+      'kind=poem',
+      'id=' + encodeURIComponent(poem.id == null ? '' : String(poem.id)),
+      'title=' + encodeURIComponent(poem.title || ''),
+      'author=' + encodeURIComponent(poem.author || ''),
+      'dynasty=' + encodeURIComponent(poem.dynasty || ''),
+      'type=' + encodeURIComponent(poem.type || '')
+    ];
+    let content = poem.content || poem.preview || '';
+    let url = '';
+    for (let i = 0; i < 3; i++) {
+      url = '/pages/chinesepoetry_detail/index?' + qs.join('&') + '&content=' + encodeURIComponent(content);
+      if (url.length <= 1800) break;
+      content = content.slice(0, Math.floor(content.length * 0.7));
+    }
+    return url;
   },
 
   onShareAppMessage() {

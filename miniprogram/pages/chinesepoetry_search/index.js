@@ -27,6 +27,8 @@ Page({
     filterTypes: [],
     selDynasty: '',
     selType: '',
+    selDynastyScrollId: '',   // 选中朝代标签滚动定位（跳转进入时可见选中态）
+    selTypeScrollId: '',      // 选中体裁标签滚动定位
     authorInput: '',
     charInput: '',
     filterPoems: [],
@@ -48,6 +50,17 @@ Page({
     if (q) {
       this.setData({ keyword: q, mode: 'search' });
       this._search(true);
+      return;
+    }
+    // 从「朝代纵览 / 体裁一览」跳转：自动带出该分类条件并直接查询
+    const dynasty = o.dynasty ? String(o.dynasty) : '';
+    const type = o.type ? String(o.type) : '';
+    if (dynasty || type) {
+      const patch = { mode: 'filter' };
+      if (dynasty) patch.selDynasty = dynasty;
+      if (type) patch.selType = type;
+      this.setData(patch);
+      this._loadFilterPoems(true);
     }
   },
 
@@ -92,17 +105,42 @@ Page({
         filterTypes: poetry.FALLBACK_TYPES.map((t) => t.name).filter((n) => !UNSUPPORTED_TYPES.includes(n))
       });
     }
+    this._syncScrollToSelected();
+  },
+
+  /** 选项就绪后，将横向标签滚动到默认选中的朝代/体裁（跳转进入时可见选中态） */
+  _syncScrollToSelected() {
+    const patch = {};
+    const dIdx = this.data.filterDynasties.indexOf(this.data.selDynasty);
+    if (dIdx >= 0) patch.selDynastyScrollId = 'chip-dynasty-' + dIdx;
+    const tIdx = this.data.filterTypes.indexOf(this.data.selType);
+    if (tIdx >= 0) patch.selTypeScrollId = 'chip-type-' + tIdx;
+    if (patch.selDynastyScrollId || patch.selTypeScrollId) {
+      setTimeout(() => this.setData(patch), 80);
+    }
   },
 
   // ── 过滤交互 ──────────────────────────────
   onSelectDynasty(e) {
     const name = e.currentTarget.dataset.name;
-    this.setData({ selDynasty: this.data.selDynasty === name ? '' : name });
+    const sel = this.data.selDynasty === name ? '' : name;
+    const patch = { selDynasty: sel };
+    if (sel) {
+      const idx = this.data.filterDynasties.indexOf(sel);
+      if (idx >= 0) patch.selDynastyScrollId = 'chip-dynasty-' + idx;
+    }
+    this.setData(patch);
   },
 
   onSelectType(e) {
     const name = e.currentTarget.dataset.name;
-    this.setData({ selType: this.data.selType === name ? '' : name });
+    const sel = this.data.selType === name ? '' : name;
+    const patch = { selType: sel };
+    if (sel) {
+      const idx = this.data.filterTypes.indexOf(sel);
+      if (idx >= 0) patch.selTypeScrollId = 'chip-type-' + idx;
+    }
+    this.setData(patch);
   },
 
   onAuthorInput(e) {

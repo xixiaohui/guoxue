@@ -68,6 +68,82 @@
     </view>
   </view>
 
+  <!-- 诗词天地 -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">诗词天地</text>
+      </view>
+      <view class="head-actions">
+        <view class="action-pill" bindtap="goPoetry" hover-class="pill-hover" hover-stay-time="80">
+          <text class="pill-text">进入 ›</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="poetry-card" bindtap="goPoetry" hover-class="card-hover" hover-stay-time="100">
+      <view class="poetry-deco">詩</view>
+      <view class="poetry-info">
+        <text class="poetry-title">诗词天地</text>
+        <text class="poetry-sub">品读千年诗韵 · 感悟东方之美</text>
+        <view class="poetry-tags">
+          <text class="poetry-tag">唐诗</text>
+          <text class="poetry-tag">宋词</text>
+          <text class="poetry-tag">元曲</text>
+        </view>
+      </view>
+      <text class="poetry-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 节气诗词 -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">节气诗词</text>
+      </view>
+      <text class="section-sub">应时而作 · 顺时而读</text>
+    </view>
+
+    <!-- 骨架屏 -->
+    <view class="solar-card" wx:if="{{solarLoading && !solar.termName}}">
+      <view class="solar-left">
+        <view class="sk-line sk-circle"></view>
+        <view class="sk-line sk-w60 sk-h28 sk-mt"></view>
+      </view>
+      <view class="solar-right">
+        <view class="sk-line sk-w90 sk-h28"></view>
+        <view class="sk-line sk-w60 sk-h28 sk-mt"></view>
+        <view class="sk-line sk-w100 sk-h40 sk-mt"></view>
+      </view>
+    </view>
+
+    <!-- 节气内容 -->
+    <view class="solar-card" wx:elif="{{solar.termName}}">
+      <view class="solar-left">
+        <text class="solar-term">{{solar.termName}}</text>
+        <text class="solar-label">节气 · 诗词</text>
+      </view>
+      <view class="solar-right">
+        <text class="solar-desc">{{solar.termDescription}}</text>
+        <view class="solar-poem" wx:if="{{solar.poem}}" bindtap="goSolarPoem" data-poem="{{solar.poem}}"
+          hover-class="card-hover" hover-stay-time="80">
+          <text class="solar-poem-title">{{solar.poem.title ? '《' + solar.poem.title + '》' : '无名篇'}} {{solar.poem.dynasty}} · {{solar.poem.author || '佚名'}}</text>
+          <text class="solar-poem-preview">{{solar.poem.preview}}</text>
+          <view class="solar-go">
+            <text>{{solar.reason || '查看全诗'}}</text>
+            <text class="solar-go-arrow">›</text>
+          </view>
+        </view>
+        <view class="solar-poem" wx:else>
+          <text class="solar-poem-preview">{{solar.reason}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
   <!-- 功能导航 -->
   <view class="section">
     <view class="section-head">

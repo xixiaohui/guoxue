@@ -120,6 +120,14 @@
     font-weight: 600;
     color: #2C1810;
   }
+
+  .section-sub {
+    font-size: 20rpx;
+    color: #A08C6B;
+    letter-spacing: 2rpx;
+    padding: 4rpx 0;
+    flex-shrink: 0;
+  }
   
   .head-actions {
     display: flex;
@@ -346,6 +354,190 @@
     word-break: break-word;
   }
   
+  /* Poetry banner */
+  .poetry-card {
+    position: relative;
+    margin: 0 24rpx;
+    border-radius: 22rpx;
+    padding: 34rpx 28rpx;
+    background: linear-gradient(135deg, #7A1E00 0%, #8B2500 55%, #B0601A 130%);
+    box-shadow: 0 8rpx 28rpx rgba(139,37,0,.18), 0 2rpx 6rpx rgba(139,37,0,.08);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    box-sizing: border-box;
+    width: calc(100% - 48rpx);
+  }
+
+  .poetry-deco {
+    position: absolute;
+    right: 24rpx;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 170rpx;
+    color: rgba(255,248,231,.08);
+    font-weight: 900;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .poetry-info {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .poetry-title {
+    display: block;
+    font-size: 36rpx;
+    font-weight: 700;
+    color: #FFF8E7;
+    letter-spacing: 4rpx;
+    margin-bottom: 8rpx;
+  }
+
+  .poetry-sub {
+    display: block;
+    font-size: 22rpx;
+    color: rgba(255,248,231,.7);
+    margin-bottom: 18rpx;
+    letter-spacing: 1rpx;
+  }
+
+  .poetry-tags {
+    display: flex;
+    gap: 12rpx;
+    flex-wrap: wrap;
+  }
+
+  .poetry-tag {
+    font-size: 20rpx;
+    color: #FFD97D;
+    border: 1rpx solid rgba(255,217,125,.5);
+    border-radius: 22rpx;
+    padding: 4rpx 16rpx;
+    background: rgba(255,217,125,.08);
+  }
+
+  .poetry-arrow {
+    position: relative;
+    z-index: 1;
+    font-size: 48rpx;
+    color: rgba(255,248,231,.7);
+    margin-left: 16rpx;
+    flex-shrink: 0;
+    font-weight: 300;
+  }
+
+  /* Solar term card */
+  .solar-card {
+    margin: 0 24rpx;
+    background: #FFFBF0;
+    border: 1rpx solid #E8C48A;
+    border-radius: 24rpx;
+    display: flex;
+    overflow: hidden;
+    box-shadow: 0 4rpx 16rpx rgba(139, 37, 0, 0.08);
+    min-height: 230rpx;
+    width: calc(100% - 48rpx);
+    box-sizing: border-box;
+  }
+
+  .solar-left {
+    width: 150rpx;
+    background: linear-gradient(160deg, #3E7C4F, #2E6B3F);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24rpx 0;
+    flex-shrink: 0;
+  }
+
+  .solar-left .sk-line {
+    background: rgba(255, 248, 231, 0.25);
+  }
+
+  .solar-term {
+    font-size: 40rpx;
+    font-weight: 700;
+    color: #FFF8E7;
+    letter-spacing: 4rpx;
+  }
+
+  .solar-label {
+    font-size: 20rpx;
+    color: rgba(255, 248, 231, 0.75);
+    margin-top: 8rpx;
+    letter-spacing: 2rpx;
+  }
+
+  .solar-right {
+    flex: 1;
+    padding: 22rpx 24rpx;
+    min-width: 0;
+  }
+
+  .solar-desc {
+    display: block;
+    font-size: 24rpx;
+    color: #6B5B45;
+    line-height: 1.6;
+  }
+
+  .solar-poem {
+    margin-top: 14rpx;
+    background: #F8EFD9;
+    border-left: 6rpx solid #C4882E;
+    border-radius: 0 12rpx 12rpx 0;
+    padding: 14rpx 18rpx;
+  }
+
+  .solar-poem-title {
+    display: block;
+    font-size: 26rpx;
+    font-weight: 600;
+    color: #4A2E18;
+  }
+
+  .solar-poem-preview {
+    display: block;
+    font-size: 22rpx;
+    color: #6B5B45;
+    margin-top: 6rpx;
+    line-height: 1.5;
+  }
+
+  .solar-go {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10rpx;
+    font-size: 22rpx;
+    color: #8B2500;
+  }
+
+  .solar-go-arrow {
+    font-size: 30rpx;
+  }
+
+  /* 节气卡片骨架辅助类 */
+  .sk-circle {
+    width: 88rpx;
+    height: 88rpx;
+    border-radius: 50%;
+  }
+
+  .sk-mt {
+    margin-top: 16rpx;
+  }
+
+  .sk-h40 {
+    height: 40rpx;
+  }
+
   /* Function grid */
   .func-grid {
     display: grid;

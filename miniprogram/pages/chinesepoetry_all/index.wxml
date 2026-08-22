@@ -48,7 +48,8 @@
 
     <!-- 全部朝代 -->
     <block wx:elif="{{kind === 'dynasties'}}">
-      <view class="cat-item" wx:for="{{items}}" wx:key="id">
+      <view class="cat-item" wx:for="{{items}}" wx:key="id" bindtap="goCatFilter"
+        data-name="{{item.name}}" hover-class="card-hover" hover-stay-time="80">
         <view class="cat-left">
           <text class="cat-name">{{item.name}}</text>
           <text class="cat-desc" wx:if="{{item.start_year || item.startYear}}">{{item.start_year || item.startYear}}-{{item.end_year || item.endYear || ''}}年</text>
@@ -63,12 +64,14 @@
             <text class="cat-num-label">位诗人</text>
           </view>
         </view>
+        <text class="row-arrow">›</text>
       </view>
     </block>
 
     <!-- 全部体裁 -->
     <block wx:elif="{{kind === 'types'}}">
-      <view class="cat-item" wx:for="{{items}}" wx:key="id">
+      <view class="cat-item" wx:for="{{items}}" wx:key="id" bindtap="goCatFilter"
+        data-name="{{item.name}}" hover-class="card-hover" hover-stay-time="80">
         <view class="cat-left">
           <text class="cat-name">{{item.name}}</text>
         </view>
@@ -78,6 +81,7 @@
             <text class="cat-num-label">首诗词</text>
           </view>
         </view>
+        <text class="row-arrow">›</text>
       </view>
     </block>
 

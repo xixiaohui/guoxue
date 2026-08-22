@@ -163,6 +163,16 @@ Page({
     wx.navigateTo({ url: this._buildPoemUrl(poem) });
   },
 
+  /** 朝代/体裁 → 过滤查询页（自动带出条件并查询该分类下诗词） */
+  goCatFilter(e) {
+    const name = e.currentTarget.dataset.name;
+    if (!name) return;
+    const key = this.data.kind === 'dynasties' ? 'dynasty' : 'type';
+    wx.navigateTo({
+      url: '/pages/chinesepoetry_search/index?' + key + '=' + encodeURIComponent(name)
+    });
+  },
+
   /** 诗人 → 详情 */
   goAuthor(e) {
     const author = e.currentTarget.dataset.author;

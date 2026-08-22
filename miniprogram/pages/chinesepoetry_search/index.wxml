@@ -24,9 +24,11 @@
 
     <view class="filter-row">
       <text class="filter-label">朝代</text>
-      <scroll-view class="filter-chips" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+      <scroll-view class="filter-chips" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}"
+        scroll-into-view="{{selDynastyScrollId}}">
         <view class="chips-wrap">
           <view wx:for="{{filterDynasties}}" wx:key="*this"
+            id="{{'chip-dynasty-' + index}}"
             class="chip {{selDynasty === item ? 'chip-active' : ''}}"
             data-name="{{item}}" bindtap="onSelectDynasty">{{item}}</view>
         </view>
@@ -35,9 +37,11 @@
 
     <view class="filter-row">
       <text class="filter-label">体裁</text>
-      <scroll-view class="filter-chips" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+      <scroll-view class="filter-chips" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}"
+        scroll-into-view="{{selTypeScrollId}}">
         <view class="chips-wrap">
           <view wx:for="{{filterTypes}}" wx:key="*this"
+            id="{{'chip-type-' + index}}"
             class="chip {{selType === item ? 'chip-active' : ''}}"
             data-name="{{item}}" bindtap="onSelectType">{{item}}</view>
         </view>
