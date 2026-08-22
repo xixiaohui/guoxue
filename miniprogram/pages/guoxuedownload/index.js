@@ -1,4 +1,6 @@
 // pages/guoxuedownload/index.js
+const settings = require('../../utils/settings');
+
 Page({
 
   /**
@@ -26,7 +28,7 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
-
+    settings.applyToPage(this);
   },
 
   /**

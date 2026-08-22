@@ -1,5 +1,5 @@
 <!-- pages/idiom/index.wxml - 成语故事页 v6.0 -->
-<view class="idiom-page">
+<view class="idiom-page {{fontFamilyClass}}">
 
   <!-- 页头 -->
   <view class="page-header">

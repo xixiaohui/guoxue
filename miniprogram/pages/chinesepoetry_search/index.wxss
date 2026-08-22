@@ -71,6 +71,126 @@
   font-weight: 500;
 }
 
+/* ── 过滤查询系统 ─────────────────────────── */
+.filter-panel {
+  margin: 20rpx 24rpx 0;
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  padding: 20rpx 22rpx;
+  box-shadow: 0 2rpx 10rpx rgba(139, 37, 0, 0.05);
+}
+
+.filter-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14rpx;
+  margin-bottom: 8rpx;
+}
+
+.filter-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #4A2E18;
+  letter-spacing: 1rpx;
+}
+
+.filter-sub {
+  font-size: 20rpx;
+  color: #A08C6B;
+}
+
+.filter-row {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 14rpx;
+}
+
+.filter-label {
+  flex-shrink: 0;
+  width: 76rpx;
+  font-size: 24rpx;
+  color: #8B2500;
+  font-weight: 600;
+  padding-top: 8rpx;
+}
+
+.filter-chips {
+  flex: 1;
+  width: 0;
+  white-space: nowrap;
+}
+
+.chips-wrap {
+  display: inline-flex;
+  gap: 12rpx;
+  padding-right: 20rpx;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 20rpx;
+  font-size: 22rpx;
+  color: #6B5B45;
+  background: #F8EFD9;
+  border: 1rpx solid #E0C890;
+  border-radius: 24rpx;
+}
+
+.chip-active {
+  color: #FFF8E7;
+  background: linear-gradient(90deg, #8B2500, #A8381A);
+  border-color: #8B2500;
+}
+
+.filter-inputs {
+  gap: 14rpx;
+}
+
+.filter-input {
+  flex: 1;
+  min-width: 0;
+  height: 60rpx;
+  background: #F8EFD9;
+  border: 1rpx solid #E0C890;
+  border-radius: 12rpx;
+  padding: 0 16rpx;
+  font-size: 22rpx;
+  color: #2C1810;
+}
+
+.filter-placeholder {
+  color: #B09070;
+  font-size: 22rpx;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 18rpx;
+}
+
+.filter-btn {
+  flex: 1;
+  text-align: center;
+  padding: 12rpx 0;
+  border-radius: 14rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.filter-btn.query {
+  color: #FFF8E7;
+  background: linear-gradient(90deg, #8B2500, #A8381A);
+}
+
+.filter-btn.reset {
+  color: #8B2500;
+  background: #F8EFD9;
+  border: 1rpx solid #E0C890;
+}
+
 /* ── 初始引导 ─────────────────────────────── */
 .welcome {
   margin: 120rpx 60rpx 0;

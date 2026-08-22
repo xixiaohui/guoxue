@@ -1,5 +1,5 @@
-<!--pages/chinesepoetry_search/index.wxml - 诗词搜索-->
-<view class="page">
+<!--pages/chinesepoetry_search/index.wxml - 诗词搜索 + 过滤查询-->
+<view class="page {{fontFamilyClass}}">
 
   <!-- 搜索栏 -->
   <view class="search-bar">
@@ -15,14 +15,56 @@
     </view>
   </view>
 
+  <!-- 诗词过滤查询系统 -->
+  <view class="filter-panel">
+    <view class="filter-head">
+      <text class="filter-title">🔎 诗词过滤查询</text>
+      <text class="filter-sub">按朝代 · 体裁 · 作者 · 含字精确筛选</text>
+    </view>
+
+    <view class="filter-row">
+      <text class="filter-label">朝代</text>
+      <scroll-view class="filter-chips" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+        <view class="chips-wrap">
+          <view wx:for="{{filterDynasties}}" wx:key="*this"
+            class="chip {{selDynasty === item ? 'chip-active' : ''}}"
+            data-name="{{item}}" bindtap="onSelectDynasty">{{item}}</view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <view class="filter-row">
+      <text class="filter-label">体裁</text>
+      <scroll-view class="filter-chips" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+        <view class="chips-wrap">
+          <view wx:for="{{filterTypes}}" wx:key="*this"
+            class="chip {{selType === item ? 'chip-active' : ''}}"
+            data-name="{{item}}" bindtap="onSelectType">{{item}}</view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <view class="filter-row filter-inputs">
+      <input class="filter-input" value="{{authorInput}}" bindinput="onAuthorInput"
+        placeholder="作者（如 李白）" placeholder-class="filter-placeholder" />
+      <input class="filter-input" value="{{charInput}}" bindinput="onCharInput"
+        placeholder="含字（如 月）" placeholder-class="filter-placeholder" />
+    </view>
+
+    <view class="filter-actions">
+      <view class="filter-btn query" bindtap="onFilterQuery" hover-class="search-btn-hover" hover-stay-time="80">查询</view>
+      <view class="filter-btn reset" bindtap="onResetFilter" hover-class="search-btn-hover" hover-stay-time="80">重置</view>
+    </view>
+  </view>
+
   <!-- 初始引导 -->
-  <view class="welcome" wx:if="{{!searched}}">
+  <view class="welcome" wx:if="{{mode === ''}}">
     <text class="welcome-icon">📜</text>
-    <text class="welcome-text">输入关键词，搜索诗词名句、作者</text>
+    <text class="welcome-text">输入关键词搜索，或使用上方过滤条件查询诗词</text>
   </view>
 
   <!-- 搜索结果 -->
-  <block wx:else>
+  <block wx:elif="{{mode === 'search'}}">
     <view class="result-head">
       <view class="label-bar"></view>
       <text class="section-label">搜索结果</text>
@@ -52,6 +94,44 @@
         <text class="status-text">上拉加载更多</text>
       </view>
       <view class="list-status" wx:elif="{{poems.length > 0}}">
+        <text class="status-text">已显示全部结果</text>
+      </view>
+    </block>
+  </block>
+
+  <!-- 过滤查询结果 -->
+  <block wx:elif="{{mode === 'filter'}}">
+    <view class="result-head">
+      <view class="label-bar"></view>
+      <text class="section-label">过滤结果</text>
+      <text class="result-count">{{filterPoems.length}} 条</text>
+    </view>
+
+    <view class="empty-tip" wx:if="{{filterEmpty && !filterLoading}}">
+      {{filterUnavailable ? '该条件下暂无诗词（筛选暂不可用），试试其他条件' : '该条件下暂无诗词，试试放宽筛选条件'}}
+    </view>
+
+    <block wx:else>
+      <view class="poem-card" wx:for="{{filterPoems}}" wx:key="id" bindtap="goDetail"
+        data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
+        <view class="poem-card-top">
+          <text class="poem-title">{{item.title || '无题'}}</text>
+          <text class="poem-type" wx:if="{{item.type}}">{{item.type}}</text>
+        </view>
+        <text class="poem-author">{{item.dynasty ? item.dynasty + ' · ' : ''}}{{item.author || '佚名'}}</text>
+        <text class="poem-preview">{{item.preview}}</text>
+      </view>
+
+      <view class="list-status" wx:if="{{filterLoading}}">
+        <text class="status-text">过滤中…</text>
+      </view>
+      <view class="list-status" wx:elif="{{filterLoadingMore}}">
+        <text class="status-text">加载更多…</text>
+      </view>
+      <view class="list-status" wx:elif="{{filterHasMore}}">
+        <text class="status-text">上拉加载更多</text>
+      </view>
+      <view class="list-status" wx:elif="{{filterPoems.length > 0}}">
         <text class="status-text">已显示全部结果</text>
       </view>
     </block>

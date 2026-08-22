@@ -261,6 +261,42 @@ async function getAuthorPoems(author, options = {}) {
   return { poems, query: d.query || author, page, pageSize, hasMore: poems.length >= pageSize };
 }
 
+/**
+ * 检索诗词完整正文（用于详情页补全）
+ * ⚠️ /poems/:id 生产环境 500 故障，改由 /search 获取全文；
+ * 有标题 → /search?type=title，匹配优先级：同标题+同作者 → 同标题 → 同作者 → 首条；
+ * 标题为空（API 大量佚名/无题记录）→ 用正文前 10 字做 /search?type=all 全文检索，
+ *   仅接受正文以原正文开头（前 6 字）且作者一致的结果，避免检索到同名他作。
+ */
+async function getPoemByTitle(title, author, contentHint) {
+  const hint = (contentHint || '').replace(/\s+/g, '');
+  if (!title && !author && !hint) return null;
+
+  if (title) {
+    const r = await getSearch(title, { type: 'title', pageSize: 20 });
+    const list = r.poems || [];
+    if (!list.length) return null;
+    const exact = list.find((p) => p.title === title && (!author || p.author === author));
+    if (exact) return exact;
+    const sameAuthor = author ? list.find((p) => p.author === author) : null;
+    return sameAuthor || list[0];
+  }
+
+  // 无标题：正文前缀全文检索（仅接受高置信匹配）
+  if (hint) {
+    const q = hint.slice(0, 10);
+    if (!q) return null;
+    const r = await getSearch(q, { type: 'all', pageSize: 20 });
+    const list = (r.poems || []).filter((p) => {
+      if (author && p.author !== author) return false;
+      const c = (p.content || '').replace(/\s+/g, '');
+      return !!hint.slice(0, 6) && c.indexOf(hint.slice(0, 6)) === 0;
+    });
+    if (list.length) return list[0];
+  }
+  return null;
+}
+
 // ─── 接口：统计 ──────────────────────────────────────────────
 
 /** GET /stats/reading 阅读统计（实测当前数据全为 0/空数组，页面需优雅降级） */
@@ -366,6 +402,7 @@ module.exports = {
   getAuthorDetail,
   getSearch,
   getAuthorPoems,
+  getPoemByTitle,
   getReadingStats,
   // 兜底数据
   FALLBACK_QUOTE,

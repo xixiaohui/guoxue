@@ -115,6 +115,13 @@
   flex: 1;
 }
 
+.section-sub {
+  font-size: 20rpx;
+  color: #A08C6B;
+  letter-spacing: 2rpx;
+  padding: 4rpx 0;
+}
+
 .section-extra {
   font-size: 24rpx;
   color: #8B2500;
@@ -339,6 +346,57 @@
   opacity: 0.75;
 }
 
+/* ── 分类搜索过滤 ─────────────────────────── */
+.category-search {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 16rpx;
+  background: #FFFBF0;
+  border: 1rpx solid #E0C890;
+  border-radius: 16rpx;
+  padding: 10rpx 14rpx;
+}
+
+.category-search-input {
+  flex: 1;
+  min-width: 0;
+  height: 56rpx;
+  font-size: 24rpx;
+  color: #2C1810;
+}
+
+.category-search-placeholder {
+  color: #B09070;
+  font-size: 22rpx;
+}
+
+.category-search-clear {
+  flex-shrink: 0;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #EFE3C8;
+  color: #8C7B61;
+  font-size: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.category-search-btn {
+  flex-shrink: 0;
+  background: linear-gradient(90deg, #8B2500, #A8381A);
+  border-radius: 16rpx;
+  padding: 8rpx 24rpx;
+}
+
+.category-search-btn-text {
+  font-size: 24rpx;
+  color: #FFF8E7;
+  font-weight: 500;
+}
+
 .category-result {
   margin-top: 18rpx;
 }
@@ -508,44 +566,179 @@
   margin-top: 6rpx;
 }
 
-/* ── 统计 ─────────────────────────────── */
-.stats-row {
-  margin: 36rpx 24rpx 0;
+/* ── 全部内容（诗词/诗人/朝代/体裁 列表入口）────── */
+.list-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+
+.list-entry {
+  width: 100%;
+  box-sizing: border-box;
   background: #FFFBF0;
   border: 1rpx solid #E8D5A3;
   border-radius: 20rpx;
-  display: flex;
-  padding: 26rpx 10rpx;
-}
-
-.stat-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 10rpx rgba(139, 37, 0, 0.05);
   position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
 }
 
-.stat-num {
-  font-size: 34rpx;
+/* 右上角柔和光晕装饰（每个入口不同色系） */
+.entry-poems::before,
+.entry-authors::before,
+.entry-dynasties::before,
+.entry-types::before {
+  content: '';
+  position: absolute;
+  right: -36rpx;
+  top: -36rpx;
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(196, 136, 46, 0.14), transparent 70%);
+  pointer-events: none;
+}
+
+.entry-authors::before {
+  background: radial-gradient(circle, rgba(62, 124, 79, 0.14), transparent 70%);
+}
+
+.entry-dynasties::before {
+  background: radial-gradient(circle, rgba(139, 37, 0, 0.12), transparent 70%);
+}
+
+.entry-types::before {
+  background: radial-gradient(circle, rgba(90, 105, 160, 0.14), transparent 70%);
+}
+
+/* 古风单字印章图标（与右上角光晕同色系） */
+.entry-seal {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 16rpx;
+  background: linear-gradient(135deg, #C4882E, #8B2500);
+  color: #FFF8E7;
+  font-size: 32rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2rpx 6rpx rgba(139, 37, 0, 0.22);
+}
+
+.seal-poems {
+  background: linear-gradient(135deg, #C4882E, #8B2500);
+}
+
+.seal-authors {
+  background: linear-gradient(135deg, #3E7C4F, #2E6B3F);
+}
+
+.seal-dynasties {
+  background: linear-gradient(135deg, #A8381A, #6B1F0A);
+}
+
+.seal-types {
+  background: linear-gradient(135deg, #5A69A0, #3B4670);
+}
+
+.entry-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #4A2E18;
+  letter-spacing: 1rpx;
+}
+
+.entry-num-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12rpx;
+  margin-top: 10rpx;
+}
+
+.entry-num {
+  font-size: 44rpx;
   font-weight: 700;
   color: #8B2500;
+  line-height: 1.1;
 }
 
-.stat-label {
+/* 分类数据加载中的数字骨架占位 */
+.entry-num-skeleton {
+  color: transparent;
+  background: #E8D5A3;
+  border-radius: 10rpx;
+  width: 140rpx;
+  animation: skeleton-breathe 1.6s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.entry-label {
   font-size: 22rpx;
   color: #8C7B61;
-  margin-top: 6rpx;
 }
 
-.stat-more {
+.entry-aside {
+  flex-shrink: 0;
+  max-width: 52%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14rpx;
+}
+
+.entry-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8rpx;
+}
+
+.entry-tag {
   font-size: 18rpx;
-  color: #C4A87C;
-  margin-top: 8rpx;
+  color: #8B2500;
+  background: #F8EFD9;
+  border: 1rpx solid #E0C890;
+  border-radius: 12rpx;
+  padding: 4rpx 14rpx;
 }
 
-.stat-hover {
-  opacity: 0.6;
+.entry-tag-more {
+  font-size: 20rpx;
+  color: #A08C6B;
+  padding: 0 4rpx;
+}
+
+.entry-foot {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  font-size: 22rpx;
+  color: #C4882E;
+  white-space: nowrap;
+}
+
+.entry-arrow {
+  font-size: 30rpx;
+  color: #C4A87C;
+  line-height: 1;
+}
+
+.entry-hover {
+  opacity: 0.85;
+  transform: translateY(2rpx);
 }
 
 /* ── 页脚 ─────────────────────────────── */
@@ -627,15 +820,6 @@
 .quote-card .skeleton,
 .solar-left .skeleton {
   background: rgba(255, 248, 231, 0.25);
-}
-
-/* 统计数字加载占位 */
-.stat-num-skeleton {
-  color: transparent;
-  background: #E8D5A3;
-  border-radius: 8rpx;
-  padding: 0 24rpx;
-  animation: skeleton-breathe 1.6s ease-in-out infinite;
 }
 
 /* 固定最小高度：骨架与真实内容切换时高度更接近，减少跳动 */

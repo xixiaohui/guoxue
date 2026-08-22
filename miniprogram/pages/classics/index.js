@@ -1,5 +1,6 @@
 // pages/classics/index.js - 诗词典籍页（静态内容版）
 const storage = require('../../utils/storage');
+const settings = require('../../utils/settings');
 
 Page({
   data: {
@@ -98,6 +99,10 @@ Page({
   },
 
 
+
+  onShow() {
+    settings.applyToPage(this);
+  },
 
   // ── Tab切换 ──────────────────────────────
   switchTab(e) {

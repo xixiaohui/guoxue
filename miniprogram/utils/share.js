@@ -19,8 +19,8 @@ const POSTER_HEIGHT = 1200;
 
 // 微信 Canvas 物理像素高度上限（超限会抛 "set height out of range"）
 const CANVAS_MAX_HEIGHT = 16384;
-// 诗词海报正文最大行数（超出后省略，防止高度越界）
-const MAX_CONTENT_LINES = 120;
+// 正文最小字号（完整展示优先：超高时缩小字号/行高，而不截断正文）
+const MIN_CONTENT_FONT = 16;
 
 /**
  * 构建"分享给好友"的消息卡片参数
@@ -405,27 +405,10 @@ async function generatePoemPoster(pageCtx, opts = {}) {
         const canvas = res[0].node;
         const ctx = canvas.getContext('2d');
 
-        // 先用正文换行数估算海报高度（完整展示不截断）
-        let layout = _measurePoemLayout(ctx, opts);
-
-        // 高度越界保护：Canvas 物理高度上限 16384，超出时二分收缩正文行数
+        // 完整展示优先：先按 Canvas 物理高度上限（16384）约束估算布局。
+        // 正文过长时不截断，而是自动缩小字号/行高，使全部内容完整落入画布。
         const maxLogicalH = Math.floor(CANVAS_MAX_HEIGHT / dpr) - 8;
-        if (layout.height > maxLogicalH) {
-          let lo = 1;
-          let hi = layout.lines.length;
-          let best = 1;
-          while (lo <= hi) {
-            const mid = (lo + hi) >> 1;
-            const candidate = _measurePoemLayout(ctx, Object.assign({}, opts, { maxLines: mid }));
-            if (candidate.height <= maxLogicalH) {
-              best = mid;
-              lo = mid + 1;
-            } else {
-              hi = mid - 1;
-            }
-          }
-          layout = _measurePoemLayout(ctx, Object.assign({}, opts, { maxLines: best }));
-        }
+        const layout = _measurePoemLayout(ctx, Object.assign({}, opts, { maxHeight: maxLogicalH }));
 
         canvas.width = POSTER_WIDTH * dpr;
         canvas.height = layout.height * dpr;
@@ -456,42 +439,63 @@ async function generatePoemPoster(pageCtx, opts = {}) {
 
 /**
  * 估算诗词海报布局：正文按宽度换行得到全部行，并计算总高度
- * 无品牌区，空间全部留给正文展示
+ * 完整展示优先：若正文超长导致高度超过 maxHeight，自动逐档缩小字号/行高，
+ * 使全部正文行完整落入画布（不截断、不省略）。
  * @param {object} opts
- * @param {number} [opts.maxLines] 正文最大行数（默认 MAX_CONTENT_LINES），超出后省略
- * @returns {{height:number, lines:string[], titleLines:string[], contentLineH:number, contentH:number}}
+ * @param {number} [opts.maxHeight] 画布逻辑像素高度上限（默认不限制）
+ * @returns {{height:number, lines:string[], titleLines:string[], contentLineH:number, contentFont:string, contentH:number}}
  */
 function _measurePoemLayout(ctx, opts = {}) {
   const W = POSTER_WIDTH;
   const content = (opts.content || '').trim();
   const title = (opts.title || '无题').trim();
+  const maxHeight = opts.maxHeight || Number.MAX_SAFE_INTEGER;
 
-  const contentFont = '34px serif';
-  const contentLineH = 60;
   const contentMaxW = W - 72 - 80;   // 卡片左右留 36、内部左右留 40，正文行宽更大
-
-  const lines = _wrapPoemLines(ctx, content, contentMaxW, contentFont);
-  const maxLines = opts.maxLines || MAX_CONTENT_LINES;
-  if (lines.length > maxLines) {
-    lines.length = maxLines;
-    lines[maxLines - 1] = '……（以下省略）';
-  }
-  const contentH = Math.max(lines.length, 1) * contentLineH;
-
   const titleLines = _wrapText(ctx, title, W - 140, 'bold 42px serif');
 
-  let height = 0;
-  height += 80;                             // 顶部留白（标题作者与画布顶部保持美观留白）
-  height += titleLines.length * 56;         // 标题
-  height += 24;                             // 标题与作者行间距
-  height += 40;                             // 朝代 · 体裁 · 作者
-  height += 36;                             // 分隔间距
-  height += 60 + contentH + 60;             // 正文卡片（上下内边距 60）
-  height += 44;                             // 卡片与底部间隔
-  height += 190;                            // 底部二维码卡
-  height += 24;                             // 底部留白
+  // 基准：字号 34px、行高 60px
+  let fontPx = 34;
+  let contentLineH = 60;
 
-  return { height, lines, titleLines, contentLineH, contentH };
+  const calcHeight = (lines, lineH) => {
+    const contentH = Math.max(lines.length, 1) * lineH;
+    let h = 0;
+    h += 80;                             // 顶部留白
+    h += titleLines.length * 56;         // 标题
+    h += 24;                             // 标题与作者行间距
+    h += 40;                             // 朝代 · 体裁 · 作者
+    h += 36;                             // 分隔间距
+    h += 60 + contentH + 60;             // 正文卡片（上下内边距 60）
+    h += 44;                             // 卡片与底部间隔
+    h += 190;                            // 底部二维码卡
+    h += 24;                             // 底部留白
+    return h;
+  };
+
+  let lines = _wrapPoemLines(ctx, content, contentMaxW, fontPx + 'px serif');
+  let height = calcHeight(lines, contentLineH);
+
+  // 高度越界 → 逐档缩小字号与行高（按同比例 60/34），直至全文可完整放入画布
+  while (height > maxHeight && fontPx > MIN_CONTENT_FONT) {
+    fontPx -= 2;
+    contentLineH = Math.round(fontPx * (60 / 34));
+    lines = _wrapPoemLines(ctx, content, contentMaxW, fontPx + 'px serif');
+    height = calcHeight(lines, contentLineH);
+  }
+
+  // 最终保护：极端超长文本在最小字号下仍越界时，仅压缩行高（不截断正文）
+  if (height > maxHeight && lines.length > 0) {
+    const fixedH = height - Math.max(lines.length, 1) * contentLineH;
+    const maxLineH = Math.floor((maxHeight - fixedH) / lines.length);
+    if (maxLineH >= 24) {
+      contentLineH = maxLineH;
+      height = calcHeight(lines, contentLineH);
+    }
+  }
+
+  const contentH = Math.max(lines.length, 1) * contentLineH;
+  return { height, lines, titleLines, contentLineH, contentFont: fontPx + 'px serif', contentH };
 }
 
 /**
@@ -580,7 +584,7 @@ async function _renderPoemPoster(ctx, canvas, opts = {}, layout = {}) {
   if (lines.length) {
     ctx.save();
     ctx.fillStyle = '#2A1A12';
-    ctx.font = '34px serif';
+    ctx.font = layout.contentFont || '34px serif';
     ctx.textAlign = 'center';
     let textY = cardY + 60 + contentLineH - 10;
     lines.forEach((line) => {

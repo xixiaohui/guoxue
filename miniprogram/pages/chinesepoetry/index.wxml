@@ -1,5 +1,5 @@
 <!--pages/chinesepoetry/index.wxml - 诗词天地（内容模块分区）-->
-<view class="page">
+<view class="page {{fontFamilyClass}}">
 
   <!-- 页头 -->
   <view class="page-header">
@@ -78,7 +78,7 @@
     <view class="section-head">
       <view class="label-bar"></view>
       <text class="section-label">分类浏览</text>
-      <view class="section-extra" wx:if="{{activeDynasty || activeType}}" bindtap="resetFilter"
+      <view class="section-extra" wx:if="{{categoryQueried}}" bindtap="resetFilter"
         hover-class="link-hover" hover-stay-time="80">重置</view>
     </view>
 
@@ -113,16 +113,29 @@
       </block>
     </view>
 
+    <!-- 分类搜索过滤 -->
+    <view class="category-search">
+      <input class="category-search-input" value="{{filterKeyword}}" bindinput="onFilterKeywordInput"
+        placeholder="输入作者或关键词过滤（如 李白、明月）" placeholder-class="category-search-placeholder"
+        confirm-type="search" bindconfirm="onFilterKeywordSearch" />
+      <view class="category-search-clear" wx:if="{{filterKeyword}}" bindtap="onFilterKeywordClear"
+        hover-class="link-hover" hover-stay-time="80">✕</view>
+      <view class="category-search-btn" bindtap="onFilterKeywordSearch" hover-class="search-btn-hover" hover-stay-time="80">
+        <text class="category-search-btn-text">搜索</text>
+      </view>
+    </view>
+
     <!-- 分类结果 -->
-    <view class="category-result" wx:if="{{activeDynasty || activeType}}">
+    <view class="category-result" wx:if="{{categoryQueried}}">
       <view class="category-title">
-        <text>{{activeDynasty || '全部朝代'}}{{activeType ? ' · ' + activeType : ''}}</text>
+        <text>{{filterKeyword ? '「' + filterKeyword + '」' : ''}}{{activeDynasty || '全部朝代'}}{{activeType ? ' · ' + activeType : ''}}</text>
         <text class="category-count">{{categoryPoems.length}} 首</text>
       </view>
       <view class="poem-loading" wx:if="{{categoryLoading}}">
         <text class="poem-loading-text">正在精选…</text>
       </view>
-      <view class="empty-tip" wx:elif="{{categoryUnavailable}}">该分类暂不可用，换个分类试试</view>
+      <view class="empty-tip" wx:elif="{{categoryUnavailable}}">未找到匹配诗词，试试调整过滤条件</view>
+      <view class="empty-tip" wx:elif="{{categoryError}}">搜索失败，请稍后重试</view>
       <block wx:elif="{{categoryPoems.length > 0}}">
         <view class="poem-card" wx:for="{{categoryPoems}}" wx:key="id" bindtap="goDetail"
           data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
@@ -229,31 +242,114 @@
     </block>
   </view>
 
-  <!-- 数据统计（/categories 汇总）→ 点击进入对应全部列表页 -->
-  <view class="stats-row" wx:if="{{totalPoemsText}}">
-    <view class="stat-item" bindtap="goStatList" data-kind="poems"
-      hover-class="stat-hover" hover-stay-time="80">
-      <text class="stat-num {{dynasties.length === 0 ? 'stat-num-skeleton' : ''}}">{{dynasties.length ? totalPoemsText : '———'}}</text>
-      <text class="stat-label">首诗词</text>
-      <text class="stat-more">查看全部 ›</text>
+  <!-- 全部内容（诗词/诗人/朝代/体裁 列表入口）→ 点击进入对应全部列表页 -->
+  <view class="section">
+    <view class="section-head">
+      <view class="label-bar"></view>
+      <text class="section-label">全部内容</text>
+      <text class="section-sub">全库一览 · 四大分类</text>
     </view>
-    <view class="stat-item" bindtap="goStatList" data-kind="authors"
-      hover-class="stat-hover" hover-stay-time="80">
-      <text class="stat-num {{dynasties.length === 0 ? 'stat-num-skeleton' : ''}}">{{dynasties.length ? totalAuthorsText : '———'}}</text>
-      <text class="stat-label">位诗人</text>
-      <text class="stat-more">查看全部 ›</text>
-    </view>
-    <view class="stat-item" bindtap="goStatList" data-kind="dynasties"
-      hover-class="stat-hover" hover-stay-time="80">
-      <text class="stat-num {{dynasties.length === 0 ? 'stat-num-skeleton' : ''}}">{{dynasties.length ? dynasties.length : '———'}}</text>
-      <text class="stat-label">个朝代</text>
-      <text class="stat-more">查看全部 ›</text>
-    </view>
-    <view class="stat-item" bindtap="goStatList" data-kind="types"
-      hover-class="stat-hover" hover-stay-time="80">
-      <text class="stat-num {{dynasties.length === 0 ? 'stat-num-skeleton' : ''}}">{{dynasties.length ? types.length : '———'}}</text>
-      <text class="stat-label">种体裁</text>
-      <text class="stat-more">查看全部 ›</text>
+
+    <view class="list-grid">
+      <!-- 诗词列表入口 -->
+      <view class="list-entry entry-poems" bindtap="goStatList" data-kind="poems"
+        hover-class="entry-hover" hover-stay-time="80">
+        <view class="entry-seal seal-poems">诗</view>
+        <view class="entry-main">
+          <text class="entry-title">诗词大全</text>
+          <view class="entry-num-row">
+            <text class="entry-num {{dynasties.length ? '' : 'entry-num-skeleton'}}">{{dynasties.length ? totalPoemsText : '·'}}</text>
+            <text class="entry-label">首传世诗词</text>
+          </view>
+        </view>
+        <view class="entry-aside">
+          <view class="entry-tags" wx:if="{{dynasties.length}}">
+            <block wx:for="{{dynasties}}" wx:key="id">
+              <text class="entry-tag" wx:if="{{index < 4}}">{{item.name}}</text>
+            </block>
+            <text class="entry-tag-more" wx:if="{{dynasties.length > 4}}">…</text>
+          </view>
+          <view class="entry-foot">
+            <text>浏览全部诗词</text>
+            <text class="entry-arrow">›</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 诗人列表入口 -->
+      <view class="list-entry entry-authors" bindtap="goStatList" data-kind="authors"
+        hover-class="entry-hover" hover-stay-time="80">
+        <view class="entry-seal seal-authors">人</view>
+        <view class="entry-main">
+          <text class="entry-title">诗人谱系</text>
+          <view class="entry-num-row">
+            <text class="entry-num {{dynasties.length ? '' : 'entry-num-skeleton'}}">{{dynasties.length ? totalAuthorsText : '·'}}</text>
+            <text class="entry-label">位诗人名家</text>
+          </view>
+        </view>
+        <view class="entry-aside">
+          <view class="entry-tags" wx:if="{{authors.length}}">
+            <block wx:for="{{authors}}" wx:key="id">
+              <text class="entry-tag" wx:if="{{index < 4}}">{{item.name}}</text>
+            </block>
+            <text class="entry-tag-more" wx:if="{{authors.length > 4}}">…</text>
+          </view>
+          <view class="entry-foot">
+            <text>浏览全部诗人</text>
+            <text class="entry-arrow">›</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 朝代列表入口 -->
+      <view class="list-entry entry-dynasties" bindtap="goStatList" data-kind="dynasties"
+        hover-class="entry-hover" hover-stay-time="80">
+        <view class="entry-seal seal-dynasties">朝</view>
+        <view class="entry-main">
+          <text class="entry-title">朝代纵览</text>
+          <view class="entry-num-row">
+            <text class="entry-num {{dynasties.length ? '' : 'entry-num-skeleton'}}">{{dynasties.length ? dynasties.length : '·'}}</text>
+            <text class="entry-label">个诗词朝代</text>
+          </view>
+        </view>
+        <view class="entry-aside">
+          <view class="entry-tags" wx:if="{{dynasties.length}}">
+            <block wx:for="{{dynasties}}" wx:key="id">
+              <text class="entry-tag" wx:if="{{index < 4}}">{{item.name}}</text>
+            </block>
+            <text class="entry-tag-more" wx:if="{{dynasties.length > 4}}">…</text>
+          </view>
+          <view class="entry-foot">
+            <text>浏览全部朝代</text>
+            <text class="entry-arrow">›</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 体裁列表入口 -->
+      <view class="list-entry entry-types" bindtap="goStatList" data-kind="types"
+        hover-class="entry-hover" hover-stay-time="80">
+        <view class="entry-seal seal-types">体</view>
+        <view class="entry-main">
+          <text class="entry-title">体裁一览</text>
+          <view class="entry-num-row">
+            <text class="entry-num {{dynasties.length ? '' : 'entry-num-skeleton'}}">{{dynasties.length ? types.length : '·'}}</text>
+            <text class="entry-label">种诗词体裁</text>
+          </view>
+        </view>
+        <view class="entry-aside">
+          <view class="entry-tags" wx:if="{{types.length}}">
+            <block wx:for="{{types}}" wx:key="id">
+              <text class="entry-tag" wx:if="{{index < 4}}">{{item.name}}</text>
+            </block>
+            <text class="entry-tag-more" wx:if="{{types.length > 4}}">…</text>
+          </view>
+          <view class="entry-foot">
+            <text>浏览全部体裁</text>
+            <text class="entry-arrow">›</text>
+          </view>
+        </view>
+      </view>
     </view>
   </view>
 

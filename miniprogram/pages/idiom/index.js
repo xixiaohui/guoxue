@@ -1,6 +1,7 @@
 // pages/idiom/index.js - 成语故事页（静态内容版）
 const storage = require('../../utils/storage');
 const { FALLBACK_IDIOM } = require('../../utils/constants');
+const settings = require('../../utils/settings');
 
 Page({
   data: {
@@ -58,6 +59,10 @@ Page({
 
   onLoad() {
     this._loadDailyIdiom();
+  },
+
+  onShow() {
+    settings.applyToPage(this);
   },
 
   // ── 加载每日成语（内置词库轮换）─────────────────

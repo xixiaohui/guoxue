@@ -1,4 +1,4 @@
-<view>
+<view class="{{fontFamilyClass}}">
 
   <view class="section">
    

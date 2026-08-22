@@ -1,5 +1,7 @@
 // pages/chinesepoetry/index.js - 诗词天地（Poetry Gateway API 数据源）
 const poetry = require('../../utils/poetryApi');
+const poemCache = require('../../utils/poemCache');
+const settings = require('../../utils/settings');
 
 Page({
   data: {
@@ -14,9 +16,12 @@ Page({
     types: [],
     activeDynasty: '',
     activeType: '',
+    filterKeyword: '',
     categoryPoems: [],
     categoryLoading: false,
     categoryUnavailable: false,
+    categoryQueried: false,   // 是否已发起过分类查询（控制结果区显隐）
+    categoryError: false,     // 关键词搜索请求失败（区别于空结果）
     // 为你推荐 /recommend
     recommendReason: '',
     recommendPoems: [],
@@ -41,12 +46,12 @@ Page({
     this._loadAll();
   },
 
-  onPullDownRefresh() {
-    this._loadAll(true).finally(() => wx.stopPullDownRefresh());
+  onShow() {
+    settings.applyToPage(this);
   },
 
-  onReachBottom() {
-    this._loadRecommend(false);
+  onPullDownRefresh() {
+    this._loadAll(true).finally(() => wx.stopPullDownRefresh());
   },
 
   async _loadAll(refresh = false) {
@@ -57,7 +62,7 @@ Page({
       this._loadQuote(),
       this._loadSolar(),
       this._loadCategories(),
-      this._loadRecommend(true),
+      this._loadRecommend(),
       this._loadPoems(),
       this._loadAuthors()
     ]);
@@ -131,8 +136,8 @@ Page({
       ? (this.data.activeType === name ? '' : name)
       : this.data.activeType;
     this.setData({ activeDynasty: nextDynasty, activeType: nextType });
-    if (!nextDynasty && !nextType) {
-      this.setData({ categoryPoems: [], categoryUnavailable: false });
+    if (!nextDynasty && !nextType && !(this.data.filterKeyword || '').trim()) {
+      this.setData({ categoryPoems: [], categoryUnavailable: false, categoryError: false, categoryQueried: false });
       return;
     }
     this._loadCategoryPoems();
@@ -142,22 +147,102 @@ Page({
     this.setData({
       activeDynasty: '',
       activeType: '',
+      filterKeyword: '',
       categoryPoems: [],
-      categoryUnavailable: false
+      categoryUnavailable: false,
+      categoryError: false,
+      categoryQueried: false
+    });
+  },
+
+  // ── 分类搜索过滤 ──────────────────────────
+  onFilterKeywordInput(e) {
+    this.setData({ filterKeyword: e.detail.value });
+  },
+
+  /** 清除关键词：仍选有朝代/体裁则按原条件重新查询，否则收起结果区 */
+  onFilterKeywordClear() {
+    const patch = { filterKeyword: '', categoryError: false };
+    if (this.data.activeDynasty || this.data.activeType) {
+      this.setData(patch);
+      this._loadCategoryPoems();
+    } else {
+      patch.categoryPoems = [];
+      patch.categoryUnavailable = false;
+      patch.categoryQueried = false;
+      this.setData(patch);
+    }
+  },
+
+  onFilterKeywordSearch() {
+    const kw = (this.data.filterKeyword || '').trim();
+    if (!kw && !this.data.activeDynasty && !this.data.activeType) {
+      wx.showToast({ title: '请输入关键词或选择分类', icon: 'none' });
+      return;
+    }
+    this._loadCategoryPoems();
+  },
+
+  /**
+   * 分类浏览统一入口：选择朝代/体裁 或 输入关键词过滤后触发查询。
+   * 有关键词 → /search 拉取 + 客户端按所选朝代/体裁精确过滤；
+   * 无关键词 → /poems/random 并发拉取构建列表（筛选参数真实生效）。
+   */
+  async _loadCategoryPoems() {
+    const { activeDynasty, activeType } = this.data;
+    const kw = (this.data.filterKeyword || '').trim();
+    if (!activeDynasty && !activeType && !kw) return;
+    this.setData({ categoryLoading: true, categoryUnavailable: false, categoryError: false, categoryQueried: true });
+    if (kw) {
+      await this._loadCategoryBySearch(kw, activeDynasty, activeType);
+    } else {
+      await this._loadCategoryByRandom(activeDynasty, activeType);
+    }
+  },
+
+  /**
+   * 关键词过滤：/search 是唯一支持关键词搜索的端点（/poems 的 dynasty/type 筛选被忽略），
+   * 分页拉取（每页 100，最多 3 页）后在客户端按所选朝代/体裁精确过滤。
+   */
+  async _loadCategoryBySearch(kw, dynasty, type) {
+    const filters = {};
+    if (dynasty) filters.dynasty = dynasty;
+    if (type) filters.type = type;
+    let list = [];
+    let failed = false;
+    for (let page = 1; page <= 3; page++) {
+      let r;
+      try {
+        r = await poetry.getSearch(kw, { type: 'all', page, pageSize: 100 });
+      } catch (e) {
+        console.warn('[PoetryHome] category search failed:', e.message || e.code);
+        failed = true;
+        break;
+      }
+      const batch = (r.poems || []).filter((p) => {
+        if (filters.dynasty && p.dynasty !== filters.dynasty) return false;
+        if (filters.type && p.type !== filters.type) return false;
+        return true;
+      });
+      list = this._dedupe(list.concat(batch));
+      if (list.length >= 12 || !r.hasMore) break;
+    }
+    this.setData({
+      categoryPoems: list,
+      categoryUnavailable: !failed && list.length === 0,
+      categoryError: failed,
+      categoryLoading: false
     });
   },
 
   /**
-   * /poems 筛选参数被忽略，分类浏览改用 /poems/random 并发拉取构建列表
-   * 零匹配值整批 500 → 判定「分类暂不可用」（区别于断网/超时）
+   * 无关键词分类浏览：/poems/random 筛选真实生效（每次 1 首），并发 8 次去重构建列表。
+   * 零匹配值整批 500 → 判定「分类暂不可用」（区别于断网/超时）。
    */
-  async _loadCategoryPoems() {
-    const { activeDynasty, activeType } = this.data;
-    if (!activeDynasty && !activeType) return;
-    this.setData({ categoryLoading: true, categoryUnavailable: false });
+  async _loadCategoryByRandom(dynasty, type) {
     const filters = {};
-    if (activeDynasty) filters.dynasty = activeDynasty;
-    if (activeType) filters.type = activeType;
+    if (dynasty) filters.dynasty = dynasty;
+    if (type) filters.type = type;
 
     const tasks = [];
     for (let i = 0; i < 8; i++) {
@@ -174,19 +259,18 @@ Page({
   },
 
   // ── 为你推荐 ──────────────────────────────
-  async _loadRecommend(reset = false) {
+  /** 点击「换一批」整批替换数据（不追加、触底不再自动加载） */
+  async _loadRecommend() {
     if (this.data.recommendLoading) return;
     this.setData({ recommendLoading: true });
     try {
       const r = await poetry.getRecommend();
-      const base = reset ? [] : this.data.recommendPoems;
-      const merged = this._dedupe(base.concat(r.poems));
       this.setData({
-        recommendPoems: merged,
-        recommendReason: r.reason || this.data.recommendReason
+        recommendPoems: this._dedupe(r.poems),
+        recommendReason: r.reason || ''
       });
     } catch (e) {
-      if (reset || this.data.recommendPoems.length === 0) {
+      if (this.data.recommendPoems.length === 0) {
         this.setData({ recommendPoems: poetry.FALLBACK_POEMS.slice(0, 5) });
       }
     } finally {
@@ -195,7 +279,7 @@ Page({
   },
 
   refreshRecommend() {
-    this._loadRecommend(true);
+    this._loadRecommend();
   },
 
   // ── 诗词精选 ──────────────────────────────
@@ -214,12 +298,18 @@ Page({
   },
 
   // ── 诗人风采 ──────────────────────────────
+  /**
+   * 推荐全库作品数 Top 20 的诗人：
+   * /authors 服务端已按作品数降序返回（poemCount 字段恒为 null，无法客户端排序），
+   * 故拉取第 1 页 pageSize=100（留足过滤「无名氏」等无效作者的余量）后截取前 20 位。
+   */
   async _loadAuthors() {
     this.setData({ authorsLoading: true });
     try {
-      const r = await poetry.getAuthors({ page: 1, pageSize: 12 });
+      const r = await poetry.getAuthors({ page: 1, pageSize: 100 });
+      const top20 = r.authors && r.authors.length ? r.authors.slice(0, 20) : [];
       this.setData({
-        authors: r.authors && r.authors.length ? r.authors : poetry.FALLBACK_AUTHORS
+        authors: top20.length ? top20 : poetry.FALLBACK_AUTHORS
       });
     } catch (e) {
       this.setData({ authors: poetry.FALLBACK_AUTHORS });
@@ -238,6 +328,8 @@ Page({
     const poem = e.currentTarget.dataset.poem;
     // 实测数据中大量诗词 title 为空（author 佚名、dynasty 其他），有正文即可进入详情
     if (!poem || (!poem.title && !poem.content)) return;
+    // 缓存完整正文，避免详情页因 URL 长度限制展示截断内容
+    poemCache.cachePoem(poem);
     wx.navigateTo({ url: this._buildPoemUrl(poem) });
   },
 

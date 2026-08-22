@@ -1,0 +1,45 @@
+<view class="page {{fontFamilyClass}}">
+
+  <!-- 顶部统计 -->
+  <view class="stat-bar">
+    <text class="stat-num">{{poems.length}}</text>
+    <text class="stat-label">首诗词已收藏</text>
+    <view class="clear-btn" wx:if="{{poems.length > 0}}" bindtap="clearAll" hover-class="clear-hover" hover-stay-time="80">
+      <text>清空</text>
+    </view>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading-wrap" wx:if="{{loading}}">
+    <view class="loading-dots">
+      <view class="dot"></view>
+      <view class="dot"></view>
+      <view class="dot"></view>
+    </view>
+    <text class="loading-txt">加载中…</text>
+  </view>
+
+  <!-- 空态 -->
+  <view class="empty-state" wx:elif="{{poems.length === 0}}">
+    <text class="empty-icon">☆</text>
+    <text class="empty-title">暂无收藏</text>
+    <text class="empty-desc">在诗词详情页点击星标即可收藏</text>
+    <view class="empty-action" bindtap="goPoetry">去浏览诗词</view>
+  </view>
+
+  <!-- 列表 -->
+  <view class="poem-list" wx:else>
+    <view class="poem-item" wx:for="{{poems}}" wx:key="savedAt" bindtap="goDetail" data-poem="{{item}}" hover-class="item-hover" hover-stay-time="80">
+      <view class="poem-main">
+        <text class="poem-title">{{item.title || '无题'}}</text>
+        <text class="poem-meta">{{item.dynasty ? item.dynasty + ' · ' : ''}}{{item.author || '佚名'}}</text>
+        <text class="poem-preview" wx:if="{{item.content}}">{{item.content}}</text>
+      </view>
+      <view class="poem-action" catchtap="toggleFavorite" data-poem="{{item}}">
+        <text class="fav-icon">★</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

@@ -225,3 +225,61 @@ page {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ── 主题覆盖（诗词详情页阅读体验）────── */
+.theme-dark {
+  background: #1E1A14 !important;
+  color: #D8CFC0 !important;
+}
+
+.theme-dark .content-card,
+.theme-dark .author-card {
+  background: #2A2218 !important;
+  border-color: #4A3E2E !important;
+}
+
+.theme-dark .poem-content,
+.theme-dark .author-desc {
+  color: #D8CFC0 !important;
+}
+
+.theme-dark .poem-title {
+  color: #E8D5A3 !important;
+}
+
+.theme-dark .poem-preview {
+  color: #A09880 !important;
+}
+
+.theme-green {
+  background: #F0F6EB !important;
+  color: #2C3E20 !important;
+}
+
+.theme-green .content-card,
+.theme-green .author-card {
+  background: #F6FBF2 !important;
+  border-color: #B8D0A0 !important;
+}
+
+.theme-green .poem-content,
+.theme-green .author-desc {
+  color: #2C3E20 !important;
+}
+
+/* ── 字号工具类（详情页正文）────── */
+.fs-small .poem-content { font-size: 24rpx; line-height: 1.7; }
+.fs-normal .poem-content { font-size: 30rpx; line-height: 1.75; }
+.fs-large .poem-content { font-size: 36rpx; line-height: 1.8; }
+
+.fs-small .author-desc { font-size: 22rpx; }
+.fs-normal .author-desc { font-size: 26rpx; }
+.fs-large .author-desc { font-size: 30rpx; }
+
+/* ── 正文字体工具类（页面根节点绑定 fontFamilyClass 生效）────── */
+/* font-family 为继承属性，根类设置后整页阅读文本统一生效 */
+.ff-song { font-family: "Songti SC", "SimSun", "Noto Serif SC", serif; }
+.ff-kai { font-family: "Kaiti SC", "KaiTi", "STKaiti", "Noto Serif SC", serif; }
+.ff-fangsong { font-family: "FangSong SC", "FangSong", "STFangsong", serif; }
+.ff-hei { font-family: "Heiti SC", "SimHei", "Noto Sans SC", sans-serif; }
+.ff-xingkai { font-family: "Xingkai SC", "STXingkai", "Kaiti SC", serif; }

@@ -1,5 +1,5 @@
 <!--pages/chinesepoetry_detail/index.wxml - 诗词/诗人详情页-->
-<view class="page">
+<view class="page {{themeClass}} {{fontSizeClass}} {{fontFamilyClass}}">
 
   <!-- 顶部标题区 -->
   <view class="hero">
@@ -70,6 +70,10 @@
 
   <!-- 底部操作栏 -->
   <view class="action-bar">
+    <view class="action-btn like-btn {{liked ? 'like-btn-active' : ''}}" wx:if="{{kind === 'poem'}}" bindtap="toggleLike" hover-class="action-hover" hover-stay-time="80">
+      <text class="action-icon">{{liked ? '♥' : '♡'}}</text>
+      <text class="action-text">{{liked ? '已赞' : '点赞'}}</text>
+    </view>
     <view class="action-btn" wx:if="{{kind === 'poem'}}" bindtap="toggleFavorite" hover-class="action-hover" hover-stay-time="80">
       <text class="action-icon">{{isFavorited ? '★' : '☆'}}</text>
       <text class="action-text">{{isFavorited ? '已收藏' : '收藏'}}</text>
@@ -93,14 +97,17 @@
   <!-- 海报生成画布（移出屏幕，供 Canvas 2D 绘制） -->
   <canvas type="2d" id="posterCanvas" class="poster-canvas"></canvas>
 
-  <!-- 海报预览弹层 -->
+  <!-- 海报预览弹层（长海报可上下滚动查看全部内容） -->
   <view class="poster-mask" wx:if="{{showPoster}}" catchtap="closePoster">
     <view class="poster-panel" catchtap="noop">
       <view class="poster-loading" wx:if="{{posterLoading}}">
         <text class="poster-loading-icon">📜</text>
         <text class="poster-loading-text">正在生成海报…</text>
       </view>
-      <image wx:elif="{{posterPath}}" class="poster-img" src="{{posterPath}}" mode="widthFix" show-menu-by-longpress></image>
+      <scroll-view wx:elif="{{posterPath}}" scroll-y class="poster-scroll" show-scrollbar="{{false}}"
+        enhanced="{{true}}" bounces="{{false}}">
+        <image class="poster-img" src="{{posterPath}}" mode="widthFix" show-menu-by-longpress></image>
+      </scroll-view>
       <view class="poster-btns" wx:if="{{posterPath}}">
         <view class="poster-btn save" bindtap="savePoster" hover-class="poster-btn-hover" hover-stay-time="80">保存到相册</view>
         <view class="poster-btn cancel" bindtap="closePoster" hover-class="poster-btn-hover" hover-stay-time="80">关闭</view>

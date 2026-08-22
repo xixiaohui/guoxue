@@ -17,10 +17,8 @@ const STORAGE_KEYS = {
 // ─── Tab 页路径 ────────────────────────────────────
 const TAB_PAGES = [
   '/pages/home/index',
-  // '/pages/translate/index',
-  '/pages/classics/index',
-  '/pages/history/index',
-  '/pages/philosophers/index',
+  '/pages/chinesepoetry/index',
+  '/pages/setting/index',
 ];
 
 // ─── 主题色 ────────────────────────────────────

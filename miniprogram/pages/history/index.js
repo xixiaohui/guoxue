@@ -1,4 +1,5 @@
 // pages/history/index.js - 历史探秘页（静态内容版）
+const settings = require('../../utils/settings');
 
 Page({
   data: {
@@ -69,6 +70,10 @@ Page({
 
   onLoad() {
     this.loadDynastyEvents('tang');
+  },
+
+  onShow() {
+    settings.applyToPage(this);
   },
 
   // ── 加载朝代事件 ──────────────────────────────

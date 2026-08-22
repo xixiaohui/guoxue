@@ -1,5 +1,5 @@
 <!--pages/chinesepoetry_all/index.wxml - 诗词/诗人/朝代/体裁 全部列表（分页）-->
-<view class="page">
+<view class="page {{fontFamilyClass}}">
 
   <!-- 页头 -->
   <view class="page-header">

@@ -9,7 +9,9 @@
     "pages/chinesepoetry/index",
     "pages/chinesepoetry_detail/index",
     "pages/chinesepoetry_search/index",
-    "pages/chinesepoetry_all/index"
+    "pages/chinesepoetry_all/index",
+    "pages/setting/index",
+    "pages/favorite/index"
   ],
   "window": {
     "backgroundColor": "#F5EDD6",
@@ -37,22 +39,10 @@
         "selectedIconPath": "images/tab_poetry_active.png"
       },
       {
-        "pagePath": "pages/classics/index",
-        "text": "典籍",
-        "iconPath": "images/tab_classics.png",
-        "selectedIconPath": "images/tab_classics_active.png"
-      },
-      {
-        "pagePath": "pages/history/index",
-        "text": "历史",
-        "iconPath": "images/tab_history.png",
-        "selectedIconPath": "images/tab_history_active.png"
-      },
-      {
-        "pagePath": "pages/philosophers/index",
-        "text": "百家",
-        "iconPath": "images/tab_philosophers.png",
-        "selectedIconPath": "images/tab_philosophers_active.png"
+        "pagePath": "pages/setting/index",
+        "text": "设置",
+        "iconPath": "images/tab_setting.png",
+        "selectedIconPath": "images/tab_setting_active.png"
       }
     ]
   },

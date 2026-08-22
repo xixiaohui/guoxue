@@ -1,5 +1,5 @@
 <!-- pages/history/index.wxml - 历史探秘页 v6.0 -->
-<view class="history-page">
+<view class="history-page {{fontFamilyClass}}">
 
   <!-- 页头 -->
   <view class="page-header">

@@ -1,5 +1,5 @@
 <!-- pages/classics/index.wxml - 诗词典籍页 v6.0 -->
-<view class="classics-page">
+<view class="classics-page {{fontFamilyClass}}">
 
   <!-- 页头 -->
   <view class="page-header">

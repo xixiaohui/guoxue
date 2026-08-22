@@ -1,5 +1,7 @@
 // pages/chinesepoetry_all/index.js - 诗词/诗人/朝代/体裁 全部列表（分页）
 const poetry = require('../../utils/poetryApi');
+const poemCache = require('../../utils/poemCache');
+const settings = require('../../utils/settings');
 
 // 服务端分页大小（/poems /authors 实测 page 参数生效）
 const PAGE_SIZE = 20;
@@ -44,6 +46,10 @@ Page({
     if (kind === 'poems' || kind === 'authors') {
       this._loadStats();
     }
+  },
+
+  onShow() {
+    settings.applyToPage(this);
   },
 
   onPullDownRefresh() {
@@ -152,6 +158,8 @@ Page({
   goPoem(e) {
     const poem = e.currentTarget.dataset.poem;
     if (!poem || (!poem.title && !poem.content)) return;
+    // 缓存完整正文，避免详情页因 URL 长度限制展示截断内容
+    poemCache.cachePoem(poem);
     wx.navigateTo({ url: this._buildPoemUrl(poem) });
   },
 

@@ -14,13 +14,34 @@ const MAX_FAVORITES = 100;
 
 // ─── 收藏夹 ────────────────────────────────────────
 
+/**
+ * 生成诗词的稳定标识：
+ * 优先真实 id；其次 title|author；title 为空时退化为正文前 20 字|author。
+ * （诗词 API 存在大量 title 为空的记录，必须兜底，否则收藏/点赞无法去重）
+ * ⚠️ 忽略 normalizePoem 生成的 "title|author" 兜底 id：
+ *    title 为空时它会退化成 "|作者"，不同诗词会撞 key，必须回退到正文前缀匹配。
+ */
+function getPoemKey(poem) {
+  const p = poem || {};
+  const title = (p.title || '').trim();
+  const author = (p.author || '').trim();
+  const fakeId = title + '|' + author;
+  const hasRealId = p.id != null && p.id !== '' && String(p.id) !== fakeId;
+  if (hasRealId) return 'id:' + p.id;
+  if (title) return 't:' + title + '|a:' + author;
+  const content = (p.content || p.preview || '').replace(/\s+/g, '').slice(0, 20);
+  if (content) return 'c:' + content + '|a:' + author;
+  return 'x:' + title + '|a:' + author;
+}
+
 function getFavoritePoems() {
   return _get(KEYS.FAVORITES_POEM, []);
 }
 
 function toggleFavoritePoem(poem) {
   const list = getFavoritePoems();
-  const idx = list.findIndex(p => p.title === poem.title && p.author === poem.author);
+  const key = getPoemKey(poem);
+  const idx = list.findIndex(p => getPoemKey(p) === key);
   if (idx >= 0) {
     list.splice(idx, 1);
     _set(KEYS.FAVORITES_POEM, list);
@@ -32,9 +53,11 @@ function toggleFavoritePoem(poem) {
   }
 }
 
-function isPoemFavorited(title, author) {
-  const list = getFavoritePoems();
-  return list.some(p => p.title === title && p.author === author);
+/** 兼容两种调用：isPoemFavorited(poem) 或 isPoemFavorited(title, author) */
+function isPoemFavorited(poem, author) {
+  const p = typeof poem === 'object' ? poem : { title: poem, author };
+  const key = getPoemKey(p);
+  return getFavoritePoems().some(f => getPoemKey(f) === key);
 }
 
 function getFavoriteIdioms() {
@@ -142,6 +165,7 @@ function _formatTime() {
 }
 
 module.exports = {
+  getPoemKey,
   getFavoritePoems,
   toggleFavoritePoem,
   isPoemFavorited,

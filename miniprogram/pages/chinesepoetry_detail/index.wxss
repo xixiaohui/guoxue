@@ -327,8 +327,28 @@
   background: linear-gradient(90deg, #2E6B5C, #20584A);
 }
 
+.action-btn:nth-child(4) {
+  background: linear-gradient(90deg, #5A69A0, #3B4670);
+}
+
 .action-btn:last-child {
   background: linear-gradient(90deg, #8B2500, #A8381A);
+}
+
+/* 点赞按钮（第一个，浅色；已赞变红） */
+.like-btn {
+  background: #F8EFD9;
+  border: 1rpx solid #E0C890;
+}
+
+.action-btn.like-btn-active {
+  background: linear-gradient(90deg, #E05858, #C03030);
+  border: none;
+}
+
+.action-btn.like-btn-active .action-icon,
+.action-btn.like-btn-active .action-text {
+  color: #FFF8E7;
 }
 
 .action-hover {
@@ -350,6 +370,8 @@
 .action-btn:nth-child(2) .action-text,
 .action-btn:nth-child(3) .action-icon,
 .action-btn:nth-child(3) .action-text,
+.action-btn:nth-child(4) .action-icon,
+.action-btn:nth-child(4) .action-text,
 .action-btn:last-child .action-icon,
 .action-btn:last-child .action-text {
   color: #FFF8E7;
@@ -397,6 +419,14 @@
   align-items: center;
 }
 
+/* 长海报：内容全部展示，高度动态，超出屏幕可滚动查看 */
+.poster-scroll {
+  width: 100%;
+  max-height: calc(88vh - 130rpx);
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
 .poster-loading {
   background: rgba(255, 251, 240, 0.96);
   border-radius: 20rpx;
@@ -425,6 +455,7 @@
 
 .poster-img {
   width: 100%;
+  display: block;
   border-radius: 16rpx;
   box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.45);
   overflow: hidden;

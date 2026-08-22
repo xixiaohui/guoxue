@@ -1,0 +1,162 @@
+/* pages/favorite/index.wxss */
+.page {
+  background: #FDF6E3;
+  min-height: 100vh;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+/* 统计条 */
+.stat-bar {
+  display: flex;
+  align-items: baseline;
+  gap: 12rpx;
+  margin-bottom: 24rpx;
+  padding: 0 8rpx;
+}
+
+.stat-num {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #8B2500;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #8C7B61;
+  flex: 1;
+}
+
+.clear-btn {
+  font-size: 24rpx;
+  color: #A8381A;
+  background: rgba(168, 56, 26, 0.08);
+  padding: 8rpx 24rpx;
+  border-radius: 24rpx;
+}
+
+.clear-hover {
+  opacity: 0.7;
+}
+
+/* 加载 */
+.loading-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
+  color: #8C7B61;
+}
+
+.loading-txt {
+  font-size: 26rpx;
+  margin-top: 16rpx;
+}
+
+/* 空态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 140rpx 40rpx;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  color: #E8D5A3;
+  margin-bottom: 20rpx;
+}
+
+.empty-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #4A2E18;
+}
+
+.empty-desc {
+  font-size: 24rpx;
+  color: #8C7B61;
+  margin-top: 12rpx;
+  text-align: center;
+}
+
+.empty-action {
+  margin-top: 36rpx;
+  background: linear-gradient(135deg, #C4882E, #8B2500);
+  color: #FFF8E7;
+  font-size: 28rpx;
+  padding: 18rpx 56rpx;
+  border-radius: 40rpx;
+  box-shadow: 0 6rpx 20rpx rgba(139, 37, 0, 0.25);
+}
+
+/* 列表 */
+.poem-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+
+.poem-item {
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(139, 37, 0, 0.05);
+}
+
+.poem-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.poem-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #4A2E18;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.poem-meta {
+  display: block;
+  font-size: 22rpx;
+  color: #8C7B61;
+  margin-top: 8rpx;
+}
+
+.poem-preview {
+  display: block;
+  font-size: 24rpx;
+  color: #6B5B45;
+  margin-top: 10rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.poem-action {
+  flex-shrink: 0;
+  padding: 8rpx;
+}
+
+.fav-icon {
+  font-size: 40rpx;
+  color: #C4882E;
+}
+
+.item-hover {
+  opacity: 0.85;
+  transform: translateY(2rpx);
+}
+
+.safe-bottom {
+  height: env(safe-area-inset-bottom);
+}

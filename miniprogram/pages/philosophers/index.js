@@ -1,4 +1,5 @@
 // pages/philosophers/index.js - 诸子百家页（静态内容版）
+const settings = require('../../utils/settings');
 
 Page({
   data: {
@@ -110,6 +111,10 @@ Page({
       { aspect: '治国理念', confucianism: '德治礼治', taoism: '无为而治', legalism: '法治', mohism: '尚贤节用' },
       { aspect: '人性观', confucianism: '性善论', taoism: '顺应自然', legalism: '性恶论', mohism: '人性平等' }
     ]
+  },
+
+  onShow() {
+    settings.applyToPage(this);
   },
 
   // ── 打开学派详情 ──────────────────────────────

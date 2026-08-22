@@ -1,5 +1,5 @@
 <!-- pages/philosophers/index.wxml - 诸子百家页 v6.0 -->
-<view class="philosophers-page">
+<view class="philosophers-page {{fontFamilyClass}}">
 
   <!-- 页头 -->
   <view class="page-header">
