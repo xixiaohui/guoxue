@@ -83,11 +83,45 @@ Page({
             if (this.data.isLogin) {
               user.syncFavoritesToCloud(user.getOpenid());
             }
-          } catch (e) {
-            wx.showToast({ title: '操作失败', icon: 'none' });
-          }
-        }
+      } catch (e) {
+        wx.showToast({ title: '操作失败', icon: 'none' });
       }
-    });
+    }
+  },
+
+  // ── 分享（与收藏的第一首诗词对应）─────────
+  onShareAppMessage() {
+    const p = (this.data.poems || [])[0];
+    if (!p) {
+      return {
+        title: '我的收藏 · 国文之学',
+        path: '/pages/favorite/index'
+      };
+    }
+    const qs = [
+      'kind=poem',
+      'id=' + encodeURIComponent(p.id || ''),
+      'title=' + encodeURIComponent(p.title || ''),
+      'author=' + encodeURIComponent(p.author || ''),
+      'dynasty=' + encodeURIComponent(p.dynasty || ''),
+      'type=' + encodeURIComponent(p.type || ''),
+      'content=' + encodeURIComponent((p.content || p.preview || '').slice(0, 300))
+    ];
+    return {
+      title: '我收藏的诗词《' + (p.title || '无题') + '》—— ' + (p.author || '中华诗词'),
+      path: '/pages/chinesepoetry_detail/index?' + qs.join('&')
+    };
+  },
+
+  onShareTimeline() {
+    const p = (this.data.poems || [])[0];
+    return {
+      title: p
+        ? '我收藏的诗词《' + (p.title || '无题') + '》—— ' + (p.author || '中华诗词')
+        : '我的收藏 · 国文之学',
+      query: 'from=timeline'
+    };
+  }
+});
   }
 });

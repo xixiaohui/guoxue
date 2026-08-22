@@ -972,51 +972,184 @@ function _measureText(ctx, text, font) {
 
 /**
  * 保存图片到相册
+ * 完整处理：权限预检（wx.getSetting）→ 首次主动申请（wx.authorize）→
+ * 被拒引导去设置（wx.openSetting）→ 返回后自动重试保存；
+ * 并兼容新版基础库的 auth denied / privacy 等失败文案。
  * @param {string} filePath
  * @returns {Promise<void>}
  */
-function savePosterToAlbum(filePath) {
-  return new Promise((resolve, reject) => {
-    if (!filePath) {
-      reject(new Error('图片路径不能为空'));
-      return;
+async function savePosterToAlbum(filePath) {
+  if (!filePath) {
+    throw new Error('图片路径不能为空');
+  }
+
+  const saveOnce = () =>
+    new Promise((resolve, reject) => {
+      wx.saveImageToPhotosAlbum({
+        filePath,
+        success: resolve,
+        fail: reject,
+      });
+    });
+
+  // 保存 + 失败兜底（_handleSaveFail 内部会处理权限/隐私并重试，成功时自带提示）
+  const doSave = async () => {
+    try {
+      await saveOnce();
+      wx.showToast({ title: '已保存到相册', icon: 'success', duration: 2000 });
+    } catch (e) {
+      await _handleSaveFail(e, saveOnce);
     }
+  };
 
-    wx.saveImageToPhotosAlbum({
-      filePath,
-      success() {
-        wx.showToast({
-          title: '已保存到相册',
-          icon: 'success',
-          duration: 2000,
-        });
-        resolve();
+  // 1) 检查相册权限状态
+  const auth = await _getAlbumAuth();
+
+  // 2) 首次使用（未请求过）→ 先主动申请，避免与保存请求时序冲突
+  let granted = auth;
+  if (auth === null) {
+    granted = await _authorizeAlbum();
+  }
+
+  // 3) 已授权 → 保存（失败时内部自动处理权限/隐私并重试）
+  if (granted) {
+    await doSave();
+    return;
+  }
+
+  // 4) 未授权（此前被拒绝）→ 引导去设置，返回后自动重试
+  const opened = await _confirmOpenSetting();
+  if (opened) {
+    await doSave();
+    return;
+  }
+
+  throw new Error('用户未开启相册权限');
+}
+
+/**
+ * 读取相册权限状态
+ * @returns {Promise<boolean|null>} true 已授权 | false 已拒绝 | null 未请求过
+ */
+function _getAlbumAuth() {
+  return new Promise((resolve) => {
+    wx.getSetting({
+      success(res) {
+        const val = (res && res.authSetting && res.authSetting['scope.writePhotosAlbum']);
+        resolve(val === true ? true : val === false ? false : null);
       },
-      fail(e) {
-        const errMsg = (e && e.errMsg) || '';
-
-        if (errMsg.includes('auth deny') || errMsg.includes('authorize no response')) {
-          wx.showModal({
-            title: '需要相册权限',
-            content: '请在设置中开启“保存到相册”权限，以便保存海报',
-            confirmText: '去设置',
-            success(r) {
-              if (r.confirm) {
-                wx.openSetting();
-              }
-            },
-          });
-        } else if (!errMsg.includes('cancel')) {
-          wx.showToast({
-            title: '保存失败，请重试',
-            icon: 'none',
-          });
-        }
-
-        reject(e);
+      fail() {
+        resolve(null);
       },
     });
   });
+}
+
+/**
+ * 首次请求相册权限（弹出授权框）
+ * @returns {Promise<boolean>}
+ */
+function _authorizeAlbum() {
+  return new Promise((resolve) => {
+    wx.authorize({
+      scope: 'scope.writePhotosAlbum',
+      success() { resolve(true); },
+      fail() { resolve(false); },
+    });
+  });
+}
+
+/**
+ * 弹窗引导用户前往设置页开启权限
+ * @returns {Promise<boolean>} 用户从设置页返回后是否已授权
+ */
+function _confirmOpenSetting() {
+  return new Promise((resolve) => {
+    wx.showModal({
+      title: '需要相册权限',
+      content: '保存海报需要访问您的相册，请在设置中开启“保存到相册”权限',
+      confirmText: '去设置',
+      cancelText: '取消',
+      success(res) {
+        if (!res.confirm) {
+          resolve(false);
+          return;
+        }
+        wx.openSetting({
+          success(s) {
+            const val = (s && s.authSetting && s.authSetting['scope.writePhotosAlbum']);
+            resolve(val === true);
+          },
+          fail() {
+            resolve(false);
+          },
+        });
+      },
+      fail() {
+        resolve(false);
+      },
+    });
+  });
+}
+
+/**
+ * 兜底：保存失败时统一处理错误文案
+ * @param {object} e
+ * @param {Function} retrySave 重试保存函数
+ * @returns {Promise<void>}
+ */
+async function _handleSaveFail(e, retrySave) {
+  const errMsg = (e && e.errMsg) || String((e && e.message) || '');
+
+  // 隐私保护指引未同意 → 尝试拉起隐私授权
+  if (errMsg.includes('privacy') || errMsg.includes('隐私')) {
+    if (wx.requirePrivacyAuthorize) {
+      try {
+        await new Promise((resolve, reject) => {
+          wx.requirePrivacyAuthorize({ success: resolve, fail: reject });
+        });
+        await retrySave();
+        wx.showToast({ title: '已保存到相册', icon: 'success', duration: 2000 });
+        return;
+      } catch (_) { /* 用户未同意，走下方提示 */ }
+    }
+    wx.showModal({
+      title: '需要授权',
+      content: '请先同意《用户隐私保护指引》，即可保存海报到相册',
+      showCancel: false,
+    });
+    throw e;
+  }
+
+  // 权限类错误 → 引导去设置
+  if (
+    errMsg.includes('auth deny') ||
+    errMsg.includes('auth denied') ||
+    errMsg.includes('authorize no response') ||
+    errMsg.includes('authorize reject') ||
+    errMsg.includes('permission denied')
+  ) {
+    const opened = await _confirmOpenSetting();
+    if (opened) {
+      await retrySave();
+      wx.showToast({ title: '已保存到相册', icon: 'success', duration: 2000 });
+      return;
+    }
+    throw e;
+  }
+
+  // 用户主动取消 → 不打扰
+  if (errMsg.includes('cancel')) {
+    throw e;
+  }
+
+  // 其他错误
+  if (errMsg.includes('invalid filePath') || errMsg.includes('invalid file')) {
+    wx.showToast({ title: '海报图片已失效，请重新生成', icon: 'none' });
+  } else {
+    wx.showToast({ title: '保存失败，请重试', icon: 'none' });
+  }
+  throw e;
 }
 
 // =========================

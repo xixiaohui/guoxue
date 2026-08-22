@@ -216,11 +216,19 @@ Page({
     return out;
   },
 
-  // ── 分享 ──────────────────────────────
+  // ── 分享（与当前列表类别对应）─────────────
   onShareAppMessage() {
+    const d = this.data;
     return {
-      title: this.data.title + ' · 国文之学',
-      path: '/pages/chinesepoetry/index'
+      title: d.title + ' · ' + (d.subtitle || '国文之学'),
+      path: '/pages/chinesepoetry_all/index?kind=' + d.kind
+    };
+  },
+  onShareTimeline() {
+    const d = this.data;
+    return {
+      title: d.title + ' · 国文之学',
+      query: 'kind=' + d.kind + '&from=timeline'
     };
   }
 });

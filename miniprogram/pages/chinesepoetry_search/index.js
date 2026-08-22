@@ -304,13 +304,59 @@ Page({
     return out;
   },
 
-  // ── 分享 ──────────────────────────────────
+  // ── 分享（与当前搜索/筛选内容对应）─────────
+  /** 当前筛选条件描述（朝代·体裁·作者·诗句） */
+  _filterSummary() {
+    const f = this._currentFilters();
+    const parts = [];
+    if (f.dynasty) parts.push(f.dynasty);
+    if (f.type) parts.push(f.type);
+    if (f.author) parts.push(f.author);
+    if (f.char) parts.push(f.char);
+    return parts.join('·');
+  },
+
   onShareAppMessage() {
-    const m = this.data.mode;
-    const t = m === 'filter' ? '诗词过滤查询' : ('「' + this.data.searchedText + '」相关诗词');
+    const d = this.data;
+    const q = (d.keyword || d.searchedText || '').trim();
+    if (d.mode === 'search' && q) {
+      return {
+        title: '「' + q + '」相关诗词 · 国文之学',
+        path: '/pages/chinesepoetry_search/index?q=' + encodeURIComponent(q)
+      };
+    }
+    if (d.mode === 'filter') {
+      const summary = this._filterSummary();
+      return {
+        title: summary ? '诗词筛选「' + summary + '」· 国文之学' : '诗词筛选查询 · 国文之学',
+        path: '/pages/chinesepoetry_search/index'
+      };
+    }
     return {
-      title: t,
-      path: '/pages/chinesepoetry/index'
+      title: '诗词搜索 · 国文之学',
+      path: '/pages/chinesepoetry_search/index'
+    };
+  },
+
+  onShareTimeline() {
+    const d = this.data;
+    const q = (d.keyword || d.searchedText || '').trim();
+    if (d.mode === 'search' && q) {
+      return {
+        title: '「' + q + '」相关诗词 · 国文之学',
+        query: 'q=' + encodeURIComponent(q) + '&from=timeline'
+      };
+    }
+    if (d.mode === 'filter') {
+      const summary = this._filterSummary();
+      return {
+        title: summary ? '诗词筛选「' + summary + '」· 国文之学' : '诗词筛选查询 · 国文之学',
+        query: 'from=timeline'
+      };
+    }
+    return {
+      title: '诗词搜索 · 国文之学',
+      query: 'from=timeline'
     };
   }
 });

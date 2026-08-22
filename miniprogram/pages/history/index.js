@@ -68,8 +68,11 @@ Page({
     ]
   },
 
-  onLoad() {
-    this.loadDynastyEvents('tang');
+  onLoad(options) {
+    const o = options || {};
+    const dynasty = o.dynasty && this.data.dynasties.some((d) => d.id === o.dynasty) ? o.dynasty : 'tang';
+    this.setData({ activeDynasty: dynasty });
+    this.loadDynastyEvents(dynasty);
   },
 
   onShow() {
@@ -99,17 +102,25 @@ Page({
     this.loadDynastyEvents(id);
   },
 
-  // ── 分享 ──────────────────────────────
+  // ── 分享（与当前选中的朝代/事件对应）─────────
   onShareAppMessage() {
+    const d = this.data;
+    const evt = d.timelineEvents && d.timelineEvents[0];
     return {
-      title: '历史探秘 · 朝代人物探究',
-      path:  '/pages/history/index',
+      title: evt
+        ? '历史探秘 · ' + d.activeTitle + ' · ' + evt.name
+        : '历史探秘 · ' + d.activeTitle + ' · 朝代人物探究',
+      path: '/pages/history/index?dynasty=' + d.activeDynasty
     };
   },
   onShareTimeline() {
+    const d = this.data;
+    const evt = d.timelineEvents && d.timelineEvents[0];
     return {
-      title: '国学助手 · 历史探秘',
-      query: 'from=timeline',
+      title: evt
+        ? d.activeTitle + '大事记 · ' + evt.name
+        : '历史探秘 · ' + d.activeTitle,
+      query: 'dynasty=' + d.activeDynasty + '&from=timeline'
     };
   },
   adLoad() {

@@ -63,7 +63,20 @@ Page({
    * 用户点击右上角分享
    */
   onShareAppMessage() {
+    return {
+      title: '国学PDF文库 · 经典典籍免费下载',
+      path: '/pages/guoxuedownload/index'
+    };
+  },
 
+  /**
+   * 分享到朋友圈
+   */
+  onShareTimeline() {
+    return {
+      title: '国学PDF文库 · 经典典籍免费下载',
+      query: 'from=timeline'
+    };
   },
 
   onPdfLoaded(e) {

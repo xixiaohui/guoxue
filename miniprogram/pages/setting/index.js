@@ -196,5 +196,20 @@ Page({
         wx.showToast({ title: '已是最新版本', icon: 'none' });
       }
     });
+  },
+
+  // ── 分享 ──────────────────────────────
+  onShareAppMessage() {
+    return {
+      title: '国文之学 · 诗词典籍 · 成语典故 · 历史人物',
+      path: '/pages/home/index'
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: '国文之学 · 传承千年智慧，让经典更易懂',
+      query: 'from=timeline'
+    };
   }
 });
