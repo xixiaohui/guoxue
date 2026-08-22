@@ -268,18 +268,20 @@ page {
 }
 
 /* ── 字号工具类（详情页正文）────── */
-.fs-small .poem-content { font-size: 24rpx; line-height: 1.7; }
-.fs-normal .poem-content { font-size: 30rpx; line-height: 1.75; }
-.fs-large .poem-content { font-size: 36rpx; line-height: 1.8; }
+/* !important 与主题类一致，确保不被页面级样式覆盖 */
+.fs-small .poem-content { font-size: 24rpx !important; line-height: 1.7 !important; }
+.fs-normal .poem-content { font-size: 30rpx !important; line-height: 1.75 !important; }
+.fs-large .poem-content { font-size: 36rpx !important; line-height: 1.8 !important; }
 
-.fs-small .author-desc { font-size: 22rpx; }
-.fs-normal .author-desc { font-size: 26rpx; }
-.fs-large .author-desc { font-size: 30rpx; }
+.fs-small .author-desc { font-size: 22rpx !important; }
+.fs-normal .author-desc { font-size: 26rpx !important; }
+.fs-large .author-desc { font-size: 30rpx !important; }
 
 /* ── 正文字体工具类（页面根节点绑定 fontFamilyClass 生效）────── */
 /* font-family 为继承属性，根类设置后整页阅读文本统一生效 */
-.ff-song { font-family: "Songti SC", "SimSun", "Noto Serif SC", serif; }
-.ff-kai { font-family: "Kaiti SC", "KaiTi", "STKaiti", "Noto Serif SC", serif; }
-.ff-fangsong { font-family: "FangSong SC", "FangSong", "STFangsong", serif; }
-.ff-hei { font-family: "Heiti SC", "SimHei", "Noto Sans SC", sans-serif; }
-.ff-xingkai { font-family: "Xingkai SC", "STXingkai", "Kaiti SC", serif; }
+/* !important 防止页面级显式 font-family 覆盖 */
+.ff-song { font-family: "Songti SC", "SimSun", "Noto Serif SC", serif !important; }
+.ff-kai { font-family: "Kaiti SC", "KaiTi", "STKaiti", "Noto Serif SC", serif !important; }
+.ff-fangsong { font-family: "FangSong SC", "FangSong", "STFangsong", serif !important; }
+.ff-hei { font-family: "Heiti SC", "SimHei", "Noto Sans SC", sans-serif !important; }
+.ff-xingkai { font-family: "Xingkai SC", "STXingkai", "Kaiti SC", serif !important; }

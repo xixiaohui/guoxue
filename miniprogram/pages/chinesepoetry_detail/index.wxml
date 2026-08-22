@@ -16,7 +16,7 @@
   <!-- 诗词正文 -->
   <view class="content-card" wx:if="{{kind === 'poem'}}">
     <view class="content-inner">
-      <text class="poem-content">{{content}}</text>
+      <text class="poem-content {{fontSizeClass}} {{fontFamilyClass}}">{{content}}</text>
     </view>
   </view>
 
@@ -30,7 +30,7 @@
       </view>
     </view>
     <view class="author-divider"></view>
-    <text class="author-desc">{{description || '暂无详细介绍'}}</text>
+    <text class="author-desc {{fontSizeClass}} {{fontFamilyClass}}">{{description || '暂无详细介绍'}}</text>
   </view>
 
   <!-- 诗人全部诗词（分页展示，/search?type=author） -->

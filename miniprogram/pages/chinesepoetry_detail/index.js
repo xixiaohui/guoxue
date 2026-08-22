@@ -29,9 +29,10 @@ Page({
     isFavorited: false,
     liked: false,
 
-    // 阅读设置（主题/字号）
+    // 阅读设置（主题/字号/字体）
     themeClass: '',
     fontSizeClass: 'fs-normal',
+    fontFamilyClass: '',
 
     // 诗人全部诗词（分页，/search?type=author）
     authorPoems: [],
@@ -95,6 +96,9 @@ Page({
       this._loadAuthorPoems(true);
     }
     this._recordView();
+
+    // 进入页面即应用阅读设置（onShow 兜底，避免首次进入时字号/字体未生效）
+    settings.applyToPage(this);
   },
 
   /** 每次进入页面时应用阅读主题、字号与正文字体设置 */
