@@ -37,7 +37,8 @@ Page({
     wx.showLoading({ title: '登录中…' });
     try {
       const openid = await user.wxLogin();
-      const profile = { openid, nickName: '微信用户', avatarUrl: '', loginAt: Date.now() };
+      const prev = user.getProfile() || {};
+      const profile = { openid, nickName: prev.nickName || '微信用户', avatarUrl: prev.avatarUrl || '', loginAt: Date.now() };
       user.saveProfile(profile);
       await user.syncFavoritesToCloud(openid);
       this.setData({ isLogin: true, profile });
@@ -50,27 +51,36 @@ Page({
     }
   },
 
-  /** 微信头像选择（open-type="chooseAvatar"） */
-  onChooseAvatar(e) {
+  /** 微信头像选择（open-type="chooseAvatar"）：云存储 → 本地文件 → 临时路径 三级持久化 */
+  async onChooseAvatar(e) {
     const tempPath = e.detail && e.detail.avatarUrl;
     if (!tempPath) return;
-    const profile = user.getProfile() || {};
-    const done = (path) => {
+    if (!user.isLogin()) {
+      wx.showToast({ title: '请先登录', icon: 'none' });
+      return;
+    }
+    wx.showLoading({ title: '头像处理中…' });
+    try {
+      // 1) 上传云存储（跨设备、重启均有效） 2) 存本地持久文件 3) 临时路径兜底
+      let path = await user.uploadAvatarToCloud(tempPath);
+      if (!path) path = await user.saveAvatarLocal(tempPath);
+      if (!path) path = tempPath;
+      const profile = user.getProfile() || { openid: user.getOpenid() };
       profile.avatarUrl = path;
       user.saveProfile(profile);
       this.setData({ profile });
       wx.showToast({ title: '头像已更新', icon: 'success' });
-    };
-    // 头像为临时路径，重启小程序会失效，保存为本地持久文件
-    try {
-      wx.getFileSystemManager().saveFile({
-        tempFilePath: tempPath,
-        success: (res) => done(res.savedFilePath),
-        fail: () => done(tempPath)
-      });
-    } catch (_) {
-      done(tempPath);
+    } catch (err) {
+      console.error('[Setting] onChooseAvatar failed:', err);
+      wx.showToast({ title: '头像设置失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
     }
+  },
+
+  /** 未登录时点击头像 */
+  onAvatarLogoutTap() {
+    wx.showToast({ title: '请先登录', icon: 'none' });
   },
 
   /** 微信昵称填写（input type="nickname"，失焦保存） */

@@ -9,7 +9,8 @@
           <image class="avatar" src="{{profile.avatarUrl || '/images/avatar.png'}}" mode="aspectFill" />
           <text class="avatar-tip">换头像</text>
         </button>
-        <image wx:else class="avatar" src="/images/avatar.png" mode="aspectFill" />
+        <image wx:else class="avatar" src="/images/avatar.png" mode="aspectFill"
+          bindtap="onAvatarLogoutTap" />
       </view>
       <view class="user-info">
         <input wx:if="{{isLogin}}" class="user-name-input" type="nickname"

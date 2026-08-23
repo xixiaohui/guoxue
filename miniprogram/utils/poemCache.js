@@ -6,11 +6,23 @@ const storage = require('./storage');
 
 let _memory = {};
 
+/**
+ * 缓存键：优先真实 id（唯一标识）；
+ * 无真实 id 时（同题同作者多作，如苏轼多首《水龙吟》）追加正文前缀，
+ * 避免不同作品共用 title|author 键互相覆盖。
+ */
+function _cacheKey(p) {
+  const key = storage.getPoemKey(p);
+  if (key.indexOf('id:') === 0) return key;
+  const prefix = (p.content || p.preview || '').replace(/\s+/g, '').slice(0, 12);
+  return prefix ? key + '|c:' + prefix : key;
+}
+
 /** 跳转详情前调用：缓存完整诗词数据 */
 function cachePoem(poem) {
   const p = poem || {};
   if (!p.title && !p.content && !p.preview) return null;
-  const key = storage.getPoemKey(p);
+  const key = _cacheKey(p);
   if (!key) return null;
   _memory[key] = Object.assign({}, p);
   return p;
@@ -18,7 +30,7 @@ function cachePoem(poem) {
 
 /** 详情页调用：按引用信息读取缓存的完整诗词（未命中返回 null） */
 function getCachedPoem(ref) {
-  const key = storage.getPoemKey(ref);
+  const key = _cacheKey(ref);
   if (!key) return null;
   return _memory[key] || null;
 }

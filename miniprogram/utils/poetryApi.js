@@ -273,9 +273,19 @@ async function getPoemByTitle(title, author, contentHint) {
   if (!title && !author && !hint) return null;
 
   if (title) {
-    const r = await getSearch(title, { type: 'title', pageSize: 20 });
+    const r = await getSearch(title, { type: 'title', pageSize: 50 });
     const list = r.poems || [];
     if (!list.length) return null;
+    // 同题多作（如苏轼多首《水龙吟》）时，用列表页 seed 正文前缀锁定被点击的那首，
+    // 避免详情页补全时总是取到搜索接口返回的第一首同名作品
+    if (hint) {
+      const prefix = hint.slice(0, 12);
+      const byContent = list.find((p) => {
+        const c = (p.content || '').replace(/\s+/g, '');
+        return !!prefix && c.indexOf(prefix) === 0;
+      });
+      if (byContent) return byContent;
+    }
     const exact = list.find((p) => p.title === title && (!author || p.author === author));
     if (exact) return exact;
     const sameAuthor = author ? list.find((p) => p.author === author) : null;

@@ -59,6 +59,41 @@ async function wxLogin() {
   });
 }
 
+/** 将微信头像临时文件保存为本地持久文件（重启仍有效，仅本机） */
+function saveAvatarLocal(tempFilePath) {
+  return new Promise((resolve) => {
+    try {
+      wx.getFileSystemManager().saveFile({
+        tempFilePath,
+        success: (res) => resolve(res.savedFilePath || tempFilePath),
+        fail: (err) => {
+          console.warn('[User] saveAvatarLocal failed:', err);
+          resolve(tempFilePath);
+        }
+      });
+    } catch (_) {
+      resolve(tempFilePath);
+    }
+  });
+}
+
+/** 将微信头像上传到云存储（跨设备、重启均有效），失败返回 null */
+async function uploadAvatarToCloud(tempFilePath) {
+  const openid = getOpenid();
+  if (!openid) return null;
+  try {
+    const ext = (String(tempFilePath).match(/\.(\w+)$/) || [])[1] || 'png';
+    const res = await wx.cloud.uploadFile({
+      cloudPath: `avatars/${openid}_${Date.now()}.${ext}`,
+      filePath: tempFilePath
+    });
+    return res.fileID || null;
+  } catch (e) {
+    console.warn('[User] uploadAvatarToCloud failed:', e);
+    return null;
+  }
+}
+
 async function syncFavoritesToCloud(openid) {
   if (!openid) return;
   const favs = wx.getStorageSync('fav_poems') || [];
@@ -101,6 +136,8 @@ module.exports = {
   saveOpenid,
   clearLogin,
   wxLogin,
+  saveAvatarLocal,
+  uploadAvatarToCloud,
   syncFavoritesToCloud,
   pullFavoritesFromCloud,
 };

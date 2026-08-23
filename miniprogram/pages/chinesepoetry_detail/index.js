@@ -240,8 +240,13 @@ Page({
         }
         if (!p) throw new Error('empty detail');
         const patch = {};
+        // 仅当检索结果与 seed 正文一致（前缀匹配）时才用全文覆盖截断的 seed，
+        // 避免同题多作（如苏轼多首《水龙吟》）时被搜索接口返回的第一首同名作品顶替
+        const seedContent = (this.data.content || '').replace(/\s+/g, '');
+        const foundContent = (p.content || '').replace(/\s+/g, '');
+        const consistent = !seedContent || !foundContent || foundContent.indexOf(seedContent.slice(0, 12)) === 0;
         // 检索到的完整正文应覆盖 URL 截断的 seed（全文长度 >= 截断长度才覆盖）
-        if (p.content && (!this.data.content || p.content.length >= this.data.content.length)) {
+        if (consistent && p.content && (!this.data.content || p.content.length >= this.data.content.length)) {
           patch.content = p.content;
         }
         if (p.author) patch.author = p.author;
