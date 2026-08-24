@@ -14,6 +14,8 @@
  *  - 默认分享封面图：/images/share-cover.png
  */
 
+const settings = require('./settings');
+
 const POSTER_WIDTH = 750;   // 逻辑像素
 const POSTER_HEIGHT = 1200;
 
@@ -21,6 +23,23 @@ const POSTER_HEIGHT = 1200;
 const CANVAS_MAX_HEIGHT = 16384;
 // 正文最小字号（完整展示优先：超高时缩小字号/行高，而不截断正文）
 const MIN_CONTENT_FONT = 16;
+
+// 正文字体 → Canvas 字体栈（与 utils/settings.js + app.wxss 保持一致）
+// 海报诗文正文渲染与换行测量均使用该字体栈，跟随设置页「正文字体」选择
+const FONT_FAMILY_STACK = {
+  default: 'serif',
+  song: '"Songti SC","STSong","华文宋体","SimSun","宋体","Noto Serif SC",serif',
+  kai: '"Kaiti SC","STKaiti","华文楷体","KaiTi","楷体","Noto Serif SC",serif',
+  fangsong: '"FangSong SC","STFangsong","华文仿宋","FangSong","仿宋",serif',
+  hei: '"Heiti SC","STHeiti","华文黑体","SimHei","黑体","Noto Sans SC",sans-serif',
+  xingkai: '"Xingkai SC","STXingkai","华文行楷","Kaiti SC","KaiTi",serif'
+};
+
+/** 当前设置的 Canvas 正文字体栈（海报诗文使用） */
+function getPosterFontStack() {
+  const s = settings.getSettings();
+  return FONT_FAMILY_STACK[s.fontFamily] || FONT_FAMILY_STACK.default;
+}
 
 /**
  * 构建"分享给好友"的消息卡片参数
@@ -454,6 +473,9 @@ function _measurePoemLayout(ctx, opts = {}) {
   const contentMaxW = W - 72 - 80;   // 卡片左右留 36、内部左右留 40，正文行宽更大
   const titleLines = _wrapText(ctx, title, W - 140, 'bold 42px serif');
 
+  // 正文使用设置页所选字体栈（与渲染一致，保证换行准确）
+  const contentStack = getPosterFontStack();
+
   // 基准：字号 34px、行高 60px
   let fontPx = 34;
   let contentLineH = 60;
@@ -473,14 +495,14 @@ function _measurePoemLayout(ctx, opts = {}) {
     return h;
   };
 
-  let lines = _wrapPoemLines(ctx, content, contentMaxW, fontPx + 'px serif');
+  let lines = _wrapPoemLines(ctx, content, contentMaxW, fontPx + 'px ' + contentStack);
   let height = calcHeight(lines, contentLineH);
 
   // 高度越界 → 逐档缩小字号与行高（按同比例 60/34），直至全文可完整放入画布
   while (height > maxHeight && fontPx > MIN_CONTENT_FONT) {
     fontPx -= 2;
     contentLineH = Math.round(fontPx * (60 / 34));
-    lines = _wrapPoemLines(ctx, content, contentMaxW, fontPx + 'px serif');
+    lines = _wrapPoemLines(ctx, content, contentMaxW, fontPx + 'px ' + contentStack);
     height = calcHeight(lines, contentLineH);
   }
 
@@ -495,7 +517,7 @@ function _measurePoemLayout(ctx, opts = {}) {
   }
 
   const contentH = Math.max(lines.length, 1) * contentLineH;
-  return { height, lines, titleLines, contentLineH, contentFont: fontPx + 'px serif', contentH };
+  return { height, lines, titleLines, contentLineH, contentFont: fontPx + 'px ' + contentStack, contentH };
 }
 
 /**
