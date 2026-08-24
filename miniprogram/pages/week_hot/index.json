@@ -1,8 +1,9 @@
 {
   "navigationBarBackgroundColor": "#8B2500",
-  "navigationBarTitleText": "古诗词大全",
+  "navigationBarTitleText": "本周最热门诗词",
   "navigationBarTextStyle": "white",
   "backgroundColor": "#F5EDD6",
+  "enablePullDownRefresh": true,
   "backgroundTextStyle": "dark",
-  "enablePullDownRefresh": true
+  "usingComponents": {}
 }

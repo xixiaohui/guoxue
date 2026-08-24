@@ -4,6 +4,8 @@ const { downloadPdf } = require('../../utils/pdf');
 const settings = require('../../utils/settings');
 const poetry = require('../../utils/poetryApi');
 const poemCache = require('../../utils/poemCache');
+const seo = require('../../utils/seo');
+const topicData = require('../../utils/topicData');
 
 // 从 fallback 中取下一条，尽量避免短时间重复
 function _getNextFallback(currentQuote) {
@@ -68,6 +70,21 @@ Page({
     solar: { termName: '', termDescription: '', poem: null, reason: '' },
     solarLoading: true,
 
+    // 本周最热门诗词（首页预览 Top3，完整榜单见 week_hot 页）
+    weekHotPreview: [
+      { rank: 1, title: '静夜思', author: '李白', dynasty: '唐' },
+      { rank: 2, title: '水调歌头·明月几时有', author: '苏轼', dynasty: '宋' },
+      { rank: 3, title: '春晓', author: '孟浩然', dynasty: '唐' }
+    ],
+
+    // 连续学习7天（首页预览：本周打卡圆点 + 连续天数，完整见 seven_days 页）
+    study: { streak: 0, todayDone: false, week: [] },
+
+    // 精选专题（唐诗三百首/宋词精选/古诗词名句/唐诗鉴赏，入口见 topic 页）
+    topics: topicData.getTopics().map((t) => Object.assign({}, t, {
+      bg: { tangshi300: 'linear-gradient(135deg,#E05820,#8B2500)', songci: 'linear-gradient(135deg,#5A3DA8,#9B6FD5)', mingju: 'linear-gradient(135deg,#C48A10,#F0B840)', shangxi: 'linear-gradient(135deg,#1A7ED5,#5BC8F5)' }[t.type] || 'linear-gradient(135deg,#C48A10,#8B2500)'
+    })),
+
     hotTopics: [
       { text: '李白 · 将进酒赏析', page: 'classics' },
       { text: '道德经核心思想', page: 'philosophers' },
@@ -124,6 +141,7 @@ Page({
 
     this._loadDaily();
     this._loadSolar();
+    this._setupSeo();
   },
 
   onShow() {
@@ -132,6 +150,7 @@ Page({
     if (this._lastLoadedDay && this._lastLoadedDay !== today) {
       this._loadDaily(true);
     }
+    this._loadStudyPreview();
   },
 
   onHide() {
@@ -143,6 +162,19 @@ Page({
   },
 
   noop() {},
+
+  /** 搜一搜优化：首页上报品牌与核心栏目关键词（覆盖「唐诗三百首/古诗词大全/飞花令」等目标词） */
+  _setupSeo() {
+    seo.reportPageInfo({
+      title: '国文之学 · 每日国学',
+      keywords: seo.buildKeywords([
+        '国文之学', '唐诗三百首', '宋词', '古诗词', '古诗词大全',
+        '飞花令', '诗词学习', '诗词鉴赏', '诗词朗诵', '李白的诗', '苏轼的诗',
+        '古诗', '唐诗', '元曲', '国学', '成语', '历史', '诸子百家', '诗词'
+      ]),
+      description: '国文之学——每日一句国学经典，唐诗宋词、古诗词大全、飞花令、诗词鉴赏、成语典故、历史文化、诸子百家，尽在掌握。'
+    });
+  },
 
   _canShowAd() {
     try {
@@ -211,6 +243,57 @@ Page({
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}${m}${day}`;
+  },
+
+  /** 连续学习7天预览：本周打卡圆点 + 连续天数（与 seven_days 页同 storage key） */
+  _loadStudyPreview() {
+    let days = [];
+    try {
+      days = wx.getStorageSync('study_days') || [];
+    } catch (_) {}
+    const doneSet = new Set(days);
+    const today = this._todayKey();
+
+    const now = new Date();
+    const dow = (now.getDay() + 6) % 7; // 周一=0
+    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow);
+    const labels = ['一', '二', '三', '四', '五', '六', '日'];
+    const week = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+      const key = this._keyOf(d);
+      week.push({
+        key,
+        label: labels[i],
+        dayNum: String(d.getDate()),
+        done: doneSet.has(key),
+        today: key === today
+      });
+    }
+
+    this.setData({
+      study: {
+        streak: this._calcStreak(doneSet, today),
+        todayDone: doneSet.has(today),
+        week
+      }
+    });
+  },
+
+  /** 连续打卡天数：今天已打卡从今天起算，否则从昨天起算 */
+  _calcStreak(doneSet, today) {
+    let streak = 0;
+    const cursor = new Date(Number(today.slice(0, 4)), Number(today.slice(4, 6)) - 1, Number(today.slice(6, 8)));
+    if (!doneSet.has(today)) cursor.setDate(cursor.getDate() - 1);
+    while (doneSet.has(this._keyOf(cursor))) {
+      streak += 1;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    return streak;
+  },
+
+  _keyOf(d) {
+    return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
   },
 
   refreshDaily() {
@@ -282,6 +365,23 @@ Page({
 
   goPoetry() {
     wx.switchTab({ url: '/pages/chinesepoetry/index' });
+  },
+
+  /** 精选专题 → 静态专题页（唐诗三百首/宋词精选/古诗词名句/唐诗鉴赏） */
+  goTopic(e) {
+    const type = e.currentTarget.dataset.type;
+    if (!type) return;
+    wx.navigateTo({ url: '/pages/topic/index?type=' + type });
+  },
+
+  /** 本周最热门诗词 → 完整榜单页 */
+  goWeekHot() {
+    wx.navigateTo({ url: '/pages/week_hot/index' });
+  },
+
+  /** 连续学习7天 → 打卡页 */
+  goSevenDays() {
+    wx.navigateTo({ url: '/pages/seven_days/index' });
   },
 
   // ── 节气诗词 ──────────────────────────────

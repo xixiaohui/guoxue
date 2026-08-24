@@ -97,6 +97,32 @@
     </view>
   </view>
 
+  <!-- 精选专题 -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">精选专题</text>
+      </view>
+      <text class="section-sub">系统整理 · 全文收录</text>
+    </view>
+
+    <scroll-view scroll-x show-scrollbar="{{false}}" class="topic-scroll" enhanced="{{true}}" bounces="{{false}}">
+      <view class="topic-row">
+        <view class="topic-card" wx:for="{{topics}}" wx:key="type" bindtap="goTopic"
+          data-type="{{item.type}}" hover-class="card-hover" hover-stay-time="80">
+          <view class="topic-badge" style="background:{{item.bg}}">{{item.badge}}</view>
+          <view class="topic-info">
+            <text class="topic-name">{{item.title}}</text>
+            <text class="topic-sub">{{item.subtitle}}</text>
+            <text class="topic-count">共 {{item.count}} 篇</text>
+          </view>
+          <text class="topic-arrow">›</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
   <!-- 节气诗词 -->
   <view class="section">
     <view class="section-head">
@@ -140,6 +166,61 @@
         <view class="solar-poem" wx:else>
           <text class="solar-poem-preview">{{solar.reason}}</text>
         </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 本周最热门诗词 -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">本周最热门诗词</text>
+      </view>
+      <text class="section-sub">本周热读 · 传世名篇</text>
+    </view>
+
+    <view class="weekhot-card" bindtap="goWeekHot" hover-class="card-hover" hover-stay-time="100">
+      <view class="weekhot-row" wx:for="{{weekHotPreview}}" wx:key="rank" wx:for-item="poem">
+        <text class="weekhot-rank rank-top">{{poem.rank}}</text>
+        <view class="weekhot-info">
+          <text class="weekhot-title">{{poem.title}}</text>
+          <text class="weekhot-author">{{poem.dynasty}} · {{poem.author}}</text>
+        </view>
+        <text class="weekhot-arrow">›</text>
+      </view>
+      <view class="weekhot-more">进入完整榜单 ›</view>
+    </view>
+  </view>
+
+  <!-- 连续学习7天 -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-label-wrap">
+        <view class="label-bar"></view>
+        <text class="section-label">连续学习7天</text>
+      </view>
+      <text class="section-sub">日拱一卒 · 功不唐捐</text>
+    </view>
+
+    <view class="sevendays-card" bindtap="goSevenDays" hover-class="card-hover" hover-stay-time="100">
+      <view class="sevendays-left">
+        <view class="sevendays-streak">
+          <text class="sevendays-num">{{study.streak}}</text>
+          <text class="sevendays-unit">天</text>
+        </view>
+        <text class="sevendays-tip">{{study.todayDone ? '今日已学习' : '今日未打卡'}}</text>
+      </view>
+      <view class="sevendays-right">
+        <view class="sevendays-week">
+          <view class="sevendays-day {{item.done ? 'day-done' : ''}} {{item.today ? 'day-today' : ''}}"
+            wx:for="{{study.week}}" wx:key="key">
+            <text class="sevendays-day-label">{{item.today ? '今' : '周' + item.label}}</text>
+            <text class="sevendays-day-num">{{item.dayNum}}</text>
+            <text class="sevendays-day-dot" wx:if="{{item.done}}">✓</text>
+          </view>
+        </view>
+        <view class="sevendays-more">进入打卡挑战 ›</view>
       </view>
     </view>
   </view>

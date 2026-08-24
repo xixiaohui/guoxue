@@ -1,0 +1,254 @@
+/* pages/week_hot/index.wxss - 本周最热门诗词榜单样式 */
+.page {
+  background: #F5EDD6;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  padding-bottom: 60rpx;
+}
+
+/* ── 页头 ─────────────────────────────── */
+.page-header {
+  background: linear-gradient(160deg, #6B1F0A 0%, #8B2500 55%, #A8381A 100%);
+  padding: 40rpx 30rpx 44rpx;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header::after {
+  content: '榜';
+  position: absolute;
+  right: -30rpx;
+  top: -50rpx;
+  font-size: 220rpx;
+  color: rgba(255, 248, 231, 0.06);
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.header-title {
+  display: block;
+  font-size: 42rpx;
+  font-weight: 700;
+  color: #FFF8E7;
+  letter-spacing: 6rpx;
+}
+
+.header-sub {
+  display: block;
+  font-size: 24rpx;
+  color: rgba(255, 248, 231, 0.65);
+  margin-top: 8rpx;
+  letter-spacing: 4rpx;
+}
+
+/* ── 加载 / 空态 ─────────────────────── */
+.list-loading {
+  margin: 24rpx 24rpx 0;
+  background: #FFFBF0;
+  border: 1rpx dashed #D8C08A;
+  border-radius: 16rpx;
+  padding: 40rpx;
+  text-align: center;
+}
+
+.list-loading-text {
+  font-size: 24rpx;
+  color: #8C7B61;
+}
+
+.empty-tip {
+  margin: 24rpx 24rpx 0;
+  background: #FFFBF0;
+  border: 1rpx dashed #D8C08A;
+  border-radius: 16rpx;
+  padding: 48rpx 20rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #8C7B61;
+}
+
+/* ── 榜单头 ──────────────────────────── */
+.list {
+  margin: 24rpx 24rpx 0;
+}
+
+.hot-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+  padding: 0 4rpx;
+}
+
+.hot-head-left {
+  display: flex;
+  align-items: baseline;
+  gap: 14rpx;
+  min-width: 0;
+}
+
+.hot-head-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #2C1810;
+  letter-spacing: 2rpx;
+}
+
+.hot-head-sub {
+  font-size: 22rpx;
+  color: #A08C6B;
+  letter-spacing: 1rpx;
+}
+
+.hot-head-tag {
+  flex-shrink: 0;
+  font-size: 20rpx;
+  color: #8B2500;
+  background: #F8EFD9;
+  border: 1rpx solid #E0C890;
+  border-radius: 22rpx;
+  padding: 4rpx 16rpx;
+}
+
+.hot-head-tag-seed {
+  color: #C4882E;
+}
+
+/* ── 榜单条目 ────────────────────────── */
+.hot-item {
+  display: flex;
+  align-items: center;
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  padding: 22rpx 22rpx;
+  margin-bottom: 18rpx;
+  box-shadow: 0 2rpx 10rpx rgba(139, 37, 0, 0.05);
+  box-sizing: border-box;
+}
+
+.card-hover {
+  background: #F8EFD9 !important;
+  transform: translateY(2rpx);
+}
+
+.hot-rank {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 14rpx;
+  background: #EFE3C8;
+  color: #8C7B61;
+  font-size: 28rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 20rpx;
+}
+
+.hot-rank-top {
+  background: linear-gradient(135deg, #F7C948, #C4882E);
+  color: #FFF8E7;
+  box-shadow: 0 3rpx 10rpx rgba(196, 136, 46, 0.4);
+}
+
+.hot-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.hot-line {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.hot-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #4A2E18;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.hot-type {
+  flex-shrink: 0;
+  font-size: 20rpx;
+  color: #8B2500;
+  background: #F8EFD9;
+  border: 1rpx solid #E0C890;
+  border-radius: 18rpx;
+  padding: 2rpx 14rpx;
+  margin-left: 12rpx;
+}
+
+.hot-author {
+  display: block;
+  font-size: 24rpx;
+  color: #C4882E;
+  margin-top: 8rpx;
+}
+
+.hot-preview {
+  display: block;
+  font-size: 24rpx;
+  color: #6B5B45;
+  margin-top: 10rpx;
+  line-height: 1.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hot-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.hot-count {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #8B2500;
+  line-height: 1.2;
+}
+
+.hot-count-label {
+  font-size: 20rpx;
+  color: #A08C6B;
+  margin-top: 4rpx;
+}
+
+.row-arrow {
+  font-size: 40rpx;
+  color: #C4A87C;
+  margin-left: 10rpx;
+  flex-shrink: 0;
+}
+
+/* ── 列表底 / 页脚 ───────────────────── */
+.list-end {
+  padding: 26rpx 0;
+  text-align: center;
+  font-size: 22rpx;
+  color: #A08C6B;
+  letter-spacing: 2rpx;
+}
+
+.footer {
+  text-align: center;
+  font-size: 20rpx;
+  color: #A08C6B;
+  padding: 36rpx 0 24rpx;
+  letter-spacing: 2rpx;
+}

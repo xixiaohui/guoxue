@@ -35,6 +35,15 @@
     </view>
   </view>
 
+  <!-- 我的阅读历史 -->
+  <view class="section-card" bindtap="goReadHistory" hover-class="card-hover" hover-stay-time="80">
+    <view class="setting-row">
+      <text class="setting-icon">📖</text>
+      <text class="setting-label">我的阅读历史</text>
+      <text class="setting-arrow">›</text>
+    </view>
+  </view>
+
   <!-- 通用设置 -->
   <view class="section-card">
     <view class="section-title-inner">通用设置</view>

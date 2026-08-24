@@ -2,6 +2,7 @@
 const poetry = require('../../utils/poetryApi');
 const poemCache = require('../../utils/poemCache');
 const settings = require('../../utils/settings');
+const seo = require('../../utils/seo');
 
 Page({
   data: {
@@ -44,6 +45,20 @@ Page({
 
   onLoad() {
     this._loadAll();
+    this._setupSeo();
+  },
+
+  /** 搜一搜优化：诗词天地页上报栏目关键词 */
+  _setupSeo() {
+    seo.reportPageInfo({
+      title: '诗词天地 · 古诗词大全',
+      navTitle: '诗词天地',
+      keywords: seo.buildKeywords([
+        '诗词天地', '诗词学习', '诗词鉴赏', '诗词朗诵', '古诗词', '古诗词大全',
+        '古诗', '唐诗', '宋词', '元曲', '国文之学', '国学', '诗词'
+      ]),
+      description: '诗词天地——每日一句、诗词精选、诗人风采，唐诗宋词元曲、古诗词大全，一键鉴赏学习。'
+    });
   },
 
   onShow() {

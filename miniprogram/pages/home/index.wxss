@@ -538,6 +538,191 @@
     height: 40rpx;
   }
 
+  /* 本周最热门诗词 */
+  .weekhot-card {
+    margin: 0 24rpx;
+    background: #FFFBF0;
+    border: 1rpx solid #EDD9A3;
+    border-radius: 22rpx;
+    padding: 10rpx 24rpx 18rpx;
+    box-shadow: 0 4rpx 16rpx rgba(139,37,0,.08);
+    width: calc(100% - 48rpx);
+    box-sizing: border-box;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .weekhot-row {
+    display: flex;
+    align-items: center;
+    padding: 20rpx 0;
+  }
+
+  .weekhot-row + .weekhot-row {
+    border-top: 1rpx dashed #E8D5A3;
+  }
+
+  .weekhot-rank {
+    width: 44rpx;
+    height: 44rpx;
+    border-radius: 12rpx;
+    background: linear-gradient(135deg, #F7C948, #C4882E);
+    color: #FFF8E7;
+    font-size: 26rpx;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-right: 20rpx;
+    box-shadow: 0 2rpx 8rpx rgba(196,136,46,.35);
+  }
+
+  .weekhot-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 14rpx;
+  }
+
+  .weekhot-title {
+    font-size: 29rpx;
+    font-weight: 600;
+    color: #2C1810;
+    max-width: 62%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .weekhot-author {
+    font-size: 22rpx;
+    color: #8C7B61;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .weekhot-arrow {
+    font-size: 32rpx;
+    color: #C4A87C;
+    margin-left: 12rpx;
+    flex-shrink: 0;
+  }
+
+  .weekhot-more {
+    text-align: center;
+    font-size: 24rpx;
+    color: #8B2500;
+    padding-top: 16rpx;
+    border-top: 1rpx dashed #E8D5A3;
+    letter-spacing: 1rpx;
+  }
+
+  /* 连续学习7天 */
+  .sevendays-card {
+    margin: 0 24rpx;
+    background: linear-gradient(135deg, #8B2500, #A23A12);
+    border-radius: 22rpx;
+    padding: 26rpx 24rpx;
+    box-shadow: 0 6rpx 20rpx rgba(139,37,0,.18);
+    width: calc(100% - 48rpx);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 24rpx;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .sevendays-left {
+    flex-shrink: 0;
+    text-align: center;
+    min-width: 120rpx;
+  }
+
+  .sevendays-streak {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+  }
+
+  .sevendays-num {
+    font-size: 68rpx;
+    font-weight: 800;
+    color: #FFD97D;
+    line-height: 1;
+  }
+
+  .sevendays-unit {
+    font-size: 24rpx;
+    color: rgba(255,248,231,.85);
+    margin-left: 6rpx;
+  }
+
+  .sevendays-tip {
+    display: block;
+    font-size: 20rpx;
+    color: rgba(255,248,231,.75);
+    margin-top: 10rpx;
+  }
+
+  .sevendays-right {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sevendays-week {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .sevendays-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6rpx;
+    padding: 10rpx 0;
+    border-radius: 14rpx;
+    width: 62rpx;
+    background: rgba(255,248,231,.08);
+    box-sizing: border-box;
+  }
+
+  .sevendays-day-label {
+    font-size: 20rpx;
+    color: rgba(255,248,231,.8);
+  }
+
+  .sevendays-day-num {
+    font-size: 26rpx;
+    font-weight: 700;
+    color: #FFF8E7;
+  }
+
+  .sevendays-day-dot {
+    font-size: 20rpx;
+    color: #FFD97D;
+    line-height: 1;
+  }
+
+  .sevendays-day.day-done {
+    background: rgba(255,217,125,.22);
+  }
+
+  .sevendays-day.day-today {
+    border: 2rpx solid #FFD97D;
+  }
+
+  .sevendays-more {
+    text-align: right;
+    font-size: 22rpx;
+    color: #FFD97D;
+    margin-top: 14rpx;
+    letter-spacing: 1rpx;
+  }
+
   /* Function grid */
   .func-grid {
     display: grid;
@@ -599,6 +784,90 @@
     word-break: break-word;
   }
   
+  /* 精选专题 */
+  .topic-scroll {
+    padding: 0 24rpx;
+    white-space: nowrap;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .topic-row {
+    display: inline-flex;
+    gap: 18rpx;
+    padding-bottom: 12rpx;
+    min-width: max-content;
+  }
+
+  .topic-card {
+    width: 300rpx;
+    background: #FFFBF0;
+    border: 1rpx solid #EDD9A3;
+    border-radius: 20rpx;
+    padding: 24rpx 22rpx;
+    box-shadow: 0 3rpx 12rpx rgba(139,37,0,.06);
+    display: inline-flex;
+    align-items: center;
+    gap: 16rpx;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .topic-badge {
+    width: 76rpx;
+    height: 76rpx;
+    border-radius: 20rpx;
+    color: #FFF8E7;
+    font-size: 36rpx;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4rpx 12rpx rgba(0,0,0,.18);
+  }
+
+  .topic-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .topic-name {
+    display: block;
+    font-size: 28rpx;
+    font-weight: 700;
+    color: #2C1810;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topic-sub {
+    display: block;
+    font-size: 20rpx;
+    color: #8C7B61;
+    margin-top: 6rpx;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topic-count {
+    display: block;
+    font-size: 19rpx;
+    color: #C4882E;
+    margin-top: 6rpx;
+  }
+
+  .topic-arrow {
+    font-size: 32rpx;
+    color: #C4A87C;
+    flex-shrink: 0;
+  }
+
   /* Hot topics */
   .hot-scroll {
     padding: 0 24rpx;

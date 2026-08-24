@@ -11,7 +11,11 @@
     "pages/chinesepoetry_search/index",
     "pages/chinesepoetry_all/index",
     "pages/setting/index",
-    "pages/favorite/index"
+    "pages/favorite/index",
+    "pages/week_hot/index",
+    "pages/my_read_history/index",
+    "pages/seven_days/index",
+    "pages/topic/index"
   ],
   "window": {
     "backgroundColor": "#F5EDD6",

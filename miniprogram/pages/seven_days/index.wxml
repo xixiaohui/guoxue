@@ -1,0 +1,47 @@
+<view class="page {{fontFamilyClass}}">
+
+  <!-- 顶部横幅 -->
+  <view class="banner">
+    <text class="banner-deco">学</text>
+    <view class="banner-streak">
+      <text class="banner-num">{{streak}}</text>
+      <text class="banner-unit">天</text>
+    </view>
+    <text class="banner-title">{{streak > 0 ? '已连续学习' + streak + '天' : '开启今日学习'}}</text>
+    <text class="banner-sub">日拱一卒 · 功不唐捐</text>
+    <view class="checkin-btn {{todayDone ? 'checkin-done' : ''}}" bindtap="checkIn" hover-class="checkin-hover" hover-stay-time="80">
+      <text>{{todayDone ? '✓ 今日已打卡' : '今日打卡'}}</text>
+    </view>
+  </view>
+
+  <!-- 本周打卡 -->
+  <view class="section-card">
+    <view class="section-head">
+      <text class="section-title">本周打卡</text>
+      <text class="section-sub">{{todayDone ? '今日已完成' : '今天也要坚持哦'}}</text>
+    </view>
+    <view class="week-grid">
+      <view class="week-day {{item.done ? 'day-done' : ''}} {{item.today ? 'day-today' : ''}}" wx:for="{{week}}" wx:key="key">
+        <text class="week-label">{{item.today ? '今' : '周' + item.label}}</text>
+        <text class="week-num">{{item.dayNum}}</text>
+        <text class="week-dot" wx:if="{{item.done}}">✓</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 打卡记录 -->
+  <view class="section-card">
+    <view class="section-head">
+      <text class="section-title">最近打卡</text>
+      <view class="clear-btn" wx:if="{{history.length > 0}}" bindtap="clearHistory" hover-class="clear-hover" hover-stay-time="80">清空</view>
+    </view>
+    <view class="empty-tip" wx:if="{{history.length === 0}}">还没有打卡记录，今天就开始吧</view>
+    <view class="history-item" wx:for="{{history}}" wx:key="date">
+      <text class="history-date">{{item.date}}</text>
+      <text class="history-week">{{item.text}}</text>
+      <text class="history-check">✓</text>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

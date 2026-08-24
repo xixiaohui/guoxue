@@ -197,6 +197,11 @@ Page({
     wx.navigateTo({ url: '/pages/favorite/index' });
   },
 
+  /** 我的阅读历史 */
+  goReadHistory() {
+    wx.navigateTo({ url: '/pages/my_read_history/index' });
+  },
+
   checkUpdate() {
     const mgr = wx.getUpdateManager();
     mgr.onCheckForUpdate((res) => {

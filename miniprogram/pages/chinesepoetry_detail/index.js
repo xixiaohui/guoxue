@@ -4,6 +4,7 @@ const poetry = require('../../utils/poetryApi');
 const poemCache = require('../../utils/poemCache');
 const share = require('../../utils/share');
 const settings = require('../../utils/settings');
+const seo = require('../../utils/seo');
 
 // 诗人作品分页大小（/search 实测 page 参数生效）
 const AUTHOR_POEM_PAGE_SIZE = 20;
@@ -89,7 +90,8 @@ Page({
       liked: kind === 'poem' ? this._isLiked(poemRef) : false
     });
 
-    wx.setNavigationBarTitle({ title: kind === 'author' ? (title || '诗人详情') : (title || '诗词详情') });
+    // 搜一搜优化：导航栏标题「诗词名 · 作者」+ 页面信息上报
+    this._setupSeo();
 
     this._enhanceDetail(kind, o.id);
     if (kind === 'author' && title) {
@@ -254,6 +256,8 @@ Page({
         if (p.type) patch.type = p.type;
         this.setData(patch);
       }
+      // 增强数据（作者/朝代/全文）返回后刷新 SEO 标题与关键词
+      this._setupSeo();
     } catch (e) {
       console.warn('[PoetryDetail] enhance failed, use seed:', e.message || e.code);
     } finally {
@@ -277,6 +281,54 @@ Page({
       const filtered = list.filter((v) => v.title !== item.title || v.author !== item.author);
       filtered.unshift(item);
       wx.setStorageSync('viewed_poems', filtered.slice(0, 30));
+    } catch (_) {}
+  },
+
+  // ── 搜一搜（SEO）────────────────────────
+  /**
+   * 搜一搜优化：
+   * 1. 导航栏标题采用「诗词名 · 作者」，提升「李白《静夜思》」等组合关键词命中率；
+   * 2. wx.setPageInfo 上报标题/关键词/摘要，供搜索结果展示（基础库 2.2.2+）。
+   */
+  _setupSeo() {
+    const d = this.data;
+    const title = (d.title || '').trim() || '无题';
+    const author = (d.author || '').trim();
+    const dynasty = d.dynasty || '';
+    const type = d.type || '';
+
+    // 导航栏标题：诗词 →「静夜思 · 李白」；诗人 →「李白的诗」（直接命中「李白的诗/苏轼的诗」搜索词）
+    let navTitle;
+    if (d.kind === 'author') {
+      navTitle = title + '的诗';
+    } else if (author && author !== '佚名') {
+      navTitle = title + ' · ' + author;
+    } else {
+      navTitle = title;
+    }
+    if (navTitle.length > 24) navTitle = navTitle.slice(0, 24);
+    wx.setNavigationBarTitle({ title: navTitle });
+
+    if (!wx.setPageInfo) return;
+
+    let kwParts;
+    let description;
+    if (d.kind === 'author') {
+      // 诗人页：命中「李白的诗」「苏轼的诗」「诗人简介」等词
+      kwParts = [title + '的诗', title, '诗人', dynasty, '唐诗', '宋词', '古诗', '诗词', '国学', '国文之学'];
+      const intro = (d.description || '').replace(/\s+/g, '').slice(0, 40);
+      description = ((dynasty ? dynasty + ' · ' : '') + title + '的诗' + (intro ? '，' + intro : '')).slice(0, 60);
+    } else {
+      // 诗词页：标题、作者、朝代、题材 + 通用词
+      kwParts = [title, author, dynasty, type, '古诗', '唐诗', '宋词', '诗词', '国学', '国文之学'];
+      const firstLine = (d.content || '').replace(/\s+/g, '').slice(0, 28);
+      const who = [dynasty, author].filter(Boolean).join(' · ');
+      description = ((who ? who + '《' + title + '》' : title) + (firstLine ? '，' + firstLine : '')).slice(0, 60);
+    }
+    const keywords = seo.buildKeywords(kwParts);
+
+    try {
+      wx.setPageInfo({ title: navTitle, keywords, description });
     } catch (_) {}
   },
 

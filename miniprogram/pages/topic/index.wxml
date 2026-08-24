@@ -1,0 +1,66 @@
+<!--pages/topic/index.wxml - 静态专题页（唐诗三百首/宋词精选/古诗词名句/唐诗鉴赏）-->
+<view class="page {{fontFamilyClass}}">
+
+  <!-- 页头 -->
+  <view class="page-header">
+    <view class="header-inner">
+      <view class="header-badge">{{badge}}</view>
+      <view class="header-text">
+        <text class="header-title">{{title}}</text>
+        <text class="header-sub">{{subtitle}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 专题简介 -->
+  <view class="intro-card">
+    <text class="intro-text">{{desc}}</text>
+    <text class="intro-count">共收录 {{items.length}} 篇</text>
+  </view>
+
+  <!-- 列表 -->
+  <view class="list">
+    <!-- 古诗词名句：名句高亮 -->
+    <block wx:if="{{type === 'mingju'}}">
+      <view class="card mingju-card" wx:for="{{items}}" wx:key="id" bindtap="goDetail"
+        data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
+        <text class="mj-sentence">「{{item.sentence}}」</text>
+        <view class="card-meta">
+          <text class="card-title">{{item.title}}</text>
+          <text class="card-author">{{item.dynasty}} · {{item.author}}</text>
+        </view>
+        <view class="mj-appreciation" wx:if="{{item.appreciation}}">
+          <text class="mj-ap-label">赏析</text>
+          <text class="mj-ap-text">{{item.appreciation}}</text>
+        </view>
+        <view class="card-full" wx:if="{{item.lines.length}}">
+          <text class="card-full-label">全文</text>
+          <text class="card-line" wx:for="{{item.lines}}" wx:for-item="line" wx:key="*this">{{line}}</text>
+        </view>
+        <text class="card-go">查看详情 ›</text>
+      </view>
+    </block>
+
+    <!-- 其他专题：全文直接渲染 -->
+    <block wx:else>
+      <view class="card poem-card" wx:for="{{items}}" wx:key="id" bindtap="goDetail"
+        data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
+        <view class="card-top">
+          <text class="card-title">{{item.title || '无题'}}</text>
+          <text class="card-type" wx:if="{{item.type}}">{{item.type}}</text>
+        </view>
+        <text class="card-author">{{item.dynasty ? item.dynasty + ' · ' : ''}}{{item.author || '佚名'}}</text>
+        <view class="card-body">
+          <text class="card-line" wx:for="{{item.lines}}" wx:for-item="line" wx:key="*this">{{line}}</text>
+        </view>
+        <view class="card-appreciation" wx:if="{{item.appreciation}}">
+          <text class="card-ap-label">赏析</text>
+          <text class="card-ap-text">{{item.appreciation}}</text>
+        </view>
+        <text class="card-go">查看详情 ›</text>
+      </view>
+    </block>
+  </view>
+
+  <view class="footer">内容为公共领域经典诗文 · 国文之学</view>
+</view>

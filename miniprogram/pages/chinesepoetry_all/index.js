@@ -2,6 +2,7 @@
 const poetry = require('../../utils/poetryApi');
 const poemCache = require('../../utils/poemCache');
 const settings = require('../../utils/settings');
+const seo = require('../../utils/seo');
 
 // 服务端分页大小（/poems /authors 实测 page 参数生效）
 const PAGE_SIZE = 20;
@@ -11,14 +12,14 @@ const AUTHOR_PAGE_SIZE = 100;
 const LOCAL_PAGE_SIZE = 10;
 
 const KIND_TITLES = {
-  poems: '全部诗词',
+  poems: '古诗词大全',
   authors: '全部诗人',
   dynasties: '全部朝代',
   types: '全部体裁'
 };
 
 const KIND_SUBTITLES = {
-  poems: '千年诗韵 · 全部诗词',
+  poems: '千年诗韵 · 唐诗宋词',
   authors: '千古风流 · 全部诗人',
   dynasties: '千年文脉 · 朝代一览',
   types: '诗词体裁 · 分类一览'
@@ -27,7 +28,7 @@ const KIND_SUBTITLES = {
 Page({
   data: {
     kind: 'poems',          // poems | authors | dynasties | types
-    title: '全部诗词',
+    title: '古诗词大全',
     subtitle: '',
     items: [],
     loading: true,          // 首屏/整页加载中
@@ -42,10 +43,32 @@ Page({
     const kind = KIND_TITLES[o.kind] ? o.kind : 'poems';
     this.setData({ kind, title: KIND_TITLES[kind], subtitle: KIND_SUBTITLES[kind] });
     wx.setNavigationBarTitle({ title: KIND_TITLES[kind] });
+    this._setupSeo(kind);
     this._load(true);
     if (kind === 'poems' || kind === 'authors') {
       this._loadStats();
     }
+  },
+
+  /** 搜一搜优化：按列表类别上报标题/关键词（命中「古诗词大全」「全部诗人」等词） */
+  _setupSeo(kind) {
+    const kwMap = {
+      poems: ['古诗词大全', '古诗词', '诗词大全', '唐诗', '宋词', '古诗', '诗词'],
+      authors: ['古代诗人', '诗人列表', '李白', '杜甫', '苏轼', '诗人'],
+      dynasties: ['古代朝代', '朝代', '唐诗', '宋词'],
+      types: ['诗词体裁', '五言绝句', '七言律诗', '词牌名']
+    };
+    const descMap = {
+      poems: '古诗词大全：唐诗宋词、历代诗词全文收录，支持按朝代、体裁、诗人浏览。',
+      authors: '历代诗人名录，李白、杜甫、苏轼、李清照等诗人简介与代表作品。',
+      dynasties: '按朝代浏览诗词：先秦、汉、魏晋、唐、宋、元、明、清历代诗篇。',
+      types: '按体裁浏览诗词：五言绝句、七言绝句、五言律诗、七言律诗、词牌。'
+    };
+    seo.reportPageInfo({
+      title: KIND_TITLES[kind],
+      keywords: seo.buildKeywords((kwMap[kind] || []).concat(['国文之学', '国学', '诗词', '唐诗', '宋词'])),
+      description: descMap[kind]
+    });
   },
 
   onShow() {

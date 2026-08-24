@@ -1,0 +1,224 @@
+/* pages/seven_days/index.wxss */
+.page {
+  background: #FDF6E3;
+  min-height: 100vh;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+/* 顶部横幅 */
+.banner {
+  position: relative;
+  background: linear-gradient(135deg, #8B2500, #A23A12 60%, #C4882E 150%);
+  border-radius: 24rpx;
+  padding: 44rpx 32rpx 40rpx;
+  margin-bottom: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 24rpx rgba(139,37,0,.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.banner-deco {
+  position: absolute;
+  right: -10rpx;
+  bottom: -30rpx;
+  font-size: 200rpx;
+  font-weight: 900;
+  color: rgba(255,248,231,.07);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.banner-streak {
+  display: flex;
+  align-items: baseline;
+}
+
+.banner-num {
+  font-size: 120rpx;
+  font-weight: 800;
+  color: #FFD97D;
+  line-height: 1;
+}
+
+.banner-unit {
+  font-size: 30rpx;
+  color: rgba(255,248,231,.85);
+  margin-left: 10rpx;
+}
+
+.banner-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #FFF8E7;
+  margin-top: 10rpx;
+  letter-spacing: 2rpx;
+}
+
+.banner-sub {
+  font-size: 22rpx;
+  color: rgba(255,248,231,.75);
+  margin-top: 10rpx;
+  letter-spacing: 3rpx;
+}
+
+.checkin-btn {
+  margin-top: 28rpx;
+  background: #FFD97D;
+  color: #8B2500;
+  font-size: 30rpx;
+  font-weight: 700;
+  padding: 18rpx 72rpx;
+  border-radius: 40rpx;
+  box-shadow: 0 6rpx 18rpx rgba(0,0,0,.15);
+}
+
+.checkin-btn.checkin-done {
+  background: rgba(255,248,231,.2);
+  color: #FFF8E7;
+  box-shadow: none;
+}
+
+.checkin-hover {
+  opacity: 0.85;
+  transform: scale(0.97);
+}
+
+/* 通用卡片 */
+.section-card {
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  padding: 26rpx 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 10rpx rgba(139,37,0,.05);
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 22rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #4A2E18;
+  letter-spacing: 2rpx;
+}
+
+.section-sub {
+  font-size: 22rpx;
+  color: #8C7B61;
+}
+
+/* 本周打卡 */
+.week-grid {
+  display: flex;
+  justify-content: space-between;
+}
+
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  width: 76rpx;
+  padding: 18rpx 0 14rpx;
+  border-radius: 18rpx;
+  background: #F8EFD9;
+  border: 2rpx solid transparent;
+  box-sizing: border-box;
+}
+
+.week-label {
+  font-size: 22rpx;
+  color: #8C7B61;
+}
+
+.week-num {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #4A2E18;
+}
+
+.week-dot {
+  font-size: 22rpx;
+  color: #C4882E;
+  line-height: 1;
+}
+
+.week-day.day-done {
+  background: #FFF3DC;
+  border-color: #C4882E;
+}
+
+.week-day.day-done .week-label,
+.week-day.day-done .week-num {
+  color: #8B2500;
+}
+
+.week-day.day-today {
+  border-color: #8B2500;
+  box-shadow: 0 0 0 2rpx rgba(139,37,0,.12);
+}
+
+.week-day.day-today .week-label {
+  color: #8B2500;
+  font-weight: 700;
+}
+
+/* 最近打卡 */
+.clear-btn {
+  font-size: 22rpx;
+  color: #A8381A;
+  background: rgba(168,56,26,.08);
+  padding: 6rpx 22rpx;
+  border-radius: 22rpx;
+}
+
+.clear-hover {
+  opacity: 0.7;
+}
+
+.empty-tip {
+  text-align: center;
+  font-size: 24rpx;
+  color: #8C7B61;
+  padding: 30rpx 0;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+}
+
+.history-item + .history-item {
+  border-top: 1rpx dashed #E8D5A3;
+}
+
+.history-date {
+  flex: 1;
+  font-size: 26rpx;
+  color: #4A2E18;
+}
+
+.history-week {
+  font-size: 22rpx;
+  color: #8C7B61;
+  margin-right: 20rpx;
+}
+
+.history-check {
+  font-size: 26rpx;
+  color: #C4882E;
+  font-weight: 700;
+}
+
+.safe-bottom {
+  height: env(safe-area-inset-bottom);
+}

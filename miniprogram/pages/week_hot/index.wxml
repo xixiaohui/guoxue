@@ -1,0 +1,52 @@
+<!--pages/week_hot/index.wxml - 本周最热门诗词（榜单页）-->
+<view class="page {{fontFamilyClass}}">
+
+  <!-- 页头 -->
+  <view class="page-header">
+    <view class="header-inner">
+      <text class="header-title">本周最热门诗词</text>
+      <text class="header-sub">本周热读 · 传世名篇 · 一览榜单</text>
+    </view>
+  </view>
+
+  <!-- 加载骨架 -->
+  <view class="list-loading" wx:if="{{loading && list.length === 0}}">
+    <text class="list-loading-text">榜单加载中…</text>
+  </view>
+
+  <!-- 空态 -->
+  <view class="empty-tip" wx:elif="{{loaded && list.length === 0}}">本周暂无热门数据，稍后再来看看吧</view>
+
+  <!-- 榜单 -->
+  <view class="list" wx:elif="{{list.length > 0}}">
+    <view class="hot-head">
+      <view class="hot-head-left">
+        <text class="hot-head-title">热门榜</text>
+        <text class="hot-head-sub">按本周阅读热度排序</text>
+      </view>
+      <text class="hot-head-tag {{isSeed ? 'hot-head-tag-seed' : ''}}">{{isSeed ? '精选推荐' : '实时热度'}}</text>
+    </view>
+
+    <view class="hot-item" wx:for="{{list}}" wx:key="id" bindtap="goDetail"
+      data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
+      <view class="hot-rank {{index < 3 ? 'hot-rank-top' : ''}}">{{index + 1}}</view>
+      <view class="hot-main">
+        <view class="hot-line">
+          <text class="hot-title">{{item.title || '无题'}}</text>
+          <text class="hot-type" wx:if="{{item.type}}">{{item.type}}</text>
+        </view>
+        <text class="hot-author">{{item.dynasty ? item.dynasty + ' · ' : ''}}{{item.author || '佚名'}}</text>
+        <text class="hot-preview">{{item.preview}}</text>
+      </view>
+      <view class="hot-side">
+        <text class="hot-count">{{item.countText}}</text>
+        <text class="hot-count-label">次阅读</text>
+      </view>
+      <text class="row-arrow">›</text>
+    </view>
+
+    <view class="list-end">—— 已展示全部 ——</view>
+  </view>
+
+  <view class="footer">数据来源：chinesepoetry.space · 国文之学</view>
+</view>
