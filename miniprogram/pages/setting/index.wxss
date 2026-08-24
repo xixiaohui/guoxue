@@ -251,11 +251,49 @@
 }
 
 /* 各字体预览效果（真机按系统已装字体渲染，未安装时依次回退） */
-.ff-preview-song .ff-preview-char { font-family: "Songti SC", "SimSun", "Noto Serif SC", serif; }
-.ff-preview-kai .ff-preview-char { font-family: "Kaiti SC", "KaiTi", "STKaiti", "Noto Serif SC", serif; }
-.ff-preview-fangsong .ff-preview-char { font-family: "FangSong SC", "FangSong", "STFangsong", serif; }
-.ff-preview-hei .ff-preview-char { font-family: "Heiti SC", "SimHei", "Noto Sans SC", sans-serif; }
-.ff-preview-xingkai .ff-preview-char { font-family: "Xingkai SC", "STXingkai", "Kaiti SC", serif; }
+.ff-preview-song .ff-preview-char { font-family: "Songti SC", "STSong", "华文宋体", "SimSun", "宋体", "Noto Serif SC", "Source Han Serif SC", serif; }
+.ff-preview-kai .ff-preview-char { font-family: "Kaiti SC", "STKaiti", "华文楷体", "KaiTi", "楷体", "Noto Serif SC", "Source Han Serif SC", serif; }
+.ff-preview-fangsong .ff-preview-char { font-family: "FangSong SC", "STFangsong", "华文仿宋", "FangSong", "仿宋", "Noto Serif SC", serif; }
+.ff-preview-hei .ff-preview-char { font-family: "Heiti SC", "STHeiti", "华文黑体", "SimHei", "黑体", "Noto Sans SC", "Source Han Sans SC", sans-serif; }
+.ff-preview-xingkai .ff-preview-char { font-family: "Xingkai SC", "STXingkai", "华文行楷", "Kaiti SC", "KaiTi", "楷体", serif; }
+
+/* 正文字体实时预览（跟随所选字体即时变化） */
+.font-preview {
+  margin-top: 20rpx;
+  padding: 22rpx 26rpx;
+  border-radius: 16rpx;
+  background: #FFFBF0;
+  border: 1rpx dashed #E0C98A;
+}
+
+.font-preview-label {
+  display: block;
+  font-size: 20rpx;
+  color: #8C7B61;
+  margin-bottom: 10rpx;
+}
+
+.font-preview-text {
+  display: block;
+  font-size: 34rpx;
+  line-height: 1.9;
+  letter-spacing: 2rpx;
+  color: #4A2E18;
+}
+
+/* 预览区整体跟随所选字体（与预览字一致） */
+.font-preview.ff-preview-song .font-preview-text { font-family: "Songti SC", "STSong", "华文宋体", "SimSun", "宋体", "Noto Serif SC", "Source Han Serif SC", serif; }
+.font-preview.ff-preview-kai .font-preview-text { font-family: "Kaiti SC", "STKaiti", "华文楷体", "KaiTi", "楷体", "Noto Serif SC", "Source Han Serif SC", serif; }
+.font-preview.ff-preview-fangsong .font-preview-text { font-family: "FangSong SC", "STFangsong", "华文仿宋", "FangSong", "仿宋", "Noto Serif SC", serif; }
+.font-preview.ff-preview-hei .font-preview-text { font-family: "Heiti SC", "STHeiti", "华文黑体", "SimHei", "黑体", "Noto Sans SC", "Source Han Sans SC", sans-serif; }
+.font-preview.ff-preview-xingkai .font-preview-text { font-family: "Xingkai SC", "STXingkai", "华文行楷", "Kaiti SC", "KaiTi", "楷体", serif; }
+
+.font-tip {
+  margin-top: 14rpx;
+  font-size: 20rpx;
+  color: #A89A80;
+  line-height: 1.6;
+}
 
 /* 主题选择 */
 .theme-opt {

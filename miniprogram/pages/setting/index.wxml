@@ -87,6 +87,13 @@
           <text class="ff-preview-name">行楷</text>
         </view>
       </view>
+
+      <!-- 正文字体实时预览（跟随所选字体即时变化） -->
+      <view class="font-preview ff-preview-{{fontFamily}}">
+        <text class="font-preview-label">实时预览</text>
+        <text class="font-preview-text">床前明月光，疑是地上霜。举头望明月，低头思故乡。</text>
+      </view>
+      <view class="font-tip">字体效果取决于设备系统已装字体，iOS / 电脑端效果最佳</view>
     </view>
 
     <view class="setting-divider"></view>

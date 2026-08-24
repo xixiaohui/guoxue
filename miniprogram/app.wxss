@@ -280,8 +280,16 @@ page {
 /* ── 正文字体工具类（页面根节点绑定 fontFamilyClass 生效）────── */
 /* font-family 为继承属性，根类设置后整页阅读文本统一生效 */
 /* !important 防止页面级显式 font-family 覆盖 */
-.ff-song { font-family: "Songti SC", "SimSun", "Noto Serif SC", serif !important; }
-.ff-kai { font-family: "Kaiti SC", "KaiTi", "STKaiti", "Noto Serif SC", serif !important; }
-.ff-fangsong { font-family: "FangSong SC", "FangSong", "STFangsong", serif !important; }
-.ff-hei { font-family: "Heiti SC", "SimHei", "Noto Sans SC", sans-serif !important; }
-.ff-xingkai { font-family: "Xingkai SC", "STXingkai", "Kaiti SC", serif !important; }
+/* 字体栈覆盖 iOS(华文* SC)、macOS(华文*)、Windows(宋体/楷体/仿宋/黑体/华文行楷) 与思源系字体 */
+.ff-song { font-family: "Songti SC", "STSong", "华文宋体", "SimSun", "宋体", "Noto Serif SC", "Source Han Serif SC", serif !important; }
+.ff-kai { font-family: "Kaiti SC", "STKaiti", "华文楷体", "KaiTi", "楷体", "Noto Serif SC", "Source Han Serif SC", serif !important; }
+.ff-fangsong { font-family: "FangSong SC", "STFangsong", "华文仿宋", "FangSong", "仿宋", "Noto Serif SC", serif !important; }
+.ff-hei { font-family: "Heiti SC", "STHeiti", "华文黑体", "SimHei", "黑体", "Noto Sans SC", "Source Han Sans SC", sans-serif !important; }
+.ff-xingkai { font-family: "Xingkai SC", "STXingkai", "华文行楷", "Kaiti SC", "KaiTi", "楷体", serif !important; }
+
+/* 正文容器元素级防御覆盖：与 fs-* 字号类对齐，防止个别页面正文显式 font-family 覆盖根节点继承 */
+.ff-song .poem-content, .ff-song .author-desc { font-family: "Songti SC", "STSong", "华文宋体", "SimSun", "宋体", "Noto Serif SC", "Source Han Serif SC", serif !important; }
+.ff-kai .poem-content, .ff-kai .author-desc { font-family: "Kaiti SC", "STKaiti", "华文楷体", "KaiTi", "楷体", "Noto Serif SC", "Source Han Serif SC", serif !important; }
+.ff-fangsong .poem-content, .ff-fangsong .author-desc { font-family: "FangSong SC", "STFangsong", "华文仿宋", "FangSong", "仿宋", "Noto Serif SC", serif !important; }
+.ff-hei .poem-content, .ff-hei .author-desc { font-family: "Heiti SC", "STHeiti", "华文黑体", "SimHei", "黑体", "Noto Sans SC", "Source Han Sans SC", sans-serif !important; }
+.ff-xingkai .poem-content, .ff-xingkai .author-desc { font-family: "Xingkai SC", "STXingkai", "华文行楷", "Kaiti SC", "KaiTi", "楷体", serif !important; }
