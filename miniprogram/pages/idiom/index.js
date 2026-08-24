@@ -2,6 +2,7 @@
 const storage = require('../../utils/storage');
 const { FALLBACK_IDIOM } = require('../../utils/constants');
 const settings = require('../../utils/settings');
+const seo = require('../../utils/seo');
 
 Page({
   data: {
@@ -59,6 +60,16 @@ Page({
 
   onLoad() {
     this._loadDailyIdiom();
+    this._setupSeo();
+  },
+
+  /** 搜一搜优化：上报标题/关键词/摘要（命中「成语故事/成语大全/一鸣惊人」等词） */
+  _setupSeo() {
+    seo.reportPageInfo({
+      title: '成语故事大全 · 国文之学',
+      keywords: seo.buildKeywords(['成语故事', '成语大全', '成语', '成语典故', '一鸣惊人', '卧薪尝胆', '成语接龙', '国学', '国文之学']),
+      description: '成语故事大全：一鸣惊人、卧薪尝胆、狐假虎威等成语典故，出处释义与故事全文。'
+    });
   },
 
   onShow() {

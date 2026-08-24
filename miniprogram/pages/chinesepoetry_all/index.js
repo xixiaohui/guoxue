@@ -65,7 +65,7 @@ Page({
       types: '按体裁浏览诗词：五言绝句、七言绝句、五言律诗、七言律诗、词牌。'
     };
     seo.reportPageInfo({
-      title: KIND_TITLES[kind],
+      title: KIND_TITLES[kind] + ' · 国文之学',
       keywords: seo.buildKeywords((kwMap[kind] || []).concat(['国文之学', '国学', '诗词', '唐诗', '宋词'])),
       description: descMap[kind]
     });

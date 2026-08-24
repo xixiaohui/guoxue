@@ -98,6 +98,53 @@
   display: block;
 }
 
+/* ── 诗词信息块（朝代/体裁/作者/名句） ─────────── */
+.info-card {
+  margin: 26rpx 24rpx 0;
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  padding: 26rpx 32rpx;
+  box-shadow: 0 4rpx 16rpx rgba(139, 37, 0, 0.06);
+}
+
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 10rpx 0;
+}
+
+.info-label {
+  flex-shrink: 0;
+  width: 96rpx;
+  font-size: 24rpx;
+  color: #8C7B61;
+  letter-spacing: 2rpx;
+}
+
+.info-value {
+  flex: 1;
+  font-size: 26rpx;
+  color: #4A2E18;
+  line-height: 1.7;
+}
+
+/* ── 搜一搜直达引导 ─────────────────────────── */
+.search-hint {
+  margin: 22rpx 24rpx 0;
+  padding: 16rpx 24rpx;
+  border-radius: 16rpx;
+  background: rgba(139, 37, 0, 0.06);
+  border: 1rpx dashed rgba(139, 37, 0, 0.25);
+  text-align: center;
+}
+
+.search-hint-text {
+  font-size: 22rpx;
+  color: #8B2500;
+  letter-spacing: 1rpx;
+}
+
 /* ── 诗人介绍 ─────────────────────────────── */
 .author-card {
   margin: 26rpx 24rpx 0;

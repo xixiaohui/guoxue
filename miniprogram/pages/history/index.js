@@ -1,5 +1,6 @@
 // pages/history/index.js - 历史探秘页（静态内容版）
 const settings = require('../../utils/settings');
+const seo = require('../../utils/seo');
 
 Page({
   data: {
@@ -73,6 +74,17 @@ Page({
     const dynasty = o.dynasty && this.data.dynasties.some((d) => d.id === o.dynasty) ? o.dynasty : 'tang';
     this.setData({ activeDynasty: dynasty });
     this.loadDynastyEvents(dynasty);
+    this._setupSeo();
+  },
+
+  /** 搜一搜优化：按当前朝代上报标题/关键词/摘要（命中「唐宋历史/贞观之治/开元盛世」等词） */
+  _setupSeo() {
+    const title = this.data.activeTitle || '中国历史';
+    seo.reportPageInfo({
+      title: title + '大事件 · 国文之学',
+      keywords: seo.buildKeywords([title + '历史', '中国历史', title, '历史大事件', '朝代', '历史人物', '历史', '国学', '国文之学']),
+      description: title + '历史大事件与名人故事：朝代兴衰、千古人物、趣味历史知识，一览华夏五千年文明。'
+    });
   },
 
   onShow() {

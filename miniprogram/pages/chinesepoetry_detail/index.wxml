@@ -20,6 +20,19 @@
     </view>
   </view>
 
+  <!-- 诗词信息（朝代/体裁/作者/名句，供搜一搜索引与阅读） -->
+  <view class="info-card" wx:if="{{kind === 'poem' && poemInfo.length}}">
+    <view class="info-row" wx:for="{{poemInfo}}" wx:key="label">
+      <text class="info-label">{{item.label}}</text>
+      <text class="info-value">{{item.value}}</text>
+    </view>
+  </view>
+
+  <!-- 搜一搜直达引导（教育用户回搜，形成搜索习惯） -->
+  <view class="search-hint" wx:if="{{kind === 'poem' && title}}">
+    <text class="search-hint-text">微信搜一搜「{{title}}」，即可直达本诗</text>
+  </view>
+
   <!-- 诗人介绍 -->
   <view class="author-card" wx:if="{{kind === 'author'}}">
     <view class="author-top">

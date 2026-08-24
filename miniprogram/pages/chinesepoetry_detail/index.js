@@ -43,6 +43,9 @@ Page({
     authorPoemsHasMore: true,
     authorPoemsLoaded: false,      // 是否已发起过请求（用于空态展示）
 
+    // 诗词信息块（朝代/体裁/作者/名句，供搜一搜索引与阅读）
+    poemInfo: [],
+
     // 海报
     showPoster: false,
     posterLoading: false,
@@ -330,6 +333,25 @@ Page({
     try {
       wx.setPageInfo({ title: navTitle, keywords, description });
     } catch (_) {}
+
+    // 数据（含增强后朝代/体裁/作者/全文）就绪后重建「诗词信息」文本块
+    this._buildPoemInfo();
+  },
+
+  /** 构造「诗词信息」文本块（朝代/体裁/作者/名句），增强页面文本量与搜索结果可抓取度 */
+  _buildPoemInfo() {
+    const d = this.data;
+    if (d.kind !== 'poem') {
+      if (this.data.poemInfo.length) this.setData({ poemInfo: [] });
+      return;
+    }
+    const info = [];
+    if (d.dynasty) info.push({ label: '朝代', value: d.dynasty });
+    if (d.type) info.push({ label: '体裁', value: d.type });
+    if (d.author && d.author !== '佚名') info.push({ label: '作者', value: d.author });
+    const firstLine = String(d.content || '').split('\n')[0].trim().slice(0, 24);
+    if (firstLine) info.push({ label: '名句', value: firstLine });
+    this.setData({ poemInfo: info });
   },
 
   // ── 收藏 ──────────────────────────────

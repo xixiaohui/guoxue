@@ -3,6 +3,32 @@
   "rules": [
     {
       "action": "allow",
+      "page": "pages/home/index"
+    },
+    {
+      "action": "allow",
+      "page": "pages/chinesepoetry/index"
+    },
+    {
+      "action": "allow",
+      "page": "pages/classics/index"
+    },
+    {
+      "action": "allow",
+      "page": "pages/idiom/index"
+    },
+    {
+      "action": "allow",
+      "page": "pages/history/index",
+      "params": ["dynasty"],
+      "matching": "inclusive"
+    },
+    {
+      "action": "allow",
+      "page": "pages/philosophers/index"
+    },
+    {
+      "action": "allow",
       "page": "pages/chinesepoetry_detail/index",
       "params": ["kind", "title", "author", "dynasty", "type", "content"],
       "matching": "inclusive"
@@ -20,8 +46,32 @@
       "matching": "inclusive"
     },
     {
-      "action": "allow",
-      "page": "*"
+      "action": "disallow",
+      "page": "pages/chinesepoetry_search/index"
+    },
+    {
+      "action": "disallow",
+      "page": "pages/favorite/index"
+    },
+    {
+      "action": "disallow",
+      "page": "pages/setting/index"
+    },
+    {
+      "action": "disallow",
+      "page": "pages/week_hot/index"
+    },
+    {
+      "action": "disallow",
+      "page": "pages/my_read_history/index"
+    },
+    {
+      "action": "disallow",
+      "page": "pages/seven_days/index"
+    },
+    {
+      "action": "disallow",
+      "page": "pages/guoxuedownload/index"
     }
   ]
 }

@@ -1,5 +1,6 @@
 // pages/philosophers/index.js - 诸子百家页（静态内容版）
 const settings = require('../../utils/settings');
+const seo = require('../../utils/seo');
 
 Page({
   data: {
@@ -115,6 +116,16 @@ Page({
 
   onShow() {
     settings.applyToPage(this);
+    this._setupSeo();
+  },
+
+  /** 搜一搜优化：上报标题/关键词/摘要（命中「诸子百家/儒家/道家/孔子/老子」等词） */
+  _setupSeo() {
+    seo.reportPageInfo({
+      title: '诸子百家 · 国文之学',
+      keywords: seo.buildKeywords(['诸子百家', '儒家', '道家', '法家', '墨家', '兵家', '孔子', '老子', '庄子', '孟子', '国学', '国文之学']),
+      description: '诸子百家思想精华：儒家、道家、法家、墨家、兵家等学派，孔子、老子、庄子、韩非子思想解读。'
+    });
   },
 
   // ── 打开学派详情 ──────────────────────────────

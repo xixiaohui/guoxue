@@ -1,6 +1,7 @@
 // pages/classics/index.js - 诗词典籍页（静态内容版）
 const storage = require('../../utils/storage');
 const settings = require('../../utils/settings');
+const seo = require('../../utils/seo');
 
 Page({
   data: {
@@ -102,6 +103,16 @@ Page({
 
   onShow() {
     settings.applyToPage(this);
+    this._setupSeo();
+  },
+
+  /** 搜一搜优化：上报标题/关键词/摘要（命中「诗词典籍/论语/诗经/道德经/唐诗/宋词/元曲」） */
+  _setupSeo() {
+    seo.reportPageInfo({
+      title: '诗词典籍大全 · 国文之学',
+      keywords: seo.buildKeywords(['诗词典籍', '国学典籍', '论语', '道德经', '诗经', '易经', '唐诗', '宋词', '元曲', '古诗', '国学', '国文之学']),
+      description: '诗词典籍大全：论语、道德经、诗经、孟子、庄子等国学经典，精选诗词全文与赏析。'
+    });
   },
 
   // ── Tab切换 ──────────────────────────────
