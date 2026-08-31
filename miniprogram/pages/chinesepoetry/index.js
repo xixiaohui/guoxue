@@ -338,6 +338,11 @@ Page({
     wx.navigateTo({ url: '/pages/chinesepoetry_search/index' });
   },
 
+  // ── 飞花令（以诗会友）──────────────────────
+  goFeihua() {
+    wx.navigateTo({ url: '/pages/feihua/index' });
+  },
+
   // ── 跳转详情 ──────────────────────────────
   goDetail(e) {
     const poem = e.currentTarget.dataset.poem;

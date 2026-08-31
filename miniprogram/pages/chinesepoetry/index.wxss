@@ -875,3 +875,66 @@
 .solar-card {
   min-height: 230rpx;
 }
+
+/* ── 飞花令入口 ─────────────────────────── */
+.feihua-entry {
+  margin: 24rpx 24rpx 0;
+  background: linear-gradient(135deg, #8B2500, #A23A12 60%, #C4882E 150%);
+  border-radius: 20rpx;
+  padding: 22rpx 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 6rpx 18rpx rgba(139, 37, 0, 0.18);
+}
+
+.feihua-entry-left {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+}
+
+.feihua-entry-char {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFD97D;
+  color: #8B2500;
+  font-size: 40rpx;
+  font-weight: 800;
+  border-radius: 18rpx;
+  flex-shrink: 0;
+}
+
+.feihua-entry-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.feihua-entry-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #FFF8E7;
+  letter-spacing: 2rpx;
+}
+
+.feihua-entry-sub {
+  font-size: 22rpx;
+  color: rgba(255, 248, 231, 0.75);
+  margin-top: 6rpx;
+  letter-spacing: 1rpx;
+}
+
+.feihua-entry-go {
+  font-size: 26rpx;
+  color: #FFD97D;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.entry-hover {
+  opacity: 0.9;
+  transform: scale(0.99);
+}

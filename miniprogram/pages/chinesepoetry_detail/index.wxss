@@ -73,6 +73,22 @@
   text-align: center;
 }
 
+/* 朋友圈单页模式提示（落地页无登录态/存储隔离） */
+.single-page-tip {
+  margin: 26rpx 24rpx 0;
+  padding: 18rpx 24rpx;
+  border-radius: 16rpx;
+  background: rgba(139, 37, 0, 0.05);
+  border: 1rpx dashed rgba(139, 37, 0, 0.22);
+  text-align: center;
+}
+
+.single-page-tip-text {
+  font-size: 22rpx;
+  color: #8B2500;
+  letter-spacing: 1rpx;
+}
+
 /* ── 诗词正文 ─────────────────────────────── */
 .content-card {
   margin: 26rpx 24rpx 0;
@@ -96,6 +112,33 @@
   letter-spacing: 2rpx;
   white-space: pre-wrap;
   display: block;
+}
+
+/* 正文缺失空态（分享落地且在线补全失败时展示） */
+.content-missing {
+  padding: 64rpx 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14rpx;
+}
+
+.content-missing-icon {
+  font-size: 64rpx;
+}
+
+.content-missing-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #4A2E18;
+  letter-spacing: 2rpx;
+}
+
+.content-missing-desc {
+  font-size: 24rpx;
+  color: #8C7B61;
+  line-height: 1.7;
 }
 
 /* ── 诗词信息块（朝代/体裁/作者/名句） ─────────── */

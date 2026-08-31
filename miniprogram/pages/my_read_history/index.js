@@ -2,16 +2,24 @@
 // 数据源：详情页 _recordView 写入的本地 storage 'viewed_poems'
 const poemCache = require('../../utils/poemCache');
 const settings = require('../../utils/settings');
+const landing = require('../../utils/landing');
 
 Page({
   data: {
     poems: [],
     loading: true,
-    fontFamilyClass: ''
+    fontFamilyClass: '',
+    isSinglePage: false // 朋友圈单页模式：本地存储隔离、禁止跳转
+  },
+
+  /** 单页模式下交互类能力被禁用，统一给出引导提示 */
+  _tipUnavailable() {
+    wx.showToast({ title: '请打开小程序体验此功能', icon: 'none' });
   },
 
   onShow() {
     settings.applyToPage(this);
+    this.setData({ isSinglePage: landing.isSinglePage() });
     this._loadHistory();
   },
 
@@ -42,6 +50,7 @@ Page({
   },
 
   goDetail(e) {
+    if (this.data.isSinglePage) { this._tipUnavailable(); return; }
     const poem = e.currentTarget.dataset.poem;
     if (!poem) return;
     // 缓存完整数据，避免详情页因 URL 长度限制展示截断内容
@@ -59,6 +68,7 @@ Page({
   },
 
   clearAll() {
+    if (this.data.isSinglePage) { this._tipUnavailable(); return; }
     if (!this.data.poems.length) {
       wx.showToast({ title: '暂无阅读记录', icon: 'none' });
       return;
@@ -82,21 +92,53 @@ Page({
   },
 
   goPoetry() {
+    if (this.data.isSinglePage) { this._tipUnavailable(); return; }
     wx.switchTab({ url: '/pages/chinesepoetry/index' });
   },
 
   // ── 分享 ──────────────────────────────
+  /** 分享落地路径（携带完整 seed，确保朋友圈单页模式可渲染正文） */
+  _poemSharePath(p, from) {
+    const qs = [
+      'kind=poem',
+      'id=' + encodeURIComponent(p.id || ''),
+      'title=' + encodeURIComponent(p.title || ''),
+      'author=' + encodeURIComponent(p.author || ''),
+      'dynasty=' + encodeURIComponent(p.dynasty || ''),
+      'type=' + encodeURIComponent(p.type || ''),
+      'content=' + encodeURIComponent((p.content || p.preview || '').slice(0, 300))
+    ];
+    if (from) qs.push('from=' + from);
+    return '/pages/chinesepoetry_detail/index?' + qs.join('&');
+  },
+
   onShareAppMessage() {
+    const p = (this.data.poems || [])[0];
+    if (!p) {
+      return {
+        title: '我的阅读历史 · 国文之学',
+        path: '/pages/my_read_history/index'
+      };
+    }
     return {
-      title: '我的阅读历史 · 国文之学',
-      path: '/pages/my_read_history/index'
+      title: '最近在读《' + (p.title || '无题') + '》—— ' + (p.author || '中华诗词'),
+      path: this._poemSharePath(p)
     };
   },
 
   onShareTimeline() {
+    const p = (this.data.poems || [])[0];
+    if (!p) {
+      return {
+        title: '我的阅读历史 · 国文之学',
+        query: 'from=timeline'
+      };
+    }
+    const path = this._poemSharePath(p, 'timeline');
+    const qIndex = path.indexOf('?');
     return {
-      title: '我的阅读历史 · 国文之学',
-      query: 'from=timeline'
+      title: '最近在读《' + (p.title || '无题') + '》—— ' + (p.author || '中华诗词'),
+      query: qIndex >= 0 ? path.slice(qIndex + 1) : 'from=timeline'
     };
   }
 });

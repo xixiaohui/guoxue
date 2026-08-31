@@ -142,14 +142,14 @@ Page({
 
   // ── 分享 ──────────────────────────────
   onShareAppMessage() {
-    const s = this.data.selectedSchool;
+    const s = this.data.activeSchool;
     return {
       title: s && s.name ? `【${s.name}】${s.slogan || ''} · 国学助手` : '诸子百家 · 百家争鸣精华',
       path:  '/pages/philosophers/index',
     };
   },
   onShareTimeline() {
-    const s = this.data.selectedSchool;
+    const s = this.data.activeSchool;
     return {
       title: s && s.name ? `【${s.name}】思想精华，流传千年` : '国学助手 · 诸子百家思想宝库',
       query: 'from=timeline',

@@ -2,18 +2,26 @@ const storage = require('../../utils/storage');
 const user = require('../../utils/user');
 const poemCache = require('../../utils/poemCache');
 const settings = require('../../utils/settings');
+const landing = require('../../utils/landing');
 
 Page({
   data: {
     poems: [],
     loading: true,
     isLogin: false,
+    isSinglePage: false, // 朋友圈单页模式：本地存储隔离、禁止跳转
   },
 
   async onShow() {
     settings.applyToPage(this);
+    this.setData({ isSinglePage: landing.isSinglePage() });
     this.setData({ isLogin: user.isLogin() });
     await this._loadFavorites();
+  },
+
+  /** 单页模式下交互类能力被禁用，统一给出引导提示 */
+  _tipUnavailable() {
+    wx.showToast({ title: '请打开小程序体验此功能', icon: 'none' });
   },
 
   async _loadFavorites() {
@@ -29,6 +37,7 @@ Page({
   },
 
   goDetail(e) {
+    if (this.data.isSinglePage) { this._tipUnavailable(); return; }
     const poem = e.currentTarget.dataset.poem;
     if (!poem) return;
     // 缓存完整正文，避免详情页因 URL 长度限制展示截断内容
@@ -46,6 +55,7 @@ Page({
   },
 
   toggleFavorite(e) {
+    if (this.data.isSinglePage) { this._tipUnavailable(); return; }
     const poem = e.currentTarget.dataset.poem;
     if (!poem) return;
     const isFav = storage.toggleFavoritePoem(poem);
@@ -61,10 +71,12 @@ Page({
   },
 
   goPoetry() {
+    if (this.data.isSinglePage) { this._tipUnavailable(); return; }
     wx.switchTab({ url: '/pages/chinesepoetry/index' });
   },
 
   clearAll() {
+    if (this.data.isSinglePage) { this._tipUnavailable(); return; }
     if (!this.data.poems.length) {
       wx.showToast({ title: '暂无收藏', icon: 'none' });
       return;
@@ -90,14 +102,13 @@ Page({
   },
 
   // ── 分享（与收藏的第一首诗词对应）─────────
-  onShareAppMessage() {
-    const p = (this.data.poems || [])[0];
-    if (!p) {
-      return {
-        title: '我的收藏 · 国文之学',
-        path: '/pages/favorite/index'
-      };
-    }
+  /** 分享标题：我收藏的诗词《X》—— 作者 */
+  _poemShareTitle(p) {
+    return '我收藏的诗词《' + (p.title || '无题') + '》—— ' + (p.author || '中华诗词');
+  },
+
+  /** 分享落地路径（携带完整 seed，确保朋友圈单页模式可渲染正文） */
+  _poemSharePath(p, from) {
     const qs = [
       'kind=poem',
       'id=' + encodeURIComponent(p.id || ''),
@@ -107,19 +118,37 @@ Page({
       'type=' + encodeURIComponent(p.type || ''),
       'content=' + encodeURIComponent((p.content || p.preview || '').slice(0, 300))
     ];
+    if (from) qs.push('from=' + from);
+    return '/pages/chinesepoetry_detail/index?' + qs.join('&');
+  },
+
+  onShareAppMessage() {
+    const p = (this.data.poems || [])[0];
+    if (!p) {
+      return {
+        title: '我的收藏 · 国文之学',
+        path: '/pages/favorite/index'
+      };
+    }
     return {
-      title: '我收藏的诗词《' + (p.title || '无题') + '》—— ' + (p.author || '中华诗词'),
-      path: '/pages/chinesepoetry_detail/index?' + qs.join('&')
+      title: this._poemShareTitle(p),
+      path: this._poemSharePath(p)
     };
   },
 
   onShareTimeline() {
     const p = (this.data.poems || [])[0];
+    if (!p) {
+      return {
+        title: '我的收藏 · 国文之学',
+        query: 'from=timeline'
+      };
+    }
+    const path = this._poemSharePath(p, 'timeline');
+    const qIndex = path.indexOf('?');
     return {
-      title: p
-        ? '我收藏的诗词《' + (p.title || '无题') + '》—— ' + (p.author || '中华诗词')
-        : '我的收藏 · 国文之学',
-      query: 'from=timeline'
+      title: this._poemShareTitle(p),
+      query: qIndex >= 0 ? path.slice(qIndex + 1) : 'from=timeline'
     };
   }
 });

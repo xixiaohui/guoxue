@@ -15,9 +15,27 @@
 
   <!-- 诗词正文 -->
   <view class="content-card" wx:if="{{kind === 'poem'}}">
-    <view class="content-inner">
+    <!-- 正文缺失：分享落地时先展示加载态，接口补全失败则给出空态说明 -->
+    <block wx:if="{{contentMissing && loading}}">
+      <view class="poem-loading">
+        <text class="poem-loading-text">正在加载正文…</text>
+      </view>
+    </block>
+    <block wx:elif="{{contentMissing}}">
+      <view class="content-missing">
+        <text class="content-missing-icon">📜</text>
+        <text class="content-missing-title">正文暂缺</text>
+        <text class="content-missing-desc">分享链接未携带完整正文，且在线检索暂时失败。打开小程序即可查看全文。</text>
+      </view>
+    </block>
+    <view class="content-inner" wx:else>
       <text class="poem-content {{fontSizeClass}} {{fontFamilyClass}}">{{content}}</text>
     </view>
+  </view>
+
+  <!-- 朋友圈单页模式提示（落地页无登录态/存储隔离，引导用户打开小程序体验完整功能） -->
+  <view class="single-page-tip" wx:if="{{isSinglePage}}">
+    <text class="single-page-tip-text">当前为朋友圈分享预览，打开小程序可体验收藏、点赞、海报等完整功能</text>
   </view>
 
   <!-- 诗词信息（朝代/体裁/作者/名句，供搜一搜索引与阅读） -->
@@ -81,8 +99,8 @@
     <view class="empty-tip" wx:elif="{{authorPoemsLoaded}}">暂未收录该作者诗词，去看看其他诗人吧</view>
   </view>
 
-  <!-- 底部操作栏 -->
-  <view class="action-bar">
+  <!-- 底部操作栏（单页模式下收藏/点赞/复制/海报/返回等能力被禁用，整体隐藏） -->
+  <view class="action-bar" wx:if="{{!isSinglePage}}">
     <view class="action-btn like-btn {{liked ? 'like-btn-active' : ''}}" wx:if="{{kind === 'poem'}}" bindtap="toggleLike" hover-class="action-hover" hover-stay-time="80">
       <text class="action-icon">{{liked ? '♥' : '♡'}}</text>
       <text class="action-text">{{liked ? '已赞' : '点赞'}}</text>
@@ -107,8 +125,8 @@
 
   <view class="footer">国文之学 · 诗词天地</view>
 
-  <!-- 海报生成画布（移出屏幕，供 Canvas 2D 绘制） -->
-  <canvas type="2d" id="posterCanvas" class="poster-canvas"></canvas>
+  <!-- 海报生成画布（移出屏幕，供 Canvas 2D 绘制；单页模式下画布能力被禁用，不渲染） -->
+  <canvas type="2d" id="posterCanvas" class="poster-canvas" wx:if="{{!isSinglePage}}"></canvas>
 
   <!-- 海报预览弹层（长海报可上下滚动查看全部内容） -->
   <view class="poster-mask" wx:if="{{showPoster}}" catchtap="closePoster">

@@ -6,6 +6,7 @@ const poetry = require('../../utils/poetryApi');
 const poemCache = require('../../utils/poemCache');
 const seo = require('../../utils/seo');
 const topicData = require('../../utils/topicData');
+const landing = require('../../utils/landing');
 
 // 从 fallback 中取下一条，尽量避免短时间重复
 function _getNextFallback(currentQuote) {
@@ -113,6 +114,8 @@ Page({
     posterLoading: false,
     posterPath: '',
 
+    isSinglePage: false, // 朋友圈单页模式：广告/跳转/海报/分享菜单被禁用
+
     showAd: false,
     adUnitId: 'adunit-67efd80bac46e2ad',
 
@@ -135,13 +138,23 @@ Page({
     this._posterTimer = null;
     this._lastLoadedDay = this._todayKey();
 
+    // 单页模式：广告组件被禁用，且禁止一切页面跳转/海报/分享菜单等能力
+    const single = landing.isSinglePage();
     this.setData({
-      showAd: this._canShowAd()
+      isSinglePage: single,
+      showAd: this._canShowAd() && !single
     });
 
     this._loadDaily();
     this._loadSolar();
     this._setupSeo();
+  },
+
+  /** 单页模式下禁止页面跳转/海报/分享菜单等能力，返回 true 表示已拦截并提示 */
+  _guardNav() {
+    if (!this.data.isSinglePage) return false;
+    wx.showToast({ title: '请打开小程序浏览更多内容', icon: 'none' });
+    return true;
   },
 
   onShow() {
@@ -318,6 +331,7 @@ Page({
   },
 
   goFunc(e) {
+    if (this._guardNav()) return;
     const func = e.currentTarget.dataset.func;
     if (!func) return;
 
@@ -329,6 +343,7 @@ Page({
   },
 
   goHotTopic(e) {
+    if (this._guardNav()) return;
     const page = e.currentTarget.dataset.page;
 
     const pageMap = {
@@ -349,6 +364,7 @@ Page({
   },
 
   goCategory(e) {
+    if (this._guardNav()) return;
     const cat = e.currentTarget.dataset.cat;
     if (!cat) return;
 
@@ -360,15 +376,18 @@ Page({
   },
 
   goGuoxueDownload() {
+    if (this._guardNav()) return;
     wx.navigateTo({ url: '/pages/guoxuedownload/index' });
   },
 
   goPoetry() {
+    if (this._guardNav()) return;
     wx.switchTab({ url: '/pages/chinesepoetry/index' });
   },
 
   /** 精选专题 → 静态专题页（唐诗三百首/宋词精选/古诗词名句/唐诗鉴赏） */
   goTopic(e) {
+    if (this._guardNav()) return;
     const type = e.currentTarget.dataset.type;
     if (!type) return;
     wx.navigateTo({ url: '/pages/topic/index?type=' + type });
@@ -376,11 +395,13 @@ Page({
 
   /** 本周最热门诗词 → 完整榜单页 */
   goWeekHot() {
+    if (this._guardNav()) return;
     wx.navigateTo({ url: '/pages/week_hot/index' });
   },
 
   /** 连续学习7天 → 打卡页 */
   goSevenDays() {
+    if (this._guardNav()) return;
     wx.navigateTo({ url: '/pages/seven_days/index' });
   },
 
@@ -400,6 +421,7 @@ Page({
 
   /** 节气诗词 → 详情 */
   goSolarPoem(e) {
+    if (this._guardNav()) return;
     const poem = e.currentTarget.dataset.poem;
     if (!poem || (!poem.title && !poem.content)) return;
     poemCache.cachePoem(poem);
@@ -447,6 +469,11 @@ Page({
   },
 
   showShareMenu() {
+    // 单页模式下分享菜单/海报等能力不可用
+    if (this.data.isSinglePage) {
+      wx.showToast({ title: '请打开小程序分享', icon: 'none' });
+      return;
+    }
     wx.showActionSheet({
       itemList: ['发送给好友', '分享到朋友圈', '生成精美海报'],
       success: (res) => {
@@ -478,6 +505,11 @@ Page({
   },
 
   openPoster() {
+    // 单页模式下画布能力被禁用
+    if (this.data.isSinglePage) {
+      wx.showToast({ title: '请打开小程序生成海报', icon: 'none' });
+      return;
+    }
     if (this.data.posterLoading || this.data.showPoster) return;
 
     this._clearPosterTask();

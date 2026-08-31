@@ -6,6 +6,22 @@
   box-sizing: border-box;
 }
 
+/* 朋友圈单页模式提示 */
+.single-page-tip {
+  padding: 18rpx 24rpx;
+  border-radius: 16rpx;
+  background: rgba(139, 37, 0, 0.05);
+  border: 1rpx dashed rgba(139, 37, 0, 0.22);
+  margin-bottom: 24rpx;
+  text-align: center;
+}
+
+.single-page-tip-text {
+  font-size: 22rpx;
+  color: #8B2500;
+  letter-spacing: 1rpx;
+}
+
 /* 顶部横幅 */
 .banner {
   position: relative;

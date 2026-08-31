@@ -22,9 +22,9 @@
   <!-- 空态 -->
   <view class="empty-state" wx:elif="{{poems.length === 0}}">
     <text class="empty-icon">☆</text>
-    <text class="empty-title">暂无收藏</text>
-    <text class="empty-desc">在诗词详情页点击星标即可收藏</text>
-    <view class="empty-action" bindtap="goPoetry">去浏览诗词</view>
+    <text class="empty-title">{{isSinglePage ? '分享预览' : '暂无收藏'}}</text>
+    <text class="empty-desc">{{isSinglePage ? '当前为朋友圈分享预览，打开小程序即可查看你的收藏' : '在诗词详情页点击星标即可收藏'}}</text>
+    <view class="empty-action" wx:if="{{!isSinglePage}}" bindtap="goPoetry">去浏览诗词</view>
   </view>
 
   <!-- 列表 -->

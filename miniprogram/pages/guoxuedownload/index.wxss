@@ -1,1 +1,38 @@
 /* pages/guoxuedownload/index.wxss */
+.page {
+  min-height: 100vh;
+  background: #FDF6E3;
+  box-sizing: border-box;
+  padding: 24rpx;
+}
+
+/* 朋友圈单页模式提示 */
+.single-page-tip {
+  margin: 40rpx 24rpx 0;
+  padding: 56rpx 40rpx;
+  background: #FFFBF0;
+  border: 1rpx dashed #D8C08A;
+  border-radius: 20rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14rpx;
+}
+
+.single-page-tip-icon {
+  font-size: 64rpx;
+}
+
+.single-page-tip-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #4A2E18;
+  letter-spacing: 2rpx;
+}
+
+.single-page-tip-desc {
+  font-size: 24rpx;
+  color: #8C7B61;
+  line-height: 1.7;
+}

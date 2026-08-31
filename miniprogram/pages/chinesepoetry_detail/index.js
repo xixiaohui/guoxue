@@ -5,6 +5,7 @@ const poemCache = require('../../utils/poemCache');
 const share = require('../../utils/share');
 const settings = require('../../utils/settings');
 const seo = require('../../utils/seo');
+const landing = require('../../utils/landing');
 
 // 诗人作品分页大小（/search 实测 page 参数生效）
 const AUTHOR_POEM_PAGE_SIZE = 20;
@@ -26,6 +27,8 @@ Page({
 
     loading: false,          // 详情接口增强请求中
     fromSeed: false,         // 是否以列表页 seed 渲染（详情接口不可用时）
+    contentMissing: false,   // 诗词正文缺失（分享落地时由接口补全，失败则展示空态）
+    isSinglePage: false,     // 朋友圈单页模式：禁用交互/跳转类能力
 
     isFavorited: false,
     liked: false,
@@ -54,12 +57,15 @@ Page({
 
   onLoad(options) {
     const o = options || {};
+    // 朋友圈单页模式：无登录态、不允许跳转、storage 与普通模式不共用，需据此收敛交互
+    const single = landing.isSinglePage();
     const kind = o.kind === 'author' ? 'author' : 'poem';
-    const title = decodeURIComponent(o.title || '');
-    const author = decodeURIComponent(o.author || '');
-    const dynasty = decodeURIComponent(o.dynasty || '');
+    const title = landing.safeDecode(o.title);
+    const author = landing.safeDecode(o.author);
+    const dynasty = landing.safeDecode(o.dynasty);
     const poemCount = parseInt(o.poemCount, 10) || 0;
-    const content = decodeURIComponent(o.content || '');
+    // 分享链接只带短正文种子 seed（避免超出 URL/query 长度限制），此处一并作为兜底正文
+    const content = landing.safeDecode(o.content) || landing.safeDecode(o.seed);
 
     // 优先使用列表页跳转前缓存的完整数据（规避 URL 长度截断导致的正文缺失）
     const cached = kind === 'poem'
@@ -69,7 +75,7 @@ Page({
     const fullTitle = (cached && cached.title) || title;
     const fullAuthor = (cached && cached.author) || author;
     const fullDynasty = (cached && cached.dynasty) || dynasty;
-    const fullType = (cached && cached.type) || decodeURIComponent(o.type || '');
+    const fullType = (cached && cached.type) || landing.safeDecode(o.type);
     const fullContent = (cached && cached.content) || content;
 
     // 诗词标识：title 可能为空（API 大量佚名/无题记录），用 id/正文前缀兜底
@@ -83,12 +89,14 @@ Page({
       author: fullAuthor,
       dynasty: fullDynasty,
       type: fullType,
-      source: decodeURIComponent(o.source || ''),
-      description: decodeURIComponent(o.description || ''),
+      source: landing.safeDecode(o.source),
+      description: landing.safeDecode(o.description),
       poemCount,
       countText: poetry.fmtCount(poemCount),
       authorChar: fullTitle.slice(0, 1),
-      fromSeed: !!(o.title || o.content),
+      fromSeed: !!(o.title || o.content || o.seed),
+      contentMissing: kind === 'poem' && !fullContent,
+      isSinglePage: single,
       isFavorited: kind === 'poem' ? storage.isPoemFavorited(poemRef) : false,
       liked: kind === 'poem' ? this._isLiked(poemRef) : false
     });
@@ -166,6 +174,8 @@ Page({
 
   /** 点击诗人作品 → 跳转诗词详情（seed 跳转，规避 /poems/:id 500 故障） */
   goAuthorPoem(e) {
+    // 单页模式禁止跳转，改为提示
+    if (this.data.isSinglePage) { this._tipUnavailable(); return; }
     const poem = e.currentTarget.dataset.poem;
     if (!poem || (!poem.title && !poem.content)) return;
     poemCache.cachePoem(poem);
@@ -253,6 +263,7 @@ Page({
         // 检索到的完整正文应覆盖 URL 截断的 seed（全文长度 >= 截断长度才覆盖）
         if (consistent && p.content && (!this.data.content || p.content.length >= this.data.content.length)) {
           patch.content = p.content;
+          patch.contentMissing = false;
         }
         if (p.author) patch.author = p.author;
         if (p.dynasty) patch.dynasty = p.dynasty;
@@ -310,7 +321,8 @@ Page({
       navTitle = title;
     }
     if (navTitle.length > 24) navTitle = navTitle.slice(0, 24);
-    wx.setNavigationBarTitle({ title: navTitle });
+    // 单页模式下 setNavigationBarTitle 无效且会静默失败，统一走安全封装
+    landing.setNavTitle(navTitle);
 
     if (!wx.setPageInfo) return;
 
@@ -355,7 +367,13 @@ Page({
   },
 
   // ── 收藏 ──────────────────────────────
+  /** 单页模式下交互类能力（存储/剪贴板/画布/跳转）被禁用，统一给出引导提示 */
+  _tipUnavailable() {
+    wx.showToast({ title: '请打开小程序体验此功能', icon: 'none' });
+  },
+
   toggleFavorite() {
+    if (this.data.isSinglePage) { this._tipUnavailable(); return; }
     if (this.data.kind !== 'poem') return;
     const poem = {
       id: this.data.id,
@@ -385,6 +403,7 @@ Page({
   },
 
   toggleLike() {
+    if (this.data.isSinglePage) { this._tipUnavailable(); return; }
     if (this.data.kind !== 'poem') return;
     const poem = {
       id: this.data.id,
@@ -413,6 +432,7 @@ Page({
   noop() {},
 
   async createPoster() {
+    if (this.data.isSinglePage) { this._tipUnavailable(); return; }
     if (this.data.kind !== 'poem') {
       wx.showToast({ title: '仅诗词支持生成海报', icon: 'none' });
       return;
@@ -447,6 +467,7 @@ Page({
   },
 
   async savePoster() {
+    if (this.data.isSinglePage) { this._tipUnavailable(); return; }
     if (!this.data.posterPath) return;
     try {
       await share.savePosterToAlbum(this.data.posterPath);
@@ -457,6 +478,7 @@ Page({
 
   // ── 复制 ──────────────────────────────
   copyContent() {
+    if (this.data.isSinglePage) { this._tipUnavailable(); return; }
     const text = this.data.kind === 'author'
       ? (this.data.title + '\n' + (this.data.description || ''))
       : (this.data.content || this.data.title);
@@ -469,6 +491,8 @@ Page({
 
   // ── 返回 ──────────────────────────────
   goBack() {
+    // 单页模式禁止一切页面跳转
+    if (this.data.isSinglePage) { this._tipUnavailable(); return; }
     const pages = getCurrentPages();
     if (pages.length > 1) {
       wx.navigateBack({ delta: 1 });
@@ -501,19 +525,50 @@ Page({
     return '《' + title + '》' + authorText;
   },
 
-  onShareAppMessage() {
+  /**
+   * 组装分享落地 URL：携带完整 seed（id/title/author/dynasty/type/content），
+   * 确保单页模式（朋友圈）下接收方仅凭 query 即可渲染正文，不依赖登录态/本地存储。
+   * 正文超长时逐轮截断，保证 path/query 不超微信上限。
+   * @param {string} [from] 分享来源标记（timeline = 朋友圈单页模式）
+   * @returns {string} 完整落地路径（含 query）
+   */
+  _buildSharePath(from) {
     const d = this.data;
+    const qs = [
+      'kind=' + d.kind,
+      'id=' + encodeURIComponent(d.id == null ? '' : String(d.id)),
+      'title=' + encodeURIComponent(d.title || this._safeTitle()),
+      'author=' + encodeURIComponent(d.author || ''),
+      'dynasty=' + encodeURIComponent(d.dynasty || ''),
+      'type=' + encodeURIComponent(d.type || '')
+    ];
+    if (from) qs.push('from=' + from);
+    const base = '/pages/chinesepoetry_detail/index?' + qs.join('&');
+    // 诗人页无需正文 seed；诗词页正文缺失时也无需携带
+    if (d.kind !== 'poem' || !d.content) return base;
+    let content = d.content;
+    let url = base;
+    for (let i = 0; i < 3; i++) {
+      url = base + '&content=' + encodeURIComponent(content);
+      if (url.length <= 1500) break; // 朋友圈 query 上限更严格，留余量
+      content = content.slice(0, Math.floor(content.length * 0.7));
+    }
+    return url;
+  },
+
+  onShareAppMessage() {
     return {
       title: this._shareTitle(),
-      path: '/pages/chinesepoetry_detail/index?kind=' + d.kind + '&title=' + encodeURIComponent(this._safeTitle())
+      path: this._buildSharePath()
     };
   },
 
   onShareTimeline() {
-    const d = this.data;
+    const path = this._buildSharePath('timeline');
+    const qIndex = path.indexOf('?');
     return {
       title: this._shareTitle(),
-      query: 'kind=' + d.kind + '&title=' + encodeURIComponent(this._safeTitle()) + '&from=timeline'
+      query: qIndex >= 0 ? path.slice(qIndex + 1) : 'from=timeline'
     };
   }
 });

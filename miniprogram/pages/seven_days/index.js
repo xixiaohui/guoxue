@@ -1,6 +1,7 @@
 // pages/seven_days/index.js - 连续学习7天打卡
 // 数据：本地 storage 'study_days'（YYYYMMDD 字符串数组，去重排序），与首页预览同 key
 const settings = require('../../utils/settings');
+const landing = require('../../utils/landing');
 
 const STORAGE_KEY = 'study_days';
 const MAX_DAYS = 60;
@@ -11,7 +12,8 @@ Page({
     todayDone: false,    // 今日是否已打卡
     week: [],            // 本周7天打卡状态
     history: [],         // 最近打卡记录
-    fontFamilyClass: ''
+    fontFamilyClass: '',
+    isSinglePage: false  // 朋友圈单页模式：本地存储隔离、禁止跳转
   },
 
   onLoad() {
@@ -19,6 +21,7 @@ Page({
   },
 
   onShow() {
+    this.setData({ isSinglePage: landing.isSinglePage() });
     this._load();
   },
 
@@ -61,6 +64,11 @@ Page({
 
   /** 今日打卡 */
   checkIn() {
+    // 单页模式本地存储隔离，打卡不生效，给出引导
+    if (this.data.isSinglePage) {
+      wx.showToast({ title: '请打开小程序打卡', icon: 'none' });
+      return;
+    }
     if (this.data.todayDone) {
       wx.showToast({ title: '今天已打过卡啦', icon: 'none' });
       return;
@@ -83,6 +91,10 @@ Page({
   },
 
   clearHistory() {
+    if (this.data.isSinglePage) {
+      wx.showToast({ title: '请打开小程序体验此功能', icon: 'none' });
+      return;
+    }
     if (!this.data.history.length) {
       wx.showToast({ title: '暂无打卡记录', icon: 'none' });
       return;

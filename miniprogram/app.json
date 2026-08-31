@@ -15,7 +15,8 @@
     "pages/week_hot/index",
     "pages/my_read_history/index",
     "pages/seven_days/index",
-    "pages/topic/index"
+    "pages/topic/index",
+    "pages/feihua/index"
   ],
   "window": {
     "backgroundColor": "#F5EDD6",

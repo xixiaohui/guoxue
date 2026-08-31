@@ -12,6 +12,11 @@
     <view class="hero-deco">道可道，非常道</view>
   </view>
 
+  <!-- 朋友圈单页模式提示 -->
+  <view class="single-page-tip" wx:if="{{isSinglePage}}">
+    <text class="single-page-tip-text">当前为朋友圈分享预览，打开小程序可浏览全部栏目与功能</text>
+  </view>
+
   <!-- 每日经典 -->
   <view class="section">
     <view class="section-head">

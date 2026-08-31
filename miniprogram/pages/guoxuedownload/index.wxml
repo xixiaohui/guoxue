@@ -1,6 +1,13 @@
 <view class="{{fontFamilyClass}}">
 
-  <view class="section">
+  <!-- 朋友圈单页模式：pdf 组件与激励视频广告被禁用，展示引导说明 -->
+  <view class="single-page-tip" wx:if="{{isSinglePage}}">
+    <text class="single-page-tip-icon">📄</text>
+    <text class="single-page-tip-title">文库预览不可用</text>
+    <text class="single-page-tip-desc">当前为朋友圈分享预览，PDF 在线阅读与下载需要完整小程序环境，打开小程序即可使用</text>
+  </view>
+
+  <view class="section" wx:if="{{!isSinglePage}}">
    
     <view class="page">
       <pdf-file-service

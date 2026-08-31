@@ -20,6 +20,8 @@
     </view>
   </view>
 
+
+
   <!-- 模块一：每日一句 /quote（首次加载骨架占位，避免内容长出导致跳动） -->
   <view class="quote-card" wx:if="{{quoteLoading && !quote.content}}">
     <view class="skeleton skeleton-line skeleton-w40"></view>
@@ -36,6 +38,18 @@
       <text class="quote-author">{{quote.author}}</text>
       <text class="quote-source" wx:if="{{quote.source}}">——《{{quote.source}}》</text>
     </view>
+  </view>
+
+  <!-- 飞花令入口 -->
+  <view class="feihua-entry" bindtap="goFeihua" hover-class="entry-hover" hover-stay-time="80">
+    <view class="feihua-entry-left">
+      <text class="feihua-entry-char">令</text>
+      <view class="feihua-entry-info">
+        <text class="feihua-entry-title">飞花令 · 以诗会友</text>
+        <text class="feihua-entry-sub">主题字出题 · 品读千古名句</text>
+      </view>
+    </view>
+    <text class="feihua-entry-go">去对诗 ›</text>
   </view>
 
   <!-- 模块二：节气推荐 /solar-term -->
@@ -58,8 +72,7 @@
     </view>
     <view class="solar-right">
       <text class="solar-desc">{{solar.termDescription}}</text>
-      <view class="solar-poem" wx:if="{{solar.poem}}" bindtap="goDetail" data-poem="{{solar.poem}}"
-        hover-class="card-hover" hover-stay-time="80">
+      <view class="solar-poem" wx:if="{{solar.poem}}" bindtap="goDetail" data-poem="{{solar.poem}}" hover-class="card-hover" hover-stay-time="80">
         <text class="solar-poem-title">{{solar.poem.title ? '《' + solar.poem.title + '》' : '无名篇'}} {{solar.poem.dynasty}} · {{solar.poem.author || '佚名'}}</text>
         <text class="solar-poem-preview">{{solar.poem.preview}}</text>
         <view class="solar-go">
@@ -78,8 +91,7 @@
     <view class="section-head">
       <view class="label-bar"></view>
       <text class="section-label">分类浏览</text>
-      <view class="section-extra" wx:if="{{categoryQueried}}" bindtap="resetFilter"
-        hover-class="link-hover" hover-stay-time="80">重置</view>
+      <view class="section-extra" wx:if="{{categoryQueried}}" bindtap="resetFilter" hover-class="link-hover" hover-stay-time="80">重置</view>
     </view>
 
     <view class="chip-block">
@@ -97,17 +109,13 @@
         <view class="chip-label">朝代</view>
         <scroll-view scroll-x show-scrollbar="{{false}}" class="chip-scroll" enhanced="{{true}}" bounces="{{false}}">
           <view class="chip-row">
-            <view class="chip {{activeDynasty === item.name ? 'chip-active' : ''}}" wx:for="{{dynasties}}" wx:key="id"
-              bindtap="selectFilter" data-kind="dynasty" data-name="{{item.name}}"
-              hover-class="chip-hover" hover-stay-time="80">{{item.name}}</view>
+            <view class="chip {{activeDynasty === item.name ? 'chip-active' : ''}}" wx:for="{{dynasties}}" wx:key="id" bindtap="selectFilter" data-kind="dynasty" data-name="{{item.name}}" hover-class="chip-hover" hover-stay-time="80">{{item.name}}</view>
           </view>
         </scroll-view>
         <view class="chip-label">体裁</view>
         <scroll-view scroll-x show-scrollbar="{{false}}" class="chip-scroll" enhanced="{{true}}" bounces="{{false}}">
           <view class="chip-row">
-            <view class="chip {{activeType === item.name ? 'chip-active' : ''}}" wx:for="{{types}}" wx:key="id"
-              bindtap="selectFilter" data-kind="type" data-name="{{item.name}}"
-              hover-class="chip-hover" hover-stay-time="80">{{item.name}}</view>
+            <view class="chip {{activeType === item.name ? 'chip-active' : ''}}" wx:for="{{types}}" wx:key="id" bindtap="selectFilter" data-kind="type" data-name="{{item.name}}" hover-class="chip-hover" hover-stay-time="80">{{item.name}}</view>
           </view>
         </scroll-view>
       </block>
@@ -115,11 +123,8 @@
 
     <!-- 分类搜索过滤 -->
     <view class="category-search">
-      <input class="category-search-input" value="{{filterKeyword}}" bindinput="onFilterKeywordInput"
-        placeholder="输入作者或关键词过滤（如 李白、明月）" placeholder-class="category-search-placeholder"
-        confirm-type="search" bindconfirm="onFilterKeywordSearch" />
-      <view class="category-search-clear" wx:if="{{filterKeyword}}" bindtap="onFilterKeywordClear"
-        hover-class="link-hover" hover-stay-time="80">✕</view>
+      <input class="category-search-input" value="{{filterKeyword}}" bindinput="onFilterKeywordInput" placeholder="输入作者或关键词过滤（如 李白、明月）" placeholder-class="category-search-placeholder" confirm-type="search" bindconfirm="onFilterKeywordSearch" />
+      <view class="category-search-clear" wx:if="{{filterKeyword}}" bindtap="onFilterKeywordClear" hover-class="link-hover" hover-stay-time="80">✕</view>
       <view class="category-search-btn" bindtap="onFilterKeywordSearch" hover-class="search-btn-hover" hover-stay-time="80">
         <text class="category-search-btn-text">搜索</text>
       </view>
@@ -137,8 +142,7 @@
       <view class="empty-tip" wx:elif="{{categoryUnavailable}}">未找到匹配诗词，试试调整过滤条件</view>
       <view class="empty-tip" wx:elif="{{categoryError}}">搜索失败，请稍后重试</view>
       <block wx:elif="{{categoryPoems.length > 0}}">
-        <view class="poem-card" wx:for="{{categoryPoems}}" wx:key="id" bindtap="goDetail"
-          data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
+        <view class="poem-card" wx:for="{{categoryPoems}}" wx:key="id" bindtap="goDetail" data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
           <view class="poem-card-top">
             <text class="poem-title">{{item.title || '无题'}}</text>
             <text class="poem-type" wx:if="{{item.type}}">{{item.type}}</text>
@@ -169,8 +173,7 @@
       </view>
     </block>
     <block wx:else>
-      <view class="poem-card" wx:for="{{recommendPoems}}" wx:key="id" bindtap="goDetail"
-        data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
+      <view class="poem-card" wx:for="{{recommendPoems}}" wx:key="id" bindtap="goDetail" data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
         <view class="poem-card-top">
           <text class="poem-title">{{item.title || '无题'}}</text>
           <text class="poem-type" wx:if="{{item.type}}">{{item.type}}</text>
@@ -199,8 +202,7 @@
       </view>
     </block>
     <block wx:else>
-      <view class="poem-card" wx:for="{{poems}}" wx:key="id" bindtap="goDetail"
-        data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
+      <view class="poem-card" wx:for="{{poems}}" wx:key="id" bindtap="goDetail" data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
         <view class="poem-card-top">
           <text class="poem-title">{{item.title || '无题'}}</text>
           <text class="poem-type" wx:if="{{item.type}}">{{item.type}}</text>
@@ -231,8 +233,7 @@
     <block wx:else>
       <scroll-view scroll-x show-scrollbar="{{false}}" class="author-scroll" enhanced="{{true}}" bounces="{{false}}">
         <view class="author-row">
-          <view class="author-card" wx:for="{{authors}}" wx:key="id" bindtap="goAuthorDetail"
-            data-author="{{item}}" hover-class="author-hover" hover-stay-time="80">
+          <view class="author-card" wx:for="{{authors}}" wx:key="id" bindtap="goAuthorDetail" data-author="{{item}}" hover-class="author-hover" hover-stay-time="80">
             <view class="author-avatar">{{item.char}}</view>
             <text class="author-name">{{item.name}}</text>
             <text class="author-dynasty">{{item.dynasty || '诗人'}}{{item.countText ? ' · ' + item.countText + '首' : ''}}</text>
@@ -252,8 +253,7 @@
 
     <view class="entry-grid">
       <!-- 诗词列表入口 -->
-      <view class="entry-card entry-poems" bindtap="goStatList" data-kind="poems"
-        hover-class="entry-hover" hover-stay-time="80">
+      <view class="entry-card entry-poems" bindtap="goStatList" data-kind="poems" hover-class="entry-hover" hover-stay-time="80">
         <view class="entry-card-top">
           <view class="entry-seal seal-poems">诗</view>
           <view class="entry-card-main">
@@ -278,8 +278,7 @@
       </view>
 
       <!-- 诗人列表入口 -->
-      <view class="entry-card entry-authors" bindtap="goStatList" data-kind="authors"
-        hover-class="entry-hover" hover-stay-time="80">
+      <view class="entry-card entry-authors" bindtap="goStatList" data-kind="authors" hover-class="entry-hover" hover-stay-time="80">
         <view class="entry-card-top">
           <view class="entry-seal seal-authors">人</view>
           <view class="entry-card-main">
@@ -304,8 +303,7 @@
       </view>
 
       <!-- 朝代列表入口 -->
-      <view class="entry-card entry-dynasties" bindtap="goStatList" data-kind="dynasties"
-        hover-class="entry-hover" hover-stay-time="80">
+      <view class="entry-card entry-dynasties" bindtap="goStatList" data-kind="dynasties" hover-class="entry-hover" hover-stay-time="80">
         <view class="entry-card-top">
           <view class="entry-seal seal-dynasties">朝</view>
           <view class="entry-card-main">
@@ -330,8 +328,7 @@
       </view>
 
       <!-- 体裁列表入口 -->
-      <view class="entry-card entry-types" bindtap="goStatList" data-kind="types"
-        hover-class="entry-hover" hover-stay-time="80">
+      <view class="entry-card entry-types" bindtap="goStatList" data-kind="types" hover-class="entry-hover" hover-stay-time="80">
         <view class="entry-card-top">
           <view class="entry-seal seal-types">体</view>
           <view class="entry-card-main">

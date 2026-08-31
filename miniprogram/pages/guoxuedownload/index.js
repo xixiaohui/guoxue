@@ -1,5 +1,6 @@
 // pages/guoxuedownload/index.js
 const settings = require('../../utils/settings');
+const landing = require('../../utils/landing');
 
 Page({
 
@@ -7,14 +8,14 @@ Page({
    * 页面的初始数据
    */
   data: {
-
+    isSinglePage: false // 朋友圈单页模式：pdf 组件/激励视频广告被禁用
   },
 
   /**
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
-
+    this.setData({ isSinglePage: landing.isSinglePage() });
   },
 
   /**

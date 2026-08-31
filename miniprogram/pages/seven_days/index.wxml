@@ -1,5 +1,10 @@
 <view class="page {{fontFamilyClass}}">
 
+  <!-- 朋友圈单页模式提示 -->
+  <view class="single-page-tip" wx:if="{{isSinglePage}}">
+    <text class="single-page-tip-text">当前为朋友圈分享预览，打卡记录不在此页展示，打开小程序即可参与打卡</text>
+  </view>
+
   <!-- 顶部横幅 -->
   <view class="banner">
     <text class="banner-deco">学</text>

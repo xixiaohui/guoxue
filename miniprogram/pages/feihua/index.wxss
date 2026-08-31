@@ -1,0 +1,572 @@
+/* pages/feihua/index.wxss */
+.page {
+  background: #FDF6E3;
+  min-height: 100vh;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+/* 朋友圈单页模式提示 */
+.single-page-tip {
+  padding: 18rpx 24rpx;
+  border-radius: 16rpx;
+  background: rgba(139, 37, 0, 0.05);
+  border: 1rpx dashed rgba(139, 37, 0, 0.22);
+  margin-bottom: 24rpx;
+  text-align: center;
+}
+
+.single-page-tip-text {
+  font-size: 22rpx;
+  color: #8B2500;
+  letter-spacing: 1rpx;
+}
+
+/* ── 通用卡片 ─────────────────────────── */
+.section-card {
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  padding: 26rpx 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 10rpx rgba(139, 37, 0, 0.05);
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 22rpx;
+}
+
+.label-bar {
+  width: 8rpx;
+  height: 30rpx;
+  border-radius: 4rpx;
+  background: linear-gradient(180deg, #C4882E, #8B2500);
+  margin-right: 12rpx;
+}
+
+.section-label {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #4A2E18;
+  letter-spacing: 2rpx;
+}
+
+/* ── 选字：头图 ───────────────────────── */
+.hero-card {
+  position: relative;
+  background: linear-gradient(135deg, #8B2500, #A23A12 60%, #C4882E 150%);
+  border-radius: 24rpx;
+  padding: 56rpx 32rpx 48rpx;
+  margin-bottom: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 24rpx rgba(139, 37, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-deco {
+  position: absolute;
+  right: -10rpx;
+  bottom: -40rpx;
+  font-size: 220rpx;
+  font-weight: 900;
+  color: rgba(255, 248, 231, 0.08);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.hero-title {
+  font-size: 56rpx;
+  font-weight: 800;
+  color: #FFD97D;
+  letter-spacing: 8rpx;
+}
+
+.hero-sub {
+  font-size: 24rpx;
+  color: rgba(255, 248, 231, 0.8);
+  margin-top: 14rpx;
+  letter-spacing: 4rpx;
+}
+
+/* ── 选字：玩法模式 ───────────────────── */
+.mode-row {
+  display: flex;
+  gap: 20rpx;
+}
+
+.mode-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 26rpx 16rpx;
+  border-radius: 18rpx;
+  background: #F8EFD9;
+  border: 2rpx solid transparent;
+  box-sizing: border-box;
+}
+
+.mode-item.mode-active {
+  background: #FFF3DC;
+  border-color: #C4882E;
+  box-shadow: 0 0 0 2rpx rgba(196, 136, 46, 0.12);
+}
+
+.mode-name {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #4A2E18;
+}
+
+.mode-item.mode-active .mode-name {
+  color: #8B2500;
+}
+
+.mode-desc {
+  font-size: 20rpx;
+  color: #8C7B61;
+  margin-top: 8rpx;
+}
+
+.mode-hover {
+  opacity: 0.85;
+}
+
+/* ── 选字：主题字 ─────────────────────── */
+.word-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.word-item {
+  width: 128rpx;
+  height: 128rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 52rpx;
+  font-weight: 700;
+  color: #4A2E18;
+  background: #F8EFD9;
+  border: 2rpx solid transparent;
+  border-radius: 20rpx;
+  box-sizing: border-box;
+}
+
+.word-item.word-active {
+  color: #FFF8E7;
+  background: linear-gradient(135deg, #8B2500, #A23A12);
+  border-color: #8B2500;
+  box-shadow: 0 6rpx 16rpx rgba(139, 37, 0, 0.25);
+}
+
+.word-hover {
+  opacity: 0.8;
+  transform: scale(0.96);
+}
+
+.custom-row {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 28rpx;
+}
+
+.custom-input {
+  flex: 1;
+  height: 84rpx;
+  background: #F8EFD9;
+  border-radius: 16rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  color: #4A2E18;
+  box-sizing: border-box;
+}
+
+.custom-placeholder {
+  color: #B5A58C;
+}
+
+.custom-btn {
+  width: 160rpx;
+  height: 84rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #C4882E, #A8651A);
+  color: #FFF8E7;
+  font-size: 30rpx;
+  font-weight: 700;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(168, 101, 26, 0.3);
+}
+
+.current-word {
+  margin-top: 20rpx;
+  font-size: 26rpx;
+  color: #8C7B61;
+  text-align: center;
+}
+
+.current-word-char {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #8B2500;
+}
+
+/* ── 选字：玩法说明 ───────────────────── */
+.rule-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.rule-arrow {
+  font-size: 22rpx;
+  color: #8B2500;
+  margin-right: 10rpx;
+}
+
+.rule-toggle-text {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #4A2E18;
+}
+
+.rule-body {
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx dashed #E8D5A3;
+}
+
+.rule-line {
+  font-size: 24rpx;
+  color: #6B5B45;
+  line-height: 1.7;
+  margin-bottom: 10rpx;
+}
+
+.rule-dot {
+  color: #C4882E;
+  margin-right: 8rpx;
+  font-weight: 700;
+}
+
+/* ── 对局：头部 ───────────────────────── */
+.play-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #8B2500, #A23A12 60%, #C4882E 150%);
+  border-radius: 24rpx;
+  padding: 36rpx 32rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(139, 37, 0, 0.2);
+}
+
+.play-word {
+  font-size: 100rpx;
+  font-weight: 900;
+  color: #FFD97D;
+  line-height: 1;
+}
+
+.play-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12rpx;
+}
+
+.round-badge {
+  background: #FFD97D;
+  color: #8B2500;
+  font-size: 30rpx;
+  font-weight: 700;
+  padding: 10rpx 28rpx;
+  border-radius: 32rpx;
+}
+
+.mode-tag {
+  font-size: 22rpx;
+  color: rgba(255, 248, 231, 0.85);
+  letter-spacing: 2rpx;
+}
+
+/* 行令位置提示 */
+.pos-tip {
+  text-align: center;
+  font-size: 24rpx;
+  color: #8C7B61;
+  margin-bottom: 20rpx;
+  letter-spacing: 1rpx;
+}
+
+.pos-word {
+  color: #8B2500;
+  font-weight: 700;
+  font-size: 28rpx;
+}
+
+/* ── 对局：诗句卡 ─────────────────────── */
+.poem-card {
+  position: relative;
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 24rpx;
+  padding: 40rpx 30rpx 30rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(139, 37, 0, 0.08);
+  transition: opacity 0.25s ease;
+}
+
+.poem-card.poem-fade {
+  opacity: 0.3;
+}
+
+.poem-quote-mark {
+  font-size: 40rpx;
+  color: #C4882E;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.poem-quote-close {
+  display: inline-flex;
+  margin-left: 8rpx;
+}
+
+.poem-chars {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  line-height: 1.9;
+  margin: 20rpx 0 8rpx;
+}
+
+.poem-char {
+  font-size: 44rpx;
+  color: #4A2E18;
+  letter-spacing: 2rpx;
+}
+
+.poem-char.char-hit {
+  color: #8B2500;
+  font-weight: 900;
+  text-shadow: 0 0 12rpx rgba(139, 37, 0, 0.25);
+}
+
+.poem-meta {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 14rpx;
+  margin-top: 18rpx;
+}
+
+.poem-title {
+  font-size: 26rpx;
+  color: #4A2E18;
+  font-weight: 600;
+}
+
+.poem-author {
+  font-size: 22rpx;
+  color: #8C7B61;
+}
+
+.poem-view {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  margin-top: 24rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx dashed #E8D5A3;
+  font-size: 24rpx;
+  color: #A8651A;
+}
+
+.poem-view-arrow {
+  font-size: 26rpx;
+}
+
+/* 出题 loading */
+.poem-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 70rpx 0;
+  color: #8C7B61;
+}
+
+.poem-loading-spin {
+  font-size: 48rpx;
+  color: #C4882E;
+  animation: spin 1s linear infinite;
+}
+
+.poem-loading-text {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  letter-spacing: 2rpx;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.empty-tip {
+  text-align: center;
+  font-size: 24rpx;
+  color: #8C7B61;
+  padding: 40rpx 0;
+}
+
+/* 行令放宽提示 */
+.relaxed-tip {
+  text-align: center;
+  font-size: 22rpx;
+  color: #A8651A;
+  background: rgba(168, 101, 26, 0.08);
+  border-radius: 14rpx;
+  padding: 14rpx 20rpx;
+  margin-bottom: 24rpx;
+}
+
+/* ── 对局：操作按钮 ───────────────────── */
+.play-actions {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 8rpx;
+}
+
+.btn {
+  flex: 1;
+  height: 92rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  font-weight: 700;
+  border-radius: 46rpx;
+}
+
+.btn-next {
+  background: linear-gradient(135deg, #8B2500, #A23A12);
+  color: #FFF8E7;
+  box-shadow: 0 6rpx 18rpx rgba(139, 37, 0, 0.25);
+}
+
+.btn-end {
+  background: #F8EFD9;
+  color: #8C7B61;
+  border: 1rpx solid #E8D5A3;
+}
+
+.btn-disabled {
+  opacity: 0.6;
+}
+
+.btn-hover {
+  opacity: 0.88;
+  transform: scale(0.98);
+}
+
+.play-stats {
+  text-align: center;
+  font-size: 22rpx;
+  color: #B5A58C;
+  margin-top: 24rpx;
+  letter-spacing: 1rpx;
+}
+
+/* ── 结算 ─────────────────────────────── */
+.result-card {
+  position: relative;
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 24rpx;
+  padding: 48rpx 30rpx 36rpx;
+  margin-top: 40rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(139, 37, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.result-deco {
+  position: absolute;
+  right: -16rpx;
+  top: -36rpx;
+  font-size: 200rpx;
+  font-weight: 900;
+  color: rgba(139, 37, 0, 0.05);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.result-label {
+  font-size: 28rpx;
+  color: #8C7B61;
+  letter-spacing: 4rpx;
+}
+
+.result-word {
+  font-size: 140rpx;
+  font-weight: 900;
+  color: #8B2500;
+  line-height: 1.4;
+  text-shadow: 0 6rpx 18rpx rgba(139, 37, 0, 0.2);
+}
+
+.result-rows {
+  width: 100%;
+  margin-top: 24rpx;
+  border-top: 1rpx dashed #E8D5A3;
+  padding-top: 20rpx;
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14rpx 8rpx;
+}
+
+.result-row + .result-row {
+  border-top: 1rpx dashed #F0E2BE;
+}
+
+.result-row-label {
+  font-size: 26rpx;
+  color: #6B5B45;
+}
+
+.result-num {
+  font-size: 36rpx;
+  font-weight: 800;
+  color: #8B2500;
+}
+
+.result-tag {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #C4882E;
+}
+
+.result-actions {
+  display: flex;
+  gap: 20rpx;
+  width: 100%;
+  margin-top: 36rpx;
+}
+
+.safe-bottom {
+  height: env(safe-area-inset-bottom);
+}
