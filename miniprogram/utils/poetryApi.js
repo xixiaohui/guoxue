@@ -321,6 +321,40 @@ async function getReadingStats() {
   };
 }
 
+// ─── 接口：海报 ──────────────────────────────────────────────
+
+/**
+ * POST /poster 生成诗词海报（服务端渲染 1080×1440）
+ * 两种入参方式：
+ *  ① poemId：数值型诗词 ID，提供时优先按库内正文渲染；
+ *  ② 自定内容：title(1-64字) + content(1-5000字) 必须同时提供。
+ * theme: ink 水墨 / sunset 落日 / night 夜月（默认 ink）
+ * filter: none/sepia/warm/cool/gray/vivid（默认 none）
+ * format: svg / png / both（小程序展示与保存需要 png）
+ * ⚠️ 接口限流 10 次/分钟；pngBase64 依赖服务端中文字体，缺失时调用方需降级提示。
+ */
+async function createPoster(options = {}) {
+  const data = {};
+  if (options.poemId != null && options.poemId !== '') data.poemId = options.poemId;
+  if (options.title) data.title = options.title;
+  if (options.content) data.content = options.content;
+  if (options.author) data.author = options.author;
+  if (options.dynasty) data.dynasty = options.dynasty;
+  if (options.theme) data.theme = options.theme;
+  if (options.filter) data.filter = options.filter;
+  if (options.format) data.format = options.format;
+  const d = await request('/poster', { method: 'POST', data });
+  return {
+    svg: d.svg || '',
+    pngBase64: d.pngBase64 || '',
+    width: d.width || 1080,
+    height: d.height || 1440,
+    theme: d.theme || '',
+    filter: d.filter || '',
+    filename: d.filename || ''
+  };
+}
+
 // ─── 内置兜底数据（请求失败时使用，保证页面可展示）─────────────
 
 const FALLBACK_QUOTE = {
@@ -414,6 +448,7 @@ module.exports = {
   getAuthorPoems,
   getPoemByTitle,
   getReadingStats,
+  createPoster,
   // 兜底数据
   FALLBACK_QUOTE,
   FALLBACK_SOLAR,

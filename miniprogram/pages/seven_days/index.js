@@ -157,15 +157,15 @@ Page({
   onShareAppMessage() {
     return {
       title: this.data.streak > 0
-        ? '我已连续学习' + this.data.streak + '天，一起来国文之学打卡吧！'
-        : '连续学习7天 · 国文之学，日拱一卒功不唐捐',
+        ? '我已连续学习' + this.data.streak + '天，一起来超然古诗词打卡吧！'
+        : '连续学习7天 · 超然古诗词，日拱一卒功不唐捐',
       path: '/pages/seven_days/index'
     };
   },
 
   onShareTimeline() {
     return {
-      title: '连续学习7天 · 国文之学，日拱一卒功不唐捐',
+      title: '连续学习7天 · 超然古诗词，日拱一卒功不唐捐',
       query: 'from=timeline'
     };
   }

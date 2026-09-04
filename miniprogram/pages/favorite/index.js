@@ -126,7 +126,7 @@ Page({
     const p = (this.data.poems || [])[0];
     if (!p) {
       return {
-        title: '我的收藏 · 国文之学',
+        title: '我的收藏 · 超然古诗词',
         path: '/pages/favorite/index'
       };
     }
@@ -140,7 +140,7 @@ Page({
     const p = (this.data.poems || [])[0];
     if (!p) {
       return {
-        title: '我的收藏 · 国文之学',
+        title: '我的收藏 · 超然古诗词',
         query: 'from=timeline'
       };
     }

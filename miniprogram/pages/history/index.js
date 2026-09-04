@@ -81,8 +81,8 @@ Page({
   _setupSeo() {
     const title = this.data.activeTitle || '中国历史';
     seo.reportPageInfo({
-      title: title + '大事件 · 国文之学',
-      keywords: seo.buildKeywords([title + '历史', '中国历史', title, '历史大事件', '朝代', '历史人物', '历史', '国学', '国文之学']),
+      title: title + '大事件 · 超然古诗词',
+      keywords: seo.buildKeywords([title + '历史', '中国历史', title, '历史大事件', '朝代', '历史人物', '历史', '国学', '超然古诗词']),
       description: title + '历史大事件与名人故事：朝代兴衰、千古人物、趣味历史知识，一览华夏五千年文明。'
     });
   },

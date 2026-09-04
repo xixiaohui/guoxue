@@ -359,19 +359,19 @@ Page({
     const q = (d.keyword || d.searchedText || '').trim();
     if (d.mode === 'search' && q) {
       return {
-        title: '「' + q + '」相关诗词 · 国文之学',
+        title: '「' + q + '」相关诗词 · 超然古诗词',
         path: '/pages/chinesepoetry_search/index?q=' + encodeURIComponent(q)
       };
     }
     if (d.mode === 'filter') {
       const summary = this._filterSummary();
       return {
-        title: summary ? '诗词筛选「' + summary + '」· 国文之学' : '诗词筛选查询 · 国文之学',
+        title: summary ? '诗词筛选「' + summary + '」· 超然古诗词' : '诗词筛选查询 · 超然古诗词',
         path: '/pages/chinesepoetry_search/index'
       };
     }
     return {
-      title: '诗词搜索 · 国文之学',
+      title: '诗词搜索 · 超然古诗词',
       path: '/pages/chinesepoetry_search/index'
     };
   },
@@ -381,19 +381,19 @@ Page({
     const q = (d.keyword || d.searchedText || '').trim();
     if (d.mode === 'search' && q) {
       return {
-        title: '「' + q + '」相关诗词 · 国文之学',
+        title: '「' + q + '」相关诗词 · 超然古诗词',
         query: 'q=' + encodeURIComponent(q) + '&from=timeline'
       };
     }
     if (d.mode === 'filter') {
       const summary = this._filterSummary();
       return {
-        title: summary ? '诗词筛选「' + summary + '」· 国文之学' : '诗词筛选查询 · 国文之学',
+        title: summary ? '诗词筛选「' + summary + '」· 超然古诗词' : '诗词筛选查询 · 超然古诗词',
         query: 'from=timeline'
       };
     }
     return {
-      title: '诗词搜索 · 国文之学',
+      title: '诗词搜索 · 超然古诗词',
       query: 'from=timeline'
     };
   }

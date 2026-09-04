@@ -216,14 +216,14 @@ Page({
   // ── 分享 ──────────────────────────────
   onShareAppMessage() {
     return {
-      title: '国文之学 · 诗词典籍 · 成语典故 · 历史人物',
+      title: '超然古诗词 · 诗词典籍 · 成语典故 · 历史人物',
       path: '/pages/home/index'
     };
   },
 
   onShareTimeline() {
     return {
-      title: '国文之学 · 传承千年智慧，让经典更易懂',
+      title: '超然古诗词 · 传承千年智慧，让经典更易懂',
       query: 'from=timeline'
     };
   }

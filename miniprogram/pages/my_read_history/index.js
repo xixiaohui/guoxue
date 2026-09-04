@@ -116,7 +116,7 @@ Page({
     const p = (this.data.poems || [])[0];
     if (!p) {
       return {
-        title: '我的阅读历史 · 国文之学',
+        title: '我的阅读历史 · 超然古诗词',
         path: '/pages/my_read_history/index'
       };
     }
@@ -130,7 +130,7 @@ Page({
     const p = (this.data.poems || [])[0];
     if (!p) {
       return {
-        title: '我的阅读历史 · 国文之学',
+        title: '我的阅读历史 · 超然古诗词',
         query: 'from=timeline'
       };
     }

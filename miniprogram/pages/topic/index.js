@@ -47,7 +47,7 @@ Page({
   _setupSeo(topic) {
     const topics = topicData.getTopics();
     const allTitles = topics.map((t) => t.title);
-    const keywordParts = (topic.keywords || []).concat(allTitles, ['诗词', '古诗', '唐诗', '宋词', '国学', '国文之学']);
+    const keywordParts = (topic.keywords || []).concat(allTitles, ['诗词', '古诗', '唐诗', '宋词', '国学', '超然古诗词']);
     seo.reportPageInfo({
       title: topic.title + ' · 全文赏析',
       navTitle: topic.title,
@@ -90,7 +90,7 @@ Page({
       ? `「${first.sentence}」${first.title} · ${first.author}`
       : (first ? `${first.title} · ${first.author}` : d.title);
     return {
-      title: `${title}｜${d.title} · 国文之学`,
+      title: `${title}｜${d.title} · 超然古诗词`,
       path: '/pages/topic/index?type=' + d.type
     };
   },
@@ -98,7 +98,7 @@ Page({
   onShareTimeline() {
     const d = this.data;
     return {
-      title: `${d.title}｜${d.subtitle} · 国文之学`,
+      title: `${d.title}｜${d.subtitle} · 超然古诗词`,
       query: 'type=' + d.type
     };
   }

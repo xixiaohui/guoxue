@@ -52,7 +52,18 @@ Page({
     // 海报
     showPoster: false,
     posterLoading: false,
-    posterPath: ''
+    posterPath: '',
+
+    // 海报样式选择
+    showStylePicker: false,   // 样式选择弹层
+    posterStyle: 1,           // 1 = 经典海报（Canvas 含小程序码）| 2 = 在线诗画海报（服务端 API）
+    posterTheme: 'ink',       // ink 水墨 | sunset 落日 | night 夜月
+    posterFilter: 'none',     // none/sepia/warm/cool/gray/vivid
+
+    // 海报字体（仅作用于本次海报，不改变阅读设置）
+    posterFont: 'default',
+    posterFonts: share.POSTER_FONT_OPTIONS,
+    posterFromServer: false   // 在线海报由服务端直接出图（服务端字体，本地无法更换）
   },
 
   onLoad(options) {
@@ -330,12 +341,12 @@ Page({
     let description;
     if (d.kind === 'author') {
       // 诗人页：命中「李白的诗」「苏轼的诗」「诗人简介」等词
-      kwParts = [title + '的诗', title, '诗人', dynasty, '唐诗', '宋词', '古诗', '诗词', '国学', '国文之学'];
+      kwParts = [title + '的诗', title, '诗人', dynasty, '唐诗', '宋词', '古诗', '诗词', '国学', '超然古诗词'];
       const intro = (d.description || '').replace(/\s+/g, '').slice(0, 40);
       description = ((dynasty ? dynasty + ' · ' : '') + title + '的诗' + (intro ? '，' + intro : '')).slice(0, 60);
     } else {
       // 诗词页：标题、作者、朝代、题材 + 通用词
-      kwParts = [title, author, dynasty, type, '古诗', '唐诗', '宋词', '诗词', '国学', '国文之学'];
+      kwParts = [title, author, dynasty, type, '古诗', '唐诗', '宋词', '诗词', '国学', '超然古诗词'];
       const firstLine = (d.content || '').replace(/\s+/g, '').slice(0, 28);
       const who = [dynasty, author].filter(Boolean).join(' · ');
       description = ((who ? who + '《' + title + '》' : title) + (firstLine ? '，' + firstLine : '')).slice(0, 60);
@@ -428,10 +439,11 @@ Page({
     } catch (_) {}
   },
 
-  // ── 海报（完整展示诗词正文）──────────────────
+  // ── 海报（样式选择 → 生成 → 预览）─────────────
   noop() {},
 
-  async createPoster() {
+  /** 点击底部「海报」：先弹出样式选择（经典含小程序码 / 在线诗画海报） */
+  createPoster() {
     if (this.data.isSinglePage) { this._tipUnavailable(); return; }
     if (this.data.kind !== 'poem') {
       wx.showToast({ title: '仅诗词支持生成海报', icon: 'none' });
@@ -442,24 +454,171 @@ Page({
       return;
     }
     if (this.data.posterLoading) return;
+    this.setData({ showStylePicker: true });
+  },
 
-    this.setData({ showPoster: true, posterLoading: true, posterPath: '' });
+  /** 选择海报样式：1 = 经典（Canvas 含小程序码），2 = 在线诗画（服务端 API） */
+  pickPosterStyle(e) {
+    const v = Number((e.currentTarget.dataset && e.currentTarget.dataset.style) || 1);
+    this.setData({ posterStyle: v === 2 ? 2 : 1 });
+  },
 
+  pickPosterTheme(e) {
+    const v = (e.currentTarget.dataset && e.currentTarget.dataset.theme) || 'ink';
+    this.setData({ posterTheme: v });
+  },
+
+  pickPosterFilter(e) {
+    const v = (e.currentTarget.dataset && e.currentTarget.dataset.filter) || 'none';
+    this.setData({ posterFilter: v });
+  },
+
+  closeStylePicker() {
+    this.setData({ showStylePicker: false });
+  },
+
+  /** 切换海报字体：本地重绘预览（经典海报 / 在线海报的 svg 降级产物） */
+  async pickPosterFont(e) {
+    const key = (e.currentTarget.dataset && e.currentTarget.dataset.font) || 'default';
+    if (this.data.posterLoading || key === this.data.posterFont) return;
+    if (this.data.posterFromServer) {
+      wx.showToast({ title: '在线海报由服务端出图，字体不可更换', icon: 'none', duration: 1800 });
+      return;
+    }
+    this.setData({ posterFont: key });
+    // 复用已获取的 svg（字体重绘无需再次请求接口，避免触发 10 次/分钟限流）
+    await this._buildPoster(true);
+  },
+
+  /** 按所选样式生成海报并进入预览弹层 */
+  async confirmPoster() {
+    if (this.data.posterLoading) return;
+    this.setData({ showStylePicker: false, showPoster: true });
+    // 主题/滤镜可能已变更，不复用上次 svg，重新请求服务端
+    await this._buildPoster(false);
+  },
+
+  /**
+   * 按当前参数生成（或重绘）海报预览
+   * @param {boolean} reuseSvg 是否复用上次的 svg（仅字体切换时使用）
+   */
+  async _buildPoster(reuseSvg) {
+    if (!reuseSvg) this._posterSvg = null;
+    this.setData({ posterLoading: true, posterPath: '' });
     try {
-      const path = await share.generatePoemPoster(this, {
-        title: this.data.title || '无题',
-        author: this.data.author || '',
-        dynasty: this.data.dynasty || '',
-        type: this.data.type || '',
-        content: this.data.content || '',
-        canvasId: 'posterCanvas'
-      });
+      const path = this.data.posterStyle === 2
+        ? await this._generateApiPoster()
+        : await this._generateClassicPoster();
       this.setData({ posterPath: path, posterLoading: false });
     } catch (e) {
       console.error('[PoetryDetail] poster failed:', e);
       this.setData({ posterLoading: false });
-      wx.showToast({ title: '海报生成失败，请重试', icon: 'none' });
+      wx.showToast({ title: this._posterErrorText(e), icon: 'none' });
     }
+  },
+
+  /** 经典海报：Canvas 2D 本地绘制（完整正文 + 底部小程序码） */
+  _generateClassicPoster() {
+    return share.generatePoemPoster(this, {
+      title: this.data.title || '无题',
+      author: this.data.author || '',
+      dynasty: this.data.dynasty || '',
+      type: this.data.type || '',
+      content: this.data.content || '',
+      canvasId: 'posterCanvas',
+      font: this.data.posterFont
+    });
+  },
+
+  /**
+   * 在线诗画海报：POST /poster（chinesepoetry.space 服务端渲染 1080×1440）
+   * 优先按 poemId 使用库内正文；id 非数值/库内查无时回退为 title+content 自定内容渲染。
+   * 产物策略（接口限流 10 次/分钟）：
+   *   ① 服务端返回 pngBase64（已配中文字体）→ 直接写本地 PNG；
+   *   ② 仅返回 svg（服务端缺字体）→ 用 Canvas 2D 本地栅格化导出 PNG。
+   */
+  async _generateApiPoster() {
+    // 字体切换时复用上次拿到的 svg 本地重绘：不重复请求接口（限流 10 次/分钟）
+    if (this._posterSvg) {
+      const cached = this._posterSvg;
+      return share.renderSvgToTempFile(this, cached.svg, {
+        width: cached.width,
+        height: cached.height,
+        font: this.data.posterFont
+      });
+    }
+
+    const d = this.data;
+    const common = {
+      theme: d.posterTheme || 'ink',
+      filter: d.posterFilter || 'none',
+      format: 'png'
+    };
+    const author = (d.author || '').trim();
+    const dynasty = (d.dynasty || '').trim();
+    if (author) common.author = author.length > 32 ? author.slice(0, 32) : author;
+    if (dynasty) common.dynasty = dynasty.length > 16 ? dynasty.slice(0, 16) : dynasty;
+
+    const content = (d.content || '').trim();
+    const numericId = /^[1-9]\d*$/.test(String(d.id || '')) ? Number(d.id) : null;
+    let res = null;
+    if (numericId) {
+      try {
+        res = await poetry.createPoster(Object.assign({}, common, { poemId: numericId }));
+      } catch (e) {
+        // 限流不再重试；库内查无该 poemId 且有正文 → 回退自定正文渲染
+        if ((e && e.code) === 'HTTP_429') throw e;
+        if (!content) throw e;
+      }
+    }
+    if (!res && content) {
+      const title = ((d.title || '').trim() || this._safeTitle());
+      res = await poetry.createPoster(Object.assign({}, common, {
+        title: title.slice(0, 64),
+        content: content.slice(0, 5000)
+      }));
+    }
+    if (!res) throw new Error('poster empty response');
+
+    // ① 服务端返回 PNG（已配置中文字体）→ 直接落盘为本地 PNG
+    //    该路径由服务端渲染，字体由服务端决定，本地不可更换
+    if (res.pngBase64) {
+      this.setData({ posterFromServer: true });
+      return share.persistPosterBase64(res.pngBase64);
+    }
+
+    // ② 服务端缺中文字体只返回 svg → 本地 Canvas 栅格化为 PNG（字体可本地切换）
+    if (res.svg) {
+      this._posterSvg = {
+        svg: res.svg,
+        width: res.width || 1080,
+        height: res.height || 1440
+      };
+      this.setData({ posterFromServer: false });
+      try {
+        return await share.renderSvgToTempFile(this, res.svg, {
+          width: res.width || 1080,
+          height: res.height || 1440,
+          font: this.data.posterFont
+        });
+      } catch (e) {
+        console.error('[PoetryDetail] svg rasterize failed:', e);
+        const err = new Error('svg raster failed');
+        err.code = 'SVG_RASTER_FAIL';
+        throw err;
+      }
+    }
+    throw new Error('poster empty png');
+  },
+
+  /** 海报生成失败提示（区分 API 限流/服务端错误与本地画布失败） */
+  _posterErrorText(e) {
+    const code = (e && e.code) || '';
+    if (code === 'HTTP_429') return '生成太频繁，请稍后再试';
+    if (code === 'HTTP_404' || code === 'NOT_FOUND') return '未找到该诗词，请换种样式试试';
+    if (code === 'HTTP_500' || code === 'HTTP_502' || code === 'HTTP_504') return '海报服务繁忙，请稍后重试';
+    if (code === 'SVG_RASTER_FAIL') return '在线海报渲染失败，请改用经典海报样式';
+    return '海报生成失败，请重试';
   },
 
   closePoster() {

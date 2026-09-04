@@ -65,8 +65,8 @@ Page({
       types: '按体裁浏览诗词：五言绝句、七言绝句、五言律诗、七言律诗、词牌。'
     };
     seo.reportPageInfo({
-      title: KIND_TITLES[kind] + ' · 国文之学',
-      keywords: seo.buildKeywords((kwMap[kind] || []).concat(['国文之学', '国学', '诗词', '唐诗', '宋词'])),
+      title: KIND_TITLES[kind] + ' · 超然古诗词',
+      keywords: seo.buildKeywords((kwMap[kind] || []).concat(['超然古诗词', '国学', '诗词', '唐诗', '宋词'])),
       description: descMap[kind]
     });
   },
@@ -253,14 +253,14 @@ Page({
   onShareAppMessage() {
     const d = this.data;
     return {
-      title: d.title + ' · ' + (d.subtitle || '国文之学'),
+      title: d.title + ' · ' + (d.subtitle || '超然古诗词'),
       path: '/pages/chinesepoetry_all/index?kind=' + d.kind
     };
   },
   onShareTimeline() {
     const d = this.data;
     return {
-      title: d.title + ' · 国文之学',
+      title: d.title + ' · 超然古诗词',
       query: 'kind=' + d.kind + '&from=timeline'
     };
   }

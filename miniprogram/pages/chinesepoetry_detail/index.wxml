@@ -123,10 +123,64 @@
     </view>
   </view>
 
-  <view class="footer">国文之学 · 诗词天地</view>
+  <view class="footer">超然古诗词 · 诗词天地</view>
 
   <!-- 海报生成画布（移出屏幕，供 Canvas 2D 绘制；单页模式下画布能力被禁用，不渲染） -->
   <canvas type="2d" id="posterCanvas" class="poster-canvas" wx:if="{{!isSinglePage}}"></canvas>
+
+  <!-- 海报样式选择弹层 -->
+  <view class="poster-mask" wx:if="{{showStylePicker}}" catchtap="closeStylePicker">
+    <view class="style-panel" catchtap="noop">
+      <view class="style-head">
+        <text class="style-title">选择海报样式</text>
+        <text class="style-close" bindtap="closeStylePicker">✕</text>
+      </view>
+
+      <view class="style-card {{posterStyle === 1 ? 'style-card-active' : ''}}"
+        bindtap="pickPosterStyle" data-style="1" hover-class="style-card-hover" hover-stay-time="80">
+        <view class="style-card-head">
+          <view class="style-badge">经典</view>
+          <text class="style-name">书画经典海报</text>
+          <view class="style-check" wx:if="{{posterStyle === 1}}">✓</view>
+        </view>
+        <text class="style-desc">本地绘制 · 完整正文 + 小程序码，保存后可长按识别进入小程序</text>
+      </view>
+
+      <view class="style-card {{posterStyle === 2 ? 'style-card-active' : ''}}"
+        bindtap="pickPosterStyle" data-style="2" hover-class="style-card-hover" hover-stay-time="80">
+        <view class="style-card-head">
+          <view class="style-badge theme-badge">诗画</view>
+          <text class="style-name">在线诗画海报</text>
+          <view class="style-check" wx:if="{{posterStyle === 2}}">✓</view>
+        </view>
+        <text class="style-desc">服务端渲染 1080×1440 · 支持水墨 / 落日 / 夜月主题与滤镜</text>
+      </view>
+
+      <block wx:if="{{posterStyle === 2}}">
+        <view class="style-opt-row">
+          <text class="style-opt-label">主题</text>
+          <view class="style-chips">
+            <view class="chip {{posterTheme === 'ink' ? 'chip-active' : ''}}" bindtap="pickPosterTheme" data-theme="ink">水墨</view>
+            <view class="chip {{posterTheme === 'sunset' ? 'chip-active' : ''}}" bindtap="pickPosterTheme" data-theme="sunset">落日</view>
+            <view class="chip {{posterTheme === 'night' ? 'chip-active' : ''}}" bindtap="pickPosterTheme" data-theme="night">夜月</view>
+          </view>
+        </view>
+        <view class="style-opt-row">
+          <text class="style-opt-label">滤镜</text>
+          <view class="style-chips">
+            <view class="chip {{posterFilter === 'none' ? 'chip-active' : ''}}" bindtap="pickPosterFilter" data-filter="none">原片</view>
+            <view class="chip {{posterFilter === 'sepia' ? 'chip-active' : ''}}" bindtap="pickPosterFilter" data-filter="sepia">复古</view>
+            <view class="chip {{posterFilter === 'warm' ? 'chip-active' : ''}}" bindtap="pickPosterFilter" data-filter="warm">暖阳</view>
+            <view class="chip {{posterFilter === 'cool' ? 'chip-active' : ''}}" bindtap="pickPosterFilter" data-filter="cool">清冷</view>
+            <view class="chip {{posterFilter === 'gray' ? 'chip-active' : ''}}" bindtap="pickPosterFilter" data-filter="gray">黑白</view>
+            <view class="chip {{posterFilter === 'vivid' ? 'chip-active' : ''}}" bindtap="pickPosterFilter" data-filter="vivid">明艳</view>
+          </view>
+        </view>
+      </block>
+
+      <view class="style-btn" bindtap="confirmPoster" hover-class="style-btn-hover" hover-stay-time="80">生成海报</view>
+    </view>
+  </view>
 
   <!-- 海报预览弹层（长海报可上下滚动查看全部内容） -->
   <view class="poster-mask" wx:if="{{showPoster}}" catchtap="closePoster">
@@ -139,6 +193,24 @@
         enhanced="{{true}}" bounces="{{false}}">
         <image class="poster-img" src="{{posterPath}}" mode="widthFix" show-menu-by-longpress></image>
       </scroll-view>
+
+      <!-- 字体选择条：切换后本地重绘预览（服务端出图的在线海报字体固定） -->
+      <view class="font-bar" wx:if="{{posterPath && !posterFromServer}}">
+        <scroll-view scroll-x class="font-scroll" show-scrollbar="{{false}}" enhanced="{{true}}">
+          <view class="font-chips">
+            <view class="font-chip {{posterFont === item.key ? 'font-chip-active' : ''}}"
+              wx:for="{{posterFonts}}" wx:key="key" data-font="{{item.key}}"
+              bindtap="pickPosterFont" hover-class="font-chip-hover" hover-stay-time="80">
+              <text class="font-chip-label">{{item.label}}</text>
+              <text class="font-chip-desc">{{item.desc}}</text>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+      <view class="font-tip" wx:elif="{{posterPath && posterFromServer}}">
+        <text class="font-tip-text">在线海报由服务端渲染，字体固定</text>
+      </view>
+
       <view class="poster-btns" wx:if="{{posterPath}}">
         <view class="poster-btn save" bindtap="savePoster" hover-class="poster-btn-hover" hover-stay-time="80">保存到相册</view>
         <view class="poster-btn cancel" bindtap="closePoster" hover-class="poster-btn-hover" hover-stay-time="80">关闭</view>

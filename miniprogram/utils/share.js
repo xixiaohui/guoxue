@@ -15,6 +15,7 @@
  */
 
 const settings = require('./settings');
+const svgRepaint = require('./svgRepaint');
 
 const POSTER_WIDTH = 750;   // 逻辑像素
 const POSTER_HEIGHT = 1200;
@@ -25,9 +26,11 @@ const CANVAS_MAX_HEIGHT = 16384;
 const MIN_CONTENT_FONT = 16;
 
 // 正文字体 → Canvas 字体栈（与 utils/settings.js + app.wxss 保持一致）
-// 海报诗文正文渲染与换行测量均使用该字体栈，跟随设置页「正文字体」选择
+// 海报诗文渲染与换行测量均使用该字体栈，跟随设置页「正文字体」或海报内临时选择
+// 说明：每栈按「平台内置古风字体 → 通用族」排列，iOS 命中 Kaiti SC / Songti SC；
+// Android 无这两款时沿栈降级到 SimSun / Noto Serif，末端通用族保证字体串可解析。
 const FONT_FAMILY_STACK = {
-  default: 'serif',
+  default: '"Songti SC","STSong","华文宋体","SimSun","宋体","Noto Serif SC",serif',
   song: '"Songti SC","STSong","华文宋体","SimSun","宋体","Noto Serif SC",serif',
   kai: '"Kaiti SC","STKaiti","华文楷体","KaiTi","楷体","Noto Serif SC",serif',
   fangsong: '"FangSong SC","STFangsong","华文仿宋","FangSong","仿宋",serif',
@@ -35,10 +38,50 @@ const FONT_FAMILY_STACK = {
   xingkai: '"Xingkai SC","STXingkai","华文行楷","Kaiti SC","KaiTi",serif'
 };
 
-/** 当前设置的 Canvas 正文字体栈（海报诗文使用） */
-function getPosterFontStack() {
-  const s = settings.getSettings();
-  return FONT_FAMILY_STACK[s.fontFamily] || FONT_FAMILY_STACK.default;
+/**
+ * 海报字体风格选项（预览弹层「字体」选择条直接渲染此列表）
+ * 平台差异备注：iOS 内置且能命中的古风字体只有楷体（Kaiti SC）与宋体（Songti SC）；
+ * 行楷、仿宋 iOS 无内置，会沿字体栈降级（行楷→楷体、仿宋→宋体），效果与默认接近。
+ */
+const POSTER_FONT_OPTIONS = [
+  { key: 'default', label: '默认古风', desc: '标题楷体 · 正文宋体' },
+  { key: 'kai', label: '楷体', desc: '全文楷书 · 手书韵味' },
+  { key: 'song', label: '宋体', desc: '全文宋刻 · 书卷气' },
+  { key: 'xingkai', label: '行楷', desc: '标题行楷 · 正文宋体' },
+  { key: 'fangsong', label: '仿宋', desc: '全文仿宋 · 清瘦工整' },
+  { key: 'hei', label: '黑体', desc: '现代清晰 · 易读' }
+];
+
+/**
+ * 解析海报字体栈：{ title, body }
+ *   title — 标题 / 落款 / 品牌名等「题字」类文本（默认楷体，书法韵味）
+ *   body  — 诗词正文等大段文本（默认宋体，兼顾古韵与可读性）
+ * 未传 fontKey 时取设置页「正文字体」；未识别的 key 回落默认古风组合。
+ * @param {string} [fontKey] default | song | kai | xingkai | fangsong | hei
+ */
+function resolvePosterStacks(fontKey) {
+  const key = fontKey || (settings.getSettings().fontFamily) || 'default';
+  const fallback = { title: FONT_FAMILY_STACK.kai, body: FONT_FAMILY_STACK.song };
+  if (!key || key === 'default') return fallback;
+  const stack = FONT_FAMILY_STACK[key];
+  if (!stack) return fallback;
+  // 行楷笔画连绵，仅作用于标题/落款，正文仍用宋体保证可读
+  if (key === 'xingkai') return { title: stack, body: FONT_FAMILY_STACK.song };
+  return { title: stack, body: stack };
+}
+
+/** 当前（或指定）字体的 Canvas 正文栈（海报诗文使用） */
+function getPosterFontStack(fontKey) {
+  return resolvePosterStacks(fontKey).body;
+}
+
+/**
+ * 在线 SVG 海报的字体栈覆盖（透传给 svgRepaint.paintScene 第 5 参）。
+ * 服务端文本按语义分组：kai = 标题/落款、song = 正文，hei/sans 极少出现，按同一策略覆盖。
+ */
+function svgFontStacks(fontKey) {
+  const s = resolvePosterStacks(fontKey);
+  return { kai: s.title, song: s.body, hei: s.title, sans: s.body };
 }
 
 /**
@@ -51,7 +94,7 @@ function getPosterFontStack() {
  */
 function buildShareMsg(opts = {}) {
   return {
-    title: opts.title || '国文之学 · 传承千年智慧',
+    title: opts.title || '超然古诗词 · 传承千年智慧',
     path: opts.path || '/pages/home/index',
     imageUrl: opts.imageUrl || '/images/share-cover.png',
   };
@@ -71,7 +114,7 @@ function buildShareMsg(opts = {}) {
  * @returns {object}
  */
 function buildShareTimeline(opts = {}) {
-  const quote = opts.quote || '国文之学';
+  const quote = opts.quote || '超然古诗词';
   const author = opts.author ? ` — ${opts.author}` : '';
 
   return {
@@ -175,12 +218,15 @@ async function _renderPoster(ctx, canvas, opts = {}) {
   const W = POSTER_WIDTH;
   const H = POSTER_HEIGHT;
 
+  // 字体栈：名句/品牌走「题字」栈（默认楷体），落款走正文栈（默认宋体）
+  const stacks = resolvePosterStacks(opts.font);
+
   const quote = (opts.quote || '知之者不如好之者，好之者不如乐之者').trim();
   const author = (opts.author || '《论语》').trim();
   const translation = (opts.translation || '').trim();
   const insight = (opts.insight || '').trim();
 
-  const brandName = opts.brandName || '国文之学';
+  const brandName = opts.brandName || '超然古诗词';
   const brandSlogan = opts.brandSlogan || '传承千年智慧 · 让经典更易懂';
   const brandMark = opts.brandMark || '文';
   const qrImageUrl = opts.qrImageUrl || '/images/mini.png';
@@ -223,6 +269,7 @@ async function _renderPoster(ctx, canvas, opts = {}) {
     brandName,
     brandSlogan,
     brandMark,
+    font: opts.font
   });
 
   // ========== 3. 主名句卡 ==========
@@ -230,7 +277,7 @@ async function _renderPoster(ctx, canvas, opts = {}) {
   const cardW = W - 92;
   const quoteCardY = 220;
 
-  const quoteFont = 'bold 42px serif';
+  const quoteFont = 'bold 42px ' + stacks.title;
   let quoteLines = _wrapText(ctx, quote, cardW - 116, quoteFont);
   quoteLines = _limitLines(ctx, quoteLines, 3, cardW - 116, quoteFont);
 
@@ -244,7 +291,7 @@ async function _renderPoster(ctx, canvas, opts = {}) {
   // 装饰引号
   ctx.save();
   ctx.fillStyle = 'rgba(194,147,62,0.20)';
-  ctx.font = 'bold 108px serif';
+  ctx.font = 'bold 108px ' + stacks.title;
   ctx.textAlign = 'left';
   ctx.fillText('“', cardX + 32, quoteCardY + 106);
   ctx.textAlign = 'right';
@@ -265,7 +312,7 @@ async function _renderPoster(ctx, canvas, opts = {}) {
 
   if (author) {
     ctx.fillStyle = '#8C6239';
-    ctx.font = '26px serif';
+    ctx.font = '26px ' + stacks.body;
     ctx.fillText(`—— ${author}`, W / 2, qY + 6);
   }
   ctx.restore();
@@ -286,7 +333,7 @@ async function _renderPoster(ctx, canvas, opts = {}) {
     const transH = 66 + transLines.length * 32 + 20;
 
     _drawGlassCard(ctx, cardX, currentY, cardW, transH, 24);
-    _drawSectionLabel(ctx, cardX + 28, currentY + 34, '白话文');
+    _drawSectionLabel(ctx, cardX + 28, currentY + 34, '白话文', stacks);
 
     ctx.save();
     ctx.fillStyle = 'rgba(248,238,215,0.92)';
@@ -311,7 +358,7 @@ async function _renderPoster(ctx, canvas, opts = {}) {
     const insH = 66 + insLines.length * 32 + 20;
 
     _drawInsightCard(ctx, cardX, currentY, cardW, insH, 24);
-    _drawSectionLabel(ctx, cardX + 28, currentY + 34, '今日启示');
+    _drawSectionLabel(ctx, cardX + 28, currentY + 34, '今日启示', stacks);
 
     ctx.save();
     ctx.fillStyle = 'rgba(255,247,233,0.94)';
@@ -363,7 +410,7 @@ async function _renderPoster(ctx, canvas, opts = {}) {
   ctx.textAlign = 'left';
 
   ctx.fillStyle = '#F8ECD0';
-  ctx.font = 'bold 34px serif';
+  ctx.font = 'bold 34px ' + stacks.title;
   ctx.fillText(brandName, infoX, qrY + 38);
 
   ctx.fillStyle = 'rgba(233,215,180,0.88)';
@@ -404,6 +451,7 @@ async function _renderPoster(ctx, canvas, opts = {}) {
  * @param {string} opts.content   诗词正文（多行以 \n 分隔）
  * @param {string} [opts.canvasId]   默认 posterCanvas
  * @param {string} [opts.qrImageUrl] 小程序码/二维码（默认 /images/mini.png）
+ * @param {string} [opts.font]       字体风格 key（海报内临时选择，缺省取设置页「正文字体」）
  * @returns {Promise<string>} 海报临时文件路径
  */
 async function generatePoemPoster(pageCtx, opts = {}) {
@@ -457,12 +505,105 @@ async function generatePoemPoster(pageCtx, opts = {}) {
 }
 
 /**
+ * 将 PNG Base64 数据写入本地临时文件（服务端海报持久化，供预览与保存）
+ * @param {string} base64 纯 base64 字符串（不含 data:image 前缀）
+ * @param {string} [name] 文件名前缀，默认 poster_<时间戳>
+ * @returns {Promise<string>} 本地文件路径
+ */
+function persistPosterBase64(base64, name) {
+  return new Promise((resolve, reject) => {
+    if (!base64) {
+      reject(new Error('海报图片数据为空'));
+      return;
+    }
+    const fs = wx.getFileSystemManager();
+    const filePath = wx.env.USER_DATA_PATH + '/' + (name || ('poster_' + Date.now())) + '.png';
+    fs.writeFile({
+      filePath,
+      data: String(base64),
+      encoding: 'base64',
+      success: () => resolve(filePath),
+      fail: (e) => reject(e)
+    });
+  });
+}
+
+/**
+ * 将服务端 SVG 海报栅格化为本地 PNG 临时文件（降级方案）
+ *
+ * 背景：POST /poster 的 pngBase64 仅在服务端配置中文字体后才返回；字体缺失时只返回 svg，
+ * 而小程序 Canvas2D 无法直接把 svg 作为图片源解码（img.onerror）。因此交给
+ * utils/svgRepaint.js 把 svg 当作绘图指令在本地 Canvas 2D 重绘后再导出 PNG——
+ * ink/sunset/night 三种主题模板的 svg 子集一致，可稳定还原版式与配色。
+ *
+ * @param {object} pageCtx  Page 实例（this）
+ * @param {string} svg      svg 源码（含 <svg> 根节点）
+ * @param {object} [opts]
+ * @param {number} [opts.width]   逻辑宽度，默认 1080
+ * @param {number} [opts.height]  逻辑高度，默认 1440
+ * @param {string} [opts.canvasId] 默认 posterCanvas
+ * @param {string} [opts.font]    字体风格 key（海报内临时选择，缺省取设置页「正文字体」）
+ * @returns {Promise<string>} PNG 临时文件路径
+ */
+function renderSvgToTempFile(pageCtx, svg, opts = {}) {
+  const canvasId = opts.canvasId || 'posterCanvas';
+  // 输出按像素比放大，但限制最大 2x，避免低端机大画布内存压力（1080×1440 → 2160×2880）
+  const dpr = Math.min((wx.getWindowInfo && wx.getWindowInfo().pixelRatio) || 2, 2);
+  const w = opts.width || 1080;
+  const h = opts.height || 1440;
+
+  return new Promise((resolve, reject) => {
+    if (!svg) {
+      reject(new Error('SVG 内容为空'));
+      return;
+    }
+    const query = _createQuery(pageCtx);
+    query
+      .select(`#${canvasId}`)
+      .fields({ node: true, size: true })
+      .exec((res) => {
+        if (!res || !res[0] || !res[0].node) {
+          reject(new Error(`Canvas 节点不存在：#${canvasId}`));
+          return;
+        }
+        const canvas = res[0].node;
+        const ctx = canvas.getContext('2d');
+
+        // 设置画布物理尺寸（重置变换），再按像素比缩放绘制逻辑坐标系
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, w, h);
+
+        try {
+          // 第 5 参：字体偏好（海报内临时选择 opts.font 优先，否则取设置页「正文字体」）
+          svgRepaint.paintScene(ctx, svg, w, h, svgFontStacks(opts.font));
+        } catch (e) {
+          console.error('[share] svg repaint error:', e);
+          reject(e instanceof Error ? e : new Error('SVG 指令重绘失败'));
+          return;
+        }
+        wx.canvasToTempFilePath({
+          canvas,
+          fileType: 'png',
+          quality: 1,
+          success(r) {
+            resolve(r.tempFilePath);
+          },
+          fail: reject
+        });
+      });
+  });
+}
+
+/**
  * 估算诗词海报布局：正文按宽度换行得到全部行，并计算总高度
  * 完整展示优先：若正文超长导致高度超过 maxHeight，自动逐档缩小字号/行高，
  * 使全部正文行完整落入画布（不截断、不省略）。
  * @param {object} opts
  * @param {number} [opts.maxHeight] 画布逻辑像素高度上限（默认不限制）
- * @returns {{height:number, lines:string[], titleLines:string[], contentLineH:number, contentFont:string, contentH:number}}
+ * @param {string} [opts.font]      字体风格 key（海报内临时选择，缺省取设置页「正文字体」）
+ * @returns {{height:number, lines:string[], titleLines:string[], titleFont:string, contentLineH:number, contentFont:string, contentH:number}}
  */
 function _measurePoemLayout(ctx, opts = {}) {
   const W = POSTER_WIDTH;
@@ -471,10 +612,14 @@ function _measurePoemLayout(ctx, opts = {}) {
   const maxHeight = opts.maxHeight || Number.MAX_SAFE_INTEGER;
 
   const contentMaxW = W - 72 - 80;   // 卡片左右留 36、内部左右留 40，正文行宽更大
-  const titleLines = _wrapText(ctx, title, W - 140, 'bold 42px serif');
 
-  // 正文使用设置页所选字体栈（与渲染一致，保证换行准确）
-  const contentStack = getPosterFontStack();
+  // 标题走「题字」栈（默认楷体）、正文走正文栈（默认宋体）；opts.font 为海报内临时选择
+  const stacks = resolvePosterStacks(opts.font);
+  const titleFont = 'bold 42px ' + stacks.title;
+  const titleLines = _wrapText(ctx, title, W - 140, titleFont);
+
+  // 正文字体栈（与渲染一致，保证换行测量准确）
+  const contentStack = stacks.body;
 
   // 基准：字号 34px、行高 60px
   let fontPx = 34;
@@ -517,7 +662,15 @@ function _measurePoemLayout(ctx, opts = {}) {
   }
 
   const contentH = Math.max(lines.length, 1) * contentLineH;
-  return { height, lines, titleLines, contentLineH, contentFont: fontPx + 'px ' + contentStack, contentH };
+  return {
+    height,
+    lines,
+    titleLines,
+    titleFont,
+    contentLineH,
+    contentFont: fontPx + 'px ' + contentStack,
+    contentH
+  };
 }
 
 /**
@@ -535,7 +688,10 @@ async function _renderPoemPoster(ctx, canvas, opts = {}, layout = {}) {
   const type = (opts.type || '').trim();
   const qrImageUrl = opts.qrImageUrl || '/images/mini.png';
 
-  const brandName = '国文之学';
+  const brandName = '超然古诗词';
+
+  // 字体栈：标题/品牌走「题字」栈（默认楷体），正文/元信息走正文栈（默认宋体）
+  const stacks = resolvePosterStacks(opts.font);
 
   // ========== 背景 ==========
   const bg = ctx.createLinearGradient(0, 0, 0, H);
@@ -573,7 +729,7 @@ async function _renderPoemPoster(ctx, canvas, opts = {}, layout = {}) {
   // ========== 标题 ==========
   ctx.save();
   ctx.fillStyle = '#F7EBD3';
-  ctx.font = 'bold 42px serif';
+  ctx.font = layout.titleFont || ('bold 42px ' + stacks.title);
   ctx.textAlign = 'center';
   layout.titleLines.forEach((line) => {
     ctx.fillText(line, W / 2, y);
@@ -587,7 +743,7 @@ async function _renderPoemPoster(ctx, canvas, opts = {}, layout = {}) {
   if (meta) {
     ctx.save();
     ctx.fillStyle = 'rgba(223,190,128,0.9)';
-    ctx.font = '28px serif';
+    ctx.font = '28px ' + stacks.body;
     ctx.textAlign = 'center';
     ctx.fillText(meta, W / 2, y);
     ctx.restore();
@@ -606,7 +762,7 @@ async function _renderPoemPoster(ctx, canvas, opts = {}, layout = {}) {
   if (lines.length) {
     ctx.save();
     ctx.fillStyle = '#2A1A12';
-    ctx.font = layout.contentFont || '34px serif';
+    ctx.font = layout.contentFont || ('34px ' + stacks.body);
     ctx.textAlign = 'center';
     let textY = cardY + 60 + contentLineH - 10;
     lines.forEach((line) => {
@@ -648,7 +804,7 @@ async function _renderPoemPoster(ctx, canvas, opts = {}, layout = {}) {
   ctx.save();
   ctx.textAlign = 'left';
   ctx.fillStyle = '#F8ECD0';
-  ctx.font = 'bold 30px serif';
+  ctx.font = 'bold 30px ' + stacks.title;
   ctx.fillText(brandName, infoX, qrY + 36);
   ctx.fillStyle = 'rgba(233,215,180,0.88)';
   ctx.font = '20px sans-serif';
@@ -719,9 +875,12 @@ async function _safeDrawImage(canvas, ctx, src, x, y, w, h) {
 // =========================
 
 function _drawTopBrand(ctx, W, opts = {}) {
-  const brandName = opts.brandName || '国文之学';
+  const brandName = opts.brandName || '超然古诗词';
   const brandSlogan = opts.brandSlogan || '传承千年智慧 · 让经典更易懂';
   const brandMark = opts.brandMark || '文';
+
+  // 品牌徽章/名称按「题字」栈渲染（默认楷体），与海报正文风格一致
+  const stacks = resolvePosterStacks(opts.font);
 
   const cx = W / 2;
   const cy = 92;
@@ -738,12 +897,12 @@ function _drawTopBrand(ctx, W, opts = {}) {
   ctx.fill();
 
   ctx.fillStyle = '#3A2114';
-  ctx.font = 'bold 28px serif';
+  ctx.font = 'bold 28px ' + stacks.title;
   ctx.textAlign = 'center';
   ctx.fillText(brandMark, cx, cy + 9);
 
   ctx.fillStyle = '#F7EBD3';
-  ctx.font = 'bold 36px serif';
+  ctx.font = 'bold 36px ' + stacks.title;
   ctx.fillText(brandName, W / 2, 152);
 
   ctx.fillStyle = 'rgba(223,190,128,0.88)';
@@ -886,10 +1045,12 @@ function _drawTag(ctx, cx, y, text) {
   ctx.restore();
 }
 
-function _drawSectionLabel(ctx, x, y, text) {
+function _drawSectionLabel(ctx, x, y, text, stacks) {
+  // 未显式传入时沿用设置页字体偏好
+  const st = stacks || resolvePosterStacks();
   ctx.save();
   ctx.fillStyle = 'rgba(230,189,99,0.95)';
-  ctx.font = 'bold 22px serif';
+  ctx.font = 'bold 22px ' + st.title;
   ctx.textAlign = 'left';
   ctx.fillText(text, x, y);
 
@@ -1191,5 +1352,11 @@ module.exports = {
   generateTimelineShare,
   generatePoster,
   generatePoemPoster,
+  persistPosterBase64,
+  renderSvgToTempFile,
   savePosterToAlbum,
+  // 海报字体：风格选项列表（预览页选择条）与栈解析（供自定义绘制复用）
+  POSTER_FONT_OPTIONS,
+  resolvePosterStacks,
+  getPosterFontStack,
 };

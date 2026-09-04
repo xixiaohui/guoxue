@@ -133,14 +133,14 @@ Page({
     return {
       title: p
         ? '本周最热门诗词 · Top1《' + (p.title || '无题') + '》'
-        : '本周最热门诗词 · 国文之学',
+        : '本周最热门诗词 · 超然古诗词',
       path: '/pages/week_hot/index'
     };
   },
 
   onShareTimeline() {
     return {
-      title: '本周最热门诗词 · 国文之学',
+      title: '本周最热门诗词 · 超然古诗词',
       query: 'from=timeline'
     };
   }

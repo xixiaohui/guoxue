@@ -1,4 +1,4 @@
-// app.js - 国文之学
+// app.js - 超然古诗词
 App({
   onLaunch() {
     const ENV_ID = 'guoxue-9gszzase2c934dcd';
