@@ -597,6 +597,227 @@ function renderSvgToTempFile(pageCtx, svg, opts = {}) {
 }
 
 /**
+ * 在已有海报底图（本地 PNG 路径）上叠加「诗词来源」文字，返回新的临时文件路径。
+ * 用于在线诗画海报：服务端不叠加来源，本地在底图底部追加一行来源标记。
+ * 叠加失败时返回原底图路径（不影响海报本身可用性）。
+ * @param {object} pageCtx  Page 实例（this）
+ * @param {string} basePath 底图本地路径
+ * @param {object} [opts]
+ * @param {number} [opts.width]  底图逻辑宽度，默认 1080
+ * @param {number} [opts.height] 底图逻辑高度，默认 1440
+ * @param {string} [opts.theme]  海报主题 ink/sunset/night，用于选择文字颜色
+ * @param {string} [opts.text]   来源文字
+ * @param {string} [opts.sealNickname] 昵称（存在时在左侧边框外侧绘制红色印章）
+ * @param {string} [opts.sealCaption]  题跋文字（存在时绘制在印章下方竖排）
+ * @returns {Promise<string>}
+ */
+function overlaySourceMark(pageCtx, basePath, opts = {}) {
+  if (!basePath) return Promise.resolve(basePath);
+  const canvasId = opts.canvasId || 'posterCanvas';
+  const dpr = Math.min((wx.getWindowInfo && wx.getWindowInfo().pixelRatio) || 2, 2);
+  const w = opts.width || 1080;
+  const h = opts.height || 1440;
+  const text = opts.text || '诗意源于「超然古诗词」微信小程序';
+  // 浅色主题（ink 水墨宣纸 / sunset 落日）用深褐文字；深色主题（night 夜月）用浅米金文字
+  const lightTheme = opts.theme === 'ink' || opts.theme === 'sunset';
+  const markColor = lightTheme ? 'rgba(74,46,24,0.82)' : 'rgba(233,215,180,0.92)';
+  const sealNickname = opts.sealNickname ? String(opts.sealNickname).trim() : '';
+  const sealCaption = opts.sealCaption ? String(opts.sealCaption).trim() : '';
+
+  return new Promise((resolve) => {
+    const query = _createQuery(pageCtx);
+    query
+      .select(`#${canvasId}`)
+      .fields({ node: true, size: true })
+      .exec((res) => {
+        if (!res || !res[0] || !res[0].node) {
+          resolve(basePath);
+          return;
+        }
+        const canvas = res[0].node;
+        const ctx = canvas.getContext('2d');
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, w, h);
+
+        const img = canvas.createImage();
+        img.onload = () => {
+          try {
+            ctx.drawImage(img, 0, 0, w, h);
+            // 底部右下角叠加来源文字（text 非空时）：无背景、无描边，按主题自适应颜色
+            if (text) {
+              ctx.font = '26px sans-serif';
+              ctx.textAlign = 'right';
+              ctx.fillStyle = markColor;
+              ctx.fillText(text, w - 36, h - 16);
+            }
+
+            // 左上角、边框外侧：题跋在上、昵称印章在下（传统「先文字后钤印」规范）
+            if (sealNickname) {
+              const topY = 50;              // 顶部留白
+              let sealLeftX = 50;           // 印章左边界（无题跋时默认；有题跋时对齐末尾字）
+              let sealCy;
+              if (sealCaption) {
+                // 先画题跋（文字在上，从右往左换列），返回末尾字位置
+                const captionRightX = sealLeftX + 30;   // 第一列中心 x（靠右）
+                const end = _drawSealCaption(ctx, sealCaption, captionRightX, topY, h - 40, markColor);
+                // 小印钤在题跋末尾字下方，x 对齐末尾字所在列
+                sealLeftX = end.x - 21;                 // 小印宽 42，中心对齐末尾字
+                sealCy = end.y + 18 + 21;               // 末尾字底部 + 间距 + 印章半高
+              } else {
+                // 无题跋：印章直接放顶部
+                sealCy = topY + 21;
+              }
+              _drawSeal(ctx, sealNickname, sealLeftX, sealCy, 42);
+            }
+
+            wx.canvasToTempFilePath({
+              canvas,
+              fileType: 'png',
+              quality: 1,
+              success(r) { resolve(r.tempFilePath); },
+              fail() { resolve(basePath); }
+            });
+          } catch (e) {
+            resolve(basePath);
+          }
+        };
+        img.onerror = () => resolve(basePath);
+        img.src = basePath;
+      });
+  });
+}
+
+/**
+ * 绘制红色印章（朱文印：红底白字），用于海报左侧边框外侧。
+ * 排版规则：4 字 → 2×2 方章；3 字 → 2×2 方章（补「印」字）；2 字 → 1 列 2 行长章；1 字 → 单字方章。
+ * 昵称最多 4 字，超出截断。
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {string} nickname 昵称（未处理）
+ * @param {number} leftX 印章左边界 x（逻辑像素）
+ * @param {number} cy 印章中心 y（逻辑像素）
+ * @param {number} [size] 方章基准边长，默认 84
+ * @returns {{size:number, cx:number, width:number, height:number}} 实际尺寸与中心 x（供题跋定位）
+ */
+function _drawSeal(ctx, nickname, leftX, cy, size = 84) {
+  const chars = (nickname || '').trim().slice(0, 4).split('');
+  if (!chars.length) return { size, cx: leftX + size / 2, width: size, height: size };
+
+  const n = chars.length;
+  // 网格行列：4字/3字 → 2×2；2字 → 1列2行；1字 → 1×1
+  const cols = (n === 2) ? 1 : 2;
+  const rows = (n === 1) ? 1 : 2;
+
+  // 印章尺寸：方章（2列）边长 size；2 字长章宽为高的一半
+  const sealW = (n === 2) ? Math.round(size * 0.62) : size;
+  const sealH = size;
+
+  const cx = leftX + sealW / 2;
+  const x = leftX;
+  const y = cy - sealH / 2;
+  const sealRed = '#B3272E';   // 印泥红（较暗，接近真实朱砂印）
+
+  // 内边距/圆角/线宽按印章尺寸等比缩放（以 84 为基准）
+  const radius = Math.max(2, Math.round(size * 0.07));   // 圆角
+  const inner = Math.max(2, Math.round(size * 0.06));    // 内框留白
+  const lineW = Math.max(1, Math.round(size * 0.024));   // 线宽
+  const padX = Math.max(3, Math.round(size * 0.12));     // 水平内边距
+  const padY = Math.max(3, Math.round(size * 0.12));     // 垂直内边距
+
+  ctx.save();
+
+  // 红底（主体）
+  ctx.fillStyle = sealRed;
+  _drawRoundRect(ctx, x, y, sealW, sealH, radius);
+  ctx.fill();
+
+  // 内层细白边（仿印章内框）
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = lineW;
+  _drawRoundRect(ctx, x + inner, y + inner, sealW - inner * 2, sealH - inner * 2, radius - 2);
+  ctx.stroke();
+
+  // 文字：按网格排列，3 字时第 4 格补「印」
+  const cells = n === 3 ? chars.concat('印') : chars.slice();
+  const cellW = (sealW - padX * 2) / cols;
+  const cellH = (sealH - padY * 2) / rows;
+  const fontSize = Math.min(cellW, cellH) * 0.72;
+
+  ctx.fillStyle = '#FDF6E8';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = 'bold ' + Math.floor(fontSize) + 'px ' + FONT_FAMILY_STACK.kai;
+
+  cells.forEach((ch, i) => {
+    const r = Math.floor(i / cols);      // 行
+    const c = i % cols;                  // 列
+    const cellCx = x + padX + cellW * c + cellW / 2;
+    const cellCy = y + padY + cellH * r + cellH / 2;
+    ctx.fillText(ch, cellCx, cellCy);
+  });
+
+  ctx.restore();
+  return { size: sealH, cx, width: sealW, height: sealH };
+}
+
+/**
+ * 绘制题跋（落款文字，最多 140 字），多列竖排、从右往左换列（传统古法）。
+ * 排版：每列从上往下写，填满可用高度后向左换新一列（右→左的书写顺序）。
+ * 字号/行高按可用高度自适应，保证长文本不溢出海报；最左列不超出画布左边界。
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {string} caption 题跋文字
+ * @param {number} rightX 题跋第一列的中心 x（靠右，与印章右边界对齐）
+ * @param {number} topY 起始 y（题跋顶部）
+ * @param {number} [maxBottom] 题跋可用的最大底部 y（默认海报底部留白处）
+ * @param {string} [color] 文字颜色（默认与来源标记一致）
+ * @returns {{x:number, y:number}} 末尾字的位置（中心 x 与底部 y），供印章钤在末尾
+ */
+function _drawSealCaption(ctx, caption, rightX, topY, maxBottom, color) {
+  const text = (caption || '').trim().slice(0, 140);
+  if (!text) return { x: rightX, y: topY };
+
+  const chars = text.split('');
+  const bottom = maxBottom || 1400;   // 默认底部留白约 40px
+
+  // 可用高度 → 每列可容纳字数
+  const availH = Math.max(bottom - topY, 60);
+  const lineH = 26;                   // 行高
+  const perCol = Math.max(1, Math.floor(availH / lineH));
+  const colW = 26;                    // 列宽（含字间距）
+  const minX = 16;                    // 最左列中心 x 下限（避免文字贴出画布）
+
+  ctx.save();
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = color || 'rgba(233,215,180,0.9)';   // 与来源标记同色系
+  ctx.font = '22px ' + FONT_FAMILY_STACK.kai;
+
+  // 从右往左：第 0 列在最右，后续列向左扩展（传统竖排右起）
+  let col = 0;
+  let endX = rightX;
+  let endY = topY;
+  for (let i = 0; i < chars.length; i += perCol) {
+    const colChars = chars.slice(i, i + perCol);
+    const colX = rightX - col * colW;
+    // 向左超出画布边界则停止换列（后续文字无法容纳，截断）
+    if (colX < minX) break;
+    let ty = topY + lineH / 2;
+    colChars.forEach((ch) => {
+      ctx.fillText(ch, colX, ty);
+      ty += lineH;
+    });
+    // 末尾字：本列最后一个字的位置
+    endX = colX;
+    endY = topY + lineH / 2 + (colChars.length - 1) * lineH;
+    col += 1;
+  }
+
+  ctx.restore();
+  return { x: endX, y: endY };
+}
+
+/**
  * 估算诗词海报布局：正文按宽度换行得到全部行，并计算总高度
  * 完整展示优先：若正文超长导致高度超过 maxHeight，自动逐档缩小字号/行高，
  * 使全部正文行完整落入画布（不截断、不省略）。
@@ -803,16 +1024,92 @@ async function _renderPoemPoster(ctx, canvas, opts = {}, layout = {}) {
   const infoX = qrX + qrSize + 28;
   ctx.save();
   ctx.textAlign = 'left';
-  ctx.fillStyle = '#F8ECD0';
-  ctx.font = 'bold 30px ' + stacks.title;
-  ctx.fillText(brandName, infoX, qrY + 36);
-  ctx.fillStyle = 'rgba(233,215,180,0.88)';
-  ctx.font = '20px sans-serif';
-  ctx.fillText('长按识别 · 进入诗词天地', infoX, qrY + 74);
-  ctx.fillStyle = 'rgba(216,177,91,0.95)';
-  ctx.font = '20px sans-serif';
-  ctx.fillText('每天一首经典诗词', infoX, qrY + 104);
+
+  // 用户头像 + 昵称（与二维码同一行卡片内，登录后展示）
+  const hasUser = !!opts.nickname || !!opts.avatarUrl;
+  if (hasUser) {
+    await _drawUserInQrCard(ctx, canvas, opts, infoX, qrY + 14, stacks);
+    // 品牌名 + 识别提示放在同一行
+    ctx.font = 'bold 24px ' + stacks.title;
+    const brandW = ctx.measureText(brandName).width;
+    ctx.fillStyle = '#F8ECD0';
+    ctx.fillText(brandName, infoX, qrY + 108);
+    ctx.fillStyle = 'rgba(233,215,180,0.88)';
+    ctx.font = '20px sans-serif';
+    ctx.fillText('长按识别 · 进入诗词天地', infoX + brandW + 16, qrY + 108);
+  } else {
+    ctx.fillStyle = '#F8ECD0';
+    ctx.font = 'bold 30px ' + stacks.title;
+    ctx.fillText(brandName, infoX, qrY + 36);
+    ctx.fillStyle = 'rgba(233,215,180,0.88)';
+    ctx.font = '20px sans-serif';
+    ctx.fillText('长按识别 · 进入诗词天地', infoX, qrY + 74);
+    ctx.fillStyle = 'rgba(216,177,91,0.95)';
+    ctx.font = '20px sans-serif';
+    ctx.fillText('每天一首经典诗词', infoX, qrY + 104);
+  }
   ctx.restore();
+}
+
+/**
+ * 在底部二维码卡片内绘制用户信息（小尺寸圆形头像 + 昵称），
+ * 位于卡片右侧顶部，与小程序码同一行区域。
+ * 头像加载失败或未设置时，用首字占位圆形替代；昵称缺失则不绘制文字。
+ */
+async function _drawUserInQrCard(ctx, canvas, opts, x, y, stacks) {
+  const nickname = (opts.nickname || '').trim();
+  const avatarUrl = await _resolveAvatarUrl(opts.avatarUrl);
+
+  const avatarSize = 44;
+  const avatarX = x;
+  const avatarY = y;
+  const centerX = avatarX + avatarSize / 2;
+  const centerY = avatarY + avatarSize / 2;
+
+  // 圆形裁剪绘制头像
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, avatarSize / 2, 0, Math.PI * 2);
+  ctx.clip();
+
+  let avatarOk = false;
+  if (avatarUrl) {
+    avatarOk = await _safeDrawImage(canvas, ctx, avatarUrl, avatarX, avatarY, avatarSize, avatarSize);
+  }
+  if (!avatarOk) {
+    // 头像加载失败或未设置：金色底 + 昵称首字（或「友」）占位
+    const g = ctx.createLinearGradient(avatarX, avatarY, avatarX + avatarSize, avatarY + avatarSize);
+    g.addColorStop(0, '#D9A441');
+    g.addColorStop(1, '#B9852F');
+    ctx.fillStyle = g;
+    ctx.fillRect(avatarX, avatarY, avatarSize, avatarSize);
+    ctx.fillStyle = '#3C210F';
+    ctx.font = 'bold 22px ' + stacks.title;
+    ctx.textAlign = 'center';
+    const mark = (nickname && nickname.slice(0, 1)) || '友';
+    ctx.fillText(mark, centerX, centerY + 8);
+  }
+  ctx.restore();
+
+  // 圆形描边
+  ctx.save();
+  ctx.strokeStyle = 'rgba(243,211,139,0.75)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, avatarSize / 2, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+
+  // 昵称文字
+  if (nickname) {
+    ctx.save();
+    ctx.fillStyle = '#F7EBD3';
+    ctx.font = '26px ' + stacks.title;
+    ctx.textAlign = 'left';
+    const nickX = avatarX + avatarSize + 16;
+    ctx.fillText(nickname, nickX, centerY + 9);
+    ctx.restore();
+  }
 }
 
 /**
@@ -833,6 +1130,30 @@ function _wrapPoemLines(ctx, text, maxWidth, font) {
     else lines.push(...sub);
   }
   return lines;
+}
+
+// =========================
+// 用户头像与昵称
+// =========================
+
+/**
+ * 将头像地址解析为 Canvas 可加载的图片源。
+ * 云存储 fileID（cloud:// 开头）需先换取临时 https 链接；本地路径/http 直接返回。
+ * @param {string} avatarUrl
+ * @returns {Promise<string|null>} 可加载地址，失败返回 null
+ */
+function _resolveAvatarUrl(avatarUrl) {
+  if (!avatarUrl) return Promise.resolve(null);
+  if (String(avatarUrl).indexOf('cloud://') === 0) {
+    if (!wx.cloud || !wx.cloud.getTempFileURL) return Promise.resolve(null);
+    return wx.cloud.getTempFileURL({ fileList: [avatarUrl] })
+      .then((res) => {
+        const f = res && res.fileList && res.fileList[0];
+        return (f && f.tempFileURL) || null;
+      })
+      .catch(() => null);
+  }
+  return Promise.resolve(String(avatarUrl));
 }
 
 // =========================
@@ -1354,6 +1675,7 @@ module.exports = {
   generatePoemPoster,
   persistPosterBase64,
   renderSvgToTempFile,
+  overlaySourceMark,
   savePosterToAlbum,
   // 海报字体：风格选项列表（预览页选择条）与栈解析（供自定义绘制复用）
   POSTER_FONT_OPTIONS,

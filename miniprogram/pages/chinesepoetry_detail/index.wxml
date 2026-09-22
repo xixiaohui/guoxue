@@ -128,6 +128,37 @@
   <!-- 海报生成画布（移出屏幕，供 Canvas 2D 绘制；单页模式下画布能力被禁用，不渲染） -->
   <canvas type="2d" id="posterCanvas" class="poster-canvas" wx:if="{{!isSinglePage}}"></canvas>
 
+  <!-- 生成海报前的登录引导弹层 -->
+  <view class="poster-mask" wx:if="{{showLoginGuide}}" catchtap="closeLoginGuide">
+    <view class="style-panel login-guide-panel" catchtap="noop">
+      <view class="style-head">
+        <text class="style-title">登录后生成专属海报</text>
+        <text class="style-close" bindtap="closeLoginGuide">✕</text>
+      </view>
+      <text class="login-guide-desc">登录并设置头像昵称，海报将展示你的个人信息</text>
+
+      <view class="login-guide-body">
+        <button class="guide-avatar-btn" open-type="chooseAvatar"
+          bind:chooseavatar="onGuideChooseAvatar" hover-class="avatar-btn-hover" hover-stay-time="60">
+          <image class="guide-avatar" src="{{guideAvatar || '/images/avatar.png'}}" mode="aspectFill" />
+          <text class="guide-avatar-tip">{{isLogin && guideAvatar ? '换头像' : '选头像'}}</text>
+        </button>
+
+        <view class="guide-nickname-wrap">
+          <input class="guide-nickname-input" type="nickname"
+            value="{{guideNickname}}" placeholder="点击设置昵称" placeholder-class="guide-nickname-placeholder"
+            bindinput="onGuideNicknameInput" maxlength="20" />
+        </view>
+      </view>
+
+      <view class="guide-login-btn" wx:if="{{!isLogin}}" bindtap="onGuideLogin" hover-class="style-btn-hover" hover-stay-time="80">
+        {{loginLogging ? '登录中…' : '微信登录'}}
+      </view>
+
+      <view class="style-btn" wx:if="{{isLogin}}" bindtap="onGuideConfirm" hover-class="style-btn-hover" hover-stay-time="80">完成并生成海报</view>
+    </view>
+  </view>
+
   <!-- 海报样式选择弹层 -->
   <view class="poster-mask" wx:if="{{showStylePicker}}" catchtap="closeStylePicker">
     <view class="style-panel" catchtap="noop">
@@ -177,6 +208,36 @@
           </view>
         </view>
       </block>
+
+      <!-- 标记诗词来源开关（仅在线诗画海报） -->
+      <view class="source-mark-row" wx:if="{{posterStyle === 2}}">
+        <view class="source-mark-info">
+          <text class="source-mark-label">标记诗词来源</text>
+          <text class="source-mark-desc">在海报上展示「诗意源于「超然古诗词」微信小程序」</text>
+        </view>
+        <view class="source-mark-switch {{showSourceMark ? 'source-mark-on' : ''}}" bindtap="toggleSourceMark" hover-class="style-card-hover" hover-stay-time="80">
+          <view class="source-mark-knob"></view>
+        </view>
+      </view>
+
+      <!-- 显示昵称印章开关（仅在线诗画海报） -->
+      <view class="source-mark-row" wx:if="{{posterStyle === 2}}">
+        <view class="source-mark-info">
+          <text class="source-mark-label">显示昵称印章</text>
+          <text class="source-mark-desc">在海报左侧以红色印章展示你的昵称（最多 4 字）</text>
+        </view>
+        <view class="source-mark-switch {{showNicknameSeal ? 'source-mark-on' : ''}}" bindtap="toggleNicknameSeal" hover-class="style-card-hover" hover-stay-time="80">
+          <view class="source-mark-knob"></view>
+        </view>
+      </view>
+
+      <!-- 题跋（落款文字，最多 140 字）输入，仅在开启昵称印章时显示 -->
+      <view class="seal-caption-row" wx:if="{{posterStyle === 2 && showNicknameSeal}}">
+        <text class="seal-caption-label">题跋（落款）</text>
+        <textarea class="seal-caption-input" value="{{sealCaption}}" bindinput="onSealCaptionInput"
+          placeholder="输入题跋文字，最多 140 字，如「某某题于中秋」" placeholder-class="seal-caption-placeholder"
+          maxlength="140" auto-height="{{true}}" />
+      </view>
 
       <view class="style-btn" bindtap="confirmPoster" hover-class="style-btn-hover" hover-stay-time="80">生成海报</view>
     </view>

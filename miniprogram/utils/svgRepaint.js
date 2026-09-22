@@ -335,6 +335,19 @@ function _drawText(ctx, a, content, stacks) {
 }
 
 /**
+ * 将服务端海报底部的标语「每日一诗 · 静水流深」重定位到右上角、边框外。
+ * 直接修改 text 指令的坐标属性（x/y/text-anchor），内容保持不变。
+ * @param {object} cmd text 指令（含 a 属性对象与 content）
+ */
+function _relocateSlogan(cmd) {
+  const text = _unescape(cmd.content || '').trim();
+  if (text.indexOf('每日一诗') < 0 && text.indexOf('静水流深') < 0) return;
+  cmd.a.x = '1075';        // 右对齐，右边界留 5px
+  cmd.a.y = '32';          // 顶部留 5px（字号 27，基线约 5 + 27）
+  cmd.a['text-anchor'] = 'end';
+}
+
+/**
  * 提取整幅色彩滤镜矩阵（对应服务端 defs 中 id="poster-fx" 的 feColorMatrix type="matrix"）。
  * 噪声滤镜 poster-grain 含 feTurbulence，会被跳过；返回 null 表示无需后处理。
  * @returns {number[]|null} 20 个矩阵系数（行主序）
@@ -389,7 +402,13 @@ function _applyColorMatrix(ctx, m) {
  *        使在线诗画海报正文跟随用户偏好，风格与经典海报一致。
  */
 function paintScene(ctx, svg, w, h, fontStacks) {
-  const cmds = parseSvgCommands(svg);
+  // 统一各主题服务端印章颜色为昵称印章红（#B3272E）：
+  //   #B23B2E（各主题「诗词」印 + ink「天地」印）、#C2452F（sunset「天地」印）、#C9A05C（night「天地」印）
+  const normalizedSvg = String(svg || '')
+    .replace(/#B23B2E/gi, '#B3272E')
+    .replace(/#C2452F/gi, '#B3272E')
+    .replace(/#C9A05C/gi, '#B3272E');
+  const cmds = parseSvgCommands(normalizedSvg);
   // 局部字体栈：内置古风栈为底，外部覆盖按 key 合并
   const stacks = Object.assign({}, FONT_STACKS, fontStacks || {});
   const gradients = {};
@@ -418,13 +437,14 @@ function paintScene(ctx, svg, w, h, fontStacks) {
         _drawEllipse(ctx, c.a, gradients, true);
         break;
       case 'text':
+        _relocateSlogan(c);
         _drawText(ctx, c.a, c.content, stacks);
         break;
       default:
         break;
     }
   }
-  const fx = _extractColorMatrix(svg);
+  const fx = _extractColorMatrix(normalizedSvg);
   if (fx) _applyColorMatrix(ctx, fx);
 }
 

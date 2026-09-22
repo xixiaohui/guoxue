@@ -810,3 +810,190 @@
 .style-btn-hover {
   opacity: 0.9;
 }
+
+/* ── 标记诗词来源开关 ─────────────────────── */
+.source-mark-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #F4EADA;
+  border: 1rpx solid #E0C890;
+  border-radius: 20rpx;
+  padding: 20rpx 24rpx;
+  margin-top: 8rpx;
+}
+
+.source-mark-info {
+  flex: 1;
+  min-width: 0;
+  margin-right: 20rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.source-mark-label {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #4A2E18;
+}
+
+.source-mark-desc {
+  font-size: 20rpx;
+  color: #8C7B61;
+  line-height: 1.4;
+  margin-top: 4rpx;
+}
+
+.source-mark-switch {
+  flex-shrink: 0;
+  width: 88rpx;
+  height: 50rpx;
+  border-radius: 26rpx;
+  background: #D8C9A8;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.source-mark-switch .source-mark-knob {
+  position: absolute;
+  top: 4rpx;
+  left: 4rpx;
+  width: 42rpx;
+  height: 42rpx;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.18);
+  transition: left 0.2s;
+}
+
+.source-mark-switch.source-mark-on {
+  background: linear-gradient(90deg, #C4882E, #D99A3D);
+}
+
+.source-mark-switch.source-mark-on .source-mark-knob {
+  left: 42rpx;
+}
+
+/* ── 题跋（落款一句话）输入 ─────────────────── */
+.seal-caption-row {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8rpx;
+}
+
+.seal-caption-label {
+  font-size: 24rpx;
+  color: #8C7B61;
+  margin-bottom: 10rpx;
+}
+
+.seal-caption-input {
+  width: 100%;
+  min-height: 80rpx;
+  background: #F4EADA;
+  border: 1rpx solid #E0C890;
+  border-radius: 16rpx;
+  padding: 16rpx 24rpx;
+  font-size: 28rpx;
+  color: #4A2E18;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.seal-caption-placeholder {
+  color: #B8A98C;
+}
+
+/* ── 生成海报前登录引导弹层 ─────────────────── */
+.login-guide-desc {
+  display: block;
+  font-size: 24rpx;
+  color: #8C7B61;
+  line-height: 1.5;
+  margin-bottom: 28rpx;
+  text-align: center;
+}
+
+.login-guide-body {
+  display: flex;
+  align-items: center;
+  padding: 8rpx 4rpx;
+}
+
+.guide-avatar-btn {
+  flex-shrink: 0;
+  width: 128rpx;
+  height: 128rpx;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.guide-avatar-btn::after {
+  border: none;
+}
+
+.guide-avatar {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 50%;
+  background: #F4EADA;
+  border: 3rpx solid #E8D5A3;
+  box-sizing: border-box;
+}
+
+.guide-avatar-tip {
+  position: absolute;
+  bottom: -2rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20rpx;
+  color: #8B2500;
+  background: #FFF8E7;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  padding: 2rpx 16rpx;
+  white-space: nowrap;
+}
+
+.guide-nickname-wrap {
+  flex: 1;
+  min-width: 0;
+  margin-left: 28rpx;
+}
+
+.guide-nickname-input {
+  height: 80rpx;
+  background: #F4EADA;
+  border: 1rpx solid #E0C890;
+  border-radius: 40rpx;
+  padding: 0 32rpx;
+  font-size: 30rpx;
+  color: #4A2E18;
+  box-sizing: border-box;
+}
+
+.guide-nickname-placeholder {
+  color: #B8A98C;
+}
+
+.guide-login-btn {
+  margin-top: 34rpx;
+  height: 88rpx;
+  border-radius: 44rpx;
+  background: linear-gradient(90deg, #2E6B5C, #20584A);
+  color: #FFF8E7;
+  font-size: 30rpx;
+  font-weight: 700;
+  letter-spacing: 4rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(32, 88, 74, 0.28);
+}

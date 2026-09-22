@@ -6,6 +6,7 @@ const share = require('../../utils/share');
 const settings = require('../../utils/settings');
 const seo = require('../../utils/seo');
 const landing = require('../../utils/landing');
+const user = require('../../utils/user');
 
 // 诗人作品分页大小（/search 实测 page 参数生效）
 const AUTHOR_POEM_PAGE_SIZE = 20;
@@ -59,11 +60,21 @@ Page({
     posterStyle: 1,           // 1 = 经典海报（Canvas 含小程序码）| 2 = 在线诗画海报（服务端 API）
     posterTheme: 'ink',       // ink 水墨 | sunset 落日 | night 夜月
     posterFilter: 'none',     // none/sepia/warm/cool/gray/vivid
+    showSourceMark: true,     // 是否在海报上标记诗词来源（默认开启）
+    showNicknameSeal: false,  // 是否在海报左侧显示昵称印章（仅在线诗画海报）
+    sealCaption: '',          // 题跋（落款一句话，显示在印章下方，用户可自定义）
 
     // 海报字体（仅作用于本次海报，不改变阅读设置）
     posterFont: 'default',
     posterFonts: share.POSTER_FONT_OPTIONS,
-    posterFromServer: false   // 在线海报由服务端直接出图（服务端字体，本地无法更换）
+    posterFromServer: false,  // 在线海报由服务端直接出图（服务端字体，本地无法更换）
+
+    // 生成海报前的登录引导
+    isLogin: false,           // 当前是否已登录（供弹层按钮态）
+    showLoginGuide: false,    // 登录引导弹层
+    loginLogging: false,      // 登录请求中
+    guideNickname: '',        // 弹层内昵称输入
+    guideAvatar: ''           // 弹层内头像（本地/云路径）
   },
 
   onLoad(options) {
@@ -125,9 +136,10 @@ Page({
     settings.applyToPage(this);
   },
 
-  /** 每次进入页面时应用阅读主题、字号与正文字体设置 */
+  /** 每次进入页面时应用阅读主题、字号与正文字体设置，并同步登录态 */
   onShow() {
     settings.applyToPage(this);
+    this.setData({ isLogin: user.isLogin() });
   },
 
   /** 触底加载诗人下一页作品 */
@@ -442,7 +454,7 @@ Page({
   // ── 海报（样式选择 → 生成 → 预览）─────────────
   noop() {},
 
-  /** 点击底部「海报」：先弹出样式选择（经典含小程序码 / 在线诗画海报） */
+  /** 点击底部「海报」：先确保已登录（拿到头像昵称），再弹出样式选择 */
   createPoster() {
     if (this.data.isSinglePage) { this._tipUnavailable(); return; }
     if (this.data.kind !== 'poem') {
@@ -454,7 +466,102 @@ Page({
       return;
     }
     if (this.data.posterLoading) return;
+
+    // 未登录 → 弹出登录引导（登录 + 设置头像昵称），登录完成后再继续生成
+    if (!user.isLogin()) {
+      this._openLoginGuide();
+      return;
+    }
     this.setData({ showStylePicker: true });
+  },
+
+  /** 打开登录引导弹层，并预填当前（如有）昵称头像 */
+  _openLoginGuide() {
+    const profile = user.getProfile() || {};
+    this.setData({
+      showLoginGuide: true,
+      loginLogging: false,
+      guideNickname: profile.nickName || '',
+      guideAvatar: profile.avatarUrl || ''
+    });
+  },
+
+  closeLoginGuide() {
+    this.setData({ showLoginGuide: false });
+  },
+
+  /** 弹层内：微信登录（仅获取 openid，昵称头像由用户随后填写） */
+  async onGuideLogin() {
+    if (this.data.loginLogging) return;
+    this.setData({ loginLogging: true });
+    try {
+      const openid = await user.wxLogin();
+      const prev = user.getProfile() || {};
+      const profile = {
+        openid,
+        nickName: prev.nickName || this.data.guideNickname || '微信用户',
+        avatarUrl: prev.avatarUrl || this.data.guideAvatar || '',
+        loginAt: Date.now()
+      };
+      user.saveProfile(profile);
+      await user.syncFavoritesToCloud(openid);
+      this.setData({
+        isLogin: true,
+        guideNickname: profile.nickName,
+        guideAvatar: profile.avatarUrl
+      });
+      wx.showToast({ title: '登录成功', icon: 'success' });
+    } catch (e) {
+      console.error('[PoetryDetail] guide login failed:', e);
+      wx.showToast({ title: '登录失败，请重试', icon: 'none' });
+    } finally {
+      this.setData({ loginLogging: false });
+    }
+  },
+
+  /** 弹层内：选择头像（open-type="chooseAvatar"） */
+  async onGuideChooseAvatar(e) {
+    const tempPath = e.detail && e.detail.avatarUrl;
+    if (!tempPath) return;
+    if (!user.isLogin()) {
+      wx.showToast({ title: '请先登录', icon: 'none' });
+      return;
+    }
+    wx.showLoading({ title: '头像处理中…' });
+    try {
+      let path = await user.uploadAvatarToCloud(tempPath);
+      if (!path) path = await user.saveAvatarLocal(tempPath);
+      if (!path) path = tempPath;
+      const profile = user.getProfile() || { openid: user.getOpenid() };
+      profile.avatarUrl = path;
+      user.saveProfile(profile);
+      this.setData({ guideAvatar: path });
+      wx.showToast({ title: '头像已设置', icon: 'success' });
+    } catch (err) {
+      console.error('[PoetryDetail] guide avatar failed:', err);
+      wx.showToast({ title: '头像设置失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
+  /** 弹层内：输入昵称（input type="nickname"） */
+  onGuideNicknameInput(e) {
+    const nickName = (e.detail && e.detail.value || '').trim();
+    this.setData({ guideNickname: nickName });
+    if (!user.isLogin()) return;
+    const profile = user.getProfile() || {};
+    profile.nickName = nickName;
+    user.saveProfile(profile);
+  },
+
+  /** 弹层内：完成设置 → 关闭弹层并进入海报样式选择 */
+  onGuideConfirm() {
+    if (!user.isLogin()) {
+      wx.showToast({ title: '请先登录', icon: 'none' });
+      return;
+    }
+    this.setData({ showLoginGuide: false, showStylePicker: true });
   },
 
   /** 选择海报样式：1 = 经典（Canvas 含小程序码），2 = 在线诗画（服务端 API） */
@@ -471,6 +578,21 @@ Page({
   pickPosterFilter(e) {
     const v = (e.currentTarget.dataset && e.currentTarget.dataset.filter) || 'none';
     this.setData({ posterFilter: v });
+  },
+
+  /** 切换是否在海报上标记诗词来源 */
+  toggleSourceMark() {
+    this.setData({ showSourceMark: !this.data.showSourceMark });
+  },
+
+  /** 切换是否在海报左侧显示昵称印章 */
+  toggleNicknameSeal() {
+    this.setData({ showNicknameSeal: !this.data.showNicknameSeal });
+  },
+
+  /** 输入题跋（落款一句话） */
+  onSealCaptionInput(e) {
+    this.setData({ sealCaption: (e.detail && e.detail.value) || '' });
   },
 
   closeStylePicker() {
@@ -506,9 +628,26 @@ Page({
     if (!reuseSvg) this._posterSvg = null;
     this.setData({ posterLoading: true, posterPath: '' });
     try {
-      const path = this.data.posterStyle === 2
+      let path = this.data.posterStyle === 2
         ? await this._generateApiPoster()
         : await this._generateClassicPoster();
+      // 在线诗画海报由服务端出图，按开关叠加「来源文字」与「昵称印章」
+      const needMark = this.data.posterStyle === 2 &&
+        (this.data.showSourceMark || this.data.showNicknameSeal);
+      if (needMark) {
+        const profile = user.getProfile();
+        const sealNickname = this.data.showNicknameSeal
+          ? ((profile && profile.nickName) || '').trim()
+          : '';
+        path = await share.overlaySourceMark(this, path, {
+          width: this._posterSvg ? this._posterSvg.width : 1080,
+          height: this._posterSvg ? this._posterSvg.height : 1440,
+          theme: this.data.posterTheme || 'ink',
+          text: this.data.showSourceMark ? undefined : '',
+          sealNickname,
+          sealCaption: this.data.showNicknameSeal ? this.data.sealCaption : ''
+        });
+      }
       this.setData({ posterPath: path, posterLoading: false });
     } catch (e) {
       console.error('[PoetryDetail] poster failed:', e);
@@ -517,8 +656,10 @@ Page({
     }
   },
 
-  /** 经典海报：Canvas 2D 本地绘制（完整正文 + 底部小程序码） */
+  /** 经典海报：Canvas 2D 本地绘制（完整正文 + 底部小程序码 + 用户头像昵称） */
   _generateClassicPoster() {
+    // 读取当前登录用户信息（未登录时 profile 为 null，海报自动省略用户区）
+    const profile = user.getProfile();
     return share.generatePoemPoster(this, {
       title: this.data.title || '无题',
       author: this.data.author || '',
@@ -526,7 +667,9 @@ Page({
       type: this.data.type || '',
       content: this.data.content || '',
       canvasId: 'posterCanvas',
-      font: this.data.posterFont
+      font: this.data.posterFont,
+      nickname: (profile && profile.nickName) || '',
+      avatarUrl: (profile && profile.avatarUrl) || ''
     });
   },
 
