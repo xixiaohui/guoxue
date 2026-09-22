@@ -938,3 +938,157 @@
   opacity: 0.9;
   transform: scale(0.99);
 }
+
+/* ── 诗词填字入口（青竹配色，与飞花令红卡区分）─── */
+.crossword-entry {
+  margin: 20rpx 24rpx 0;
+  background: linear-gradient(135deg, #2F4F3E, #4A7357 62%, #C4882E 155%);
+  border-radius: 20rpx;
+  padding: 22rpx 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 6rpx 18rpx rgba(47, 79, 62, 0.22);
+}
+
+.crossword-entry-left {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+}
+
+.crossword-entry-char {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFD97D;
+  color: #2F4F3E;
+  font-size: 40rpx;
+  font-weight: 800;
+  border-radius: 18rpx;
+  flex-shrink: 0;
+}
+
+.crossword-entry-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.crossword-entry-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #FFF8E7;
+  letter-spacing: 2rpx;
+}
+
+.crossword-entry-sub {
+  font-size: 22rpx;
+  color: rgba(255, 248, 231, 0.78);
+  margin-top: 6rpx;
+  letter-spacing: 1rpx;
+}
+
+.crossword-entry-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.crossword-entry-progress {
+  font-size: 20rpx;
+  color: #FFD97D;
+  background: rgba(255, 248, 231, 0.16);
+  border-radius: 16rpx;
+  padding: 2rpx 12rpx;
+  margin-bottom: 6rpx;
+}
+
+.crossword-entry-go {
+  font-size: 26rpx;
+  color: #FFD97D;
+  font-weight: 700;
+}
+
+/* ── 节日诗词入口（中秋/端午 双卡横排）─── */
+.festival-entry {
+  margin: 20rpx 24rpx 0;
+  display: flex;
+  gap: 16rpx;
+}
+
+.festival-card {
+  flex: 1;
+  min-width: 0;
+  border-radius: 20rpx;
+  padding: 20rpx 22rpx;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 6rpx 18rpx rgba(47, 79, 62, 0.16);
+}
+
+.festival-mid {
+  background: linear-gradient(135deg, #1F2A4A, #2C3E66 62%, #C4882E 155%);
+}
+
+.festival-duanwu {
+  background: linear-gradient(135deg, #1E4A3A, #2F6B52 62%, #C4882E 155%);
+}
+
+.festival-newyear {
+  background: linear-gradient(135deg, #7A1818, #A62828 62%, #C4882E 155%);
+}
+
+.festival-qingming {
+  background: linear-gradient(135deg, #33484A, #4A6B6E 62%, #C4882E 155%);
+}
+
+.festival-char {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 248, 231, 0.16);
+  border: 1rpx solid rgba(255, 248, 231, 0.5);
+  color: #FFF8E7;
+  font-size: 34rpx;
+  font-weight: 800;
+  border-radius: 16rpx;
+  flex-shrink: 0;
+}
+
+.festival-info {
+  flex: 1;
+  min-width: 0;
+  margin-left: 14rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.festival-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #FFF8E7;
+  letter-spacing: 2rpx;
+}
+
+.festival-sub {
+  font-size: 20rpx;
+  color: rgba(255, 248, 231, 0.72);
+  margin-top: 6rpx;
+  letter-spacing: 1rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.festival-go {
+  font-size: 28rpx;
+  color: #FFD97D;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-left: 8rpx;
+}

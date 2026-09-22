@@ -52,6 +52,61 @@
     <text class="feihua-entry-go">去对诗 ›</text>
   </view>
 
+  <!-- 诗词填字入口（纵横交叉游戏） -->
+  <view class="crossword-entry" bindtap="goCrossword" hover-class="entry-hover" hover-stay-time="80">
+    <view class="crossword-entry-left">
+      <view class="crossword-entry-char">填</view>
+      <view class="crossword-entry-info">
+        <text class="crossword-entry-title">诗词填字 · 纵横填诗</text>
+        <text class="crossword-entry-sub">两诗共享一字交叉，补全千古名句</text>
+      </view>
+    </view>
+    <view class="crossword-entry-right">
+      <text class="crossword-entry-progress" wx:if="{{crosswordCleared > 0}}">已闯 {{crosswordCleared}} 关</text>
+      <text class="crossword-entry-go">去填诗 ›</text>
+    </view>
+  </view>
+
+  <!-- 节日诗词入口（中秋 / 端午 双卡横排） -->
+  <view class="festival-entry">
+    <view class="festival-card festival-mid" bindtap="goFestival" data-type="mid_autumn" hover-class="entry-hover" hover-stay-time="80">
+      <view class="festival-char">月</view>
+      <view class="festival-info">
+        <text class="festival-title">中秋诗词</text>
+        <text class="festival-sub">但愿人长久</text>
+      </view>
+      <text class="festival-go">›</text>
+    </view>
+    <view class="festival-card festival-duanwu" bindtap="goFestival" data-type="dragon_boat" hover-class="entry-hover" hover-stay-time="80">
+      <view class="festival-char">舟</view>
+      <view class="festival-info">
+        <text class="festival-title">端午诗词</text>
+        <text class="festival-sub">路漫漫其修远兮</text>
+      </view>
+      <text class="festival-go">›</text>
+    </view>
+  </view>
+
+  <!-- 节日诗词入口（除夕 / 清明 双卡横排） -->
+  <view class="festival-entry">
+    <view class="festival-card festival-newyear" bindtap="goFestival" data-type="new_year" hover-class="entry-hover" hover-stay-time="80">
+      <view class="festival-char">岁</view>
+      <view class="festival-info">
+        <text class="festival-title">除夕诗词</text>
+        <text class="festival-sub">爆竹声中一岁除</text>
+      </view>
+      <text class="festival-go">›</text>
+    </view>
+    <view class="festival-card festival-qingming" bindtap="goFestival" data-type="qingming" hover-class="entry-hover" hover-stay-time="80">
+      <view class="festival-char">青</view>
+      <view class="festival-info">
+        <text class="festival-title">清明诗词</text>
+        <text class="festival-sub">清明时节雨纷纷</text>
+      </view>
+      <text class="festival-go">›</text>
+    </view>
+  </view>
+
   <!-- 模块二：节气推荐 /solar-term -->
   <view class="solar-card" wx:if="{{solarLoading && !solar.termName}}">
     <view class="solar-left">

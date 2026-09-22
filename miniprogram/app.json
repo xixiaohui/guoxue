@@ -16,7 +16,12 @@
     "pages/my_read_history/index",
     "pages/seven_days/index",
     "pages/topic/index",
-    "pages/feihua/index"
+    "pages/feihua/index",
+    "pages/crossword_puzzle/index",
+    "pages/mid_autumn/index",
+    "pages/dragon_boat_festival/index",
+    "pages/new_year/index",
+    "pages/qingming_festival/index"
   ],
   "window": {
     "backgroundColor": "#F5EDD6",

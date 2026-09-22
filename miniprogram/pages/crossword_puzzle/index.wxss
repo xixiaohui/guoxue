@@ -1,0 +1,402 @@
+/* pages/crossword_puzzle/index.wxss - 诗词填字（纵横交叉）
+ * 配色沿用全局古典色：底色 #FDF6E3、主色 #8B2500、点缀 #C4882E / #FFD97D。
+ * 注意：根节点不绑定 themeClass / fontSizeClass —— 深色主题会把格子里
+ * 的深字压到深色背景上造成对比度不足，游戏页保持固定配色。
+ */
+
+.page {
+  min-height: 100vh;
+  background: #FDF6E3;
+  padding: 24rpx 0 40rpx;
+}
+
+/* ── 顶部信息条 ─────────────────────────── */
+.cw-top {
+  margin: 0 24rpx 20rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.cw-badge {
+  background: linear-gradient(135deg, #8B2500, #A23A12);
+  color: #FFD97D;
+  font-size: 24rpx;
+  font-weight: 700;
+  padding: 6rpx 20rpx;
+  border-radius: 24rpx;
+  flex-shrink: 0;
+}
+
+.cw-meta {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  flex-wrap: wrap;
+}
+
+.cw-meta-item {
+  font-size: 24rpx;
+  color: #8C7B61;
+}
+
+.cw-src {
+  font-size: 20rpx;
+  color: #B39A6B;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 18rpx;
+  padding: 2rpx 12rpx;
+  flex-shrink: 0;
+}
+
+/* ── 加载 / 错误 ────────────────────────── */
+.cw-loading,
+.cw-error {
+  margin: 80rpx 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.cw-loading-text,
+.cw-error-text {
+  font-size: 26rpx;
+  color: #8C7B61;
+}
+
+/* ── 题面条 ─────────────────────────────── */
+.cw-clues {
+  margin: 0 24rpx 24rpx;
+}
+
+.cw-clue {
+  display: flex;
+  align-items: flex-start;
+  gap: 14rpx;
+  background: #FFFBF0;
+  border: 1rpx solid #EDD9A3;
+  border-radius: 16rpx;
+  padding: 18rpx 20rpx;
+  margin-bottom: 14rpx;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.cw-clue-active {
+  border-color: #8B2500;
+  background: #FFF3DC;
+}
+
+.cw-clue-hover {
+  opacity: 0.9;
+}
+
+.cw-clue-dir {
+  font-size: 22rpx;
+  color: #8B2500;
+  font-weight: 700;
+  background: #FFD97D;
+  border-radius: 8rpx;
+  padding: 4rpx 10rpx;
+  flex-shrink: 0;
+  margin-top: 2rpx;
+}
+
+.cw-clue-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.cw-clue-text {
+  font-size: 30rpx;
+  color: #2C1810;
+  letter-spacing: 2rpx;
+  line-height: 1.5;
+}
+
+.cw-clue-from {
+  font-size: 22rpx;
+  color: #8C7B61;
+  margin-top: 6rpx;
+}
+
+/* ── 网格 ───────────────────────────────── */
+.cw-grid-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 8rpx 0 18rpx;
+}
+
+.cw-grid {
+  margin: 0 auto;
+}
+
+.cw-row {
+  display: flex;
+  margin-bottom: 6rpx;
+}
+
+.cw-cell {
+  position: relative;
+  width: 76rpx;
+  height: 76rpx;
+  margin-right: 6rpx;
+  border-radius: 10rpx;
+  background: #FFFBF0;
+  border: 2rpx solid #E8D5A3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cw-cell.is-given {
+  background: #FFF6E0;
+}
+
+/* 非答题区：既不在横句也不在竖句上，仅占位 */
+.cw-cell.is-void {
+  background: #F6EEDC;
+  border-color: #EFE2C4;
+}
+
+.cw-cell.is-cross {
+  background: #FFD97D;
+  border-color: #C4882E;
+}
+
+.cw-cell.is-word {
+  background: #FFFAEC;
+}
+
+.cw-cell.is-cross.is-word {
+  background: #FFD97D;
+}
+
+.cw-cell.is-active {
+  border-color: #8B2500;
+  box-shadow: 0 0 0 3rpx rgba(139, 37, 0, 0.18);
+}
+
+.cw-cell.is-hint .cw-ch {
+  color: #3F7A4D;
+}
+
+.cw-cell.is-ok .cw-ch {
+  color: #2E7D4F;
+}
+
+.cw-cell.is-wrong {
+  border-color: #D0021B;
+  background: #FDECEC;
+}
+
+.cw-cell.is-wrong .cw-ch {
+  color: #D0021B;
+}
+
+.cw-ch {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #3B2E1E;
+  line-height: 1;
+}
+
+.cw-tag {
+  position: absolute;
+  top: 2rpx;
+  left: 4rpx;
+  font-size: 18rpx;
+  color: #B08948;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* 校验失败抖动 */
+.cw-shake {
+  animation: cwShake 0.45s ease;
+}
+
+@keyframes cwShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8rpx); }
+  40% { transform: translateX(8rpx); }
+  60% { transform: translateX(-6rpx); }
+  80% { transform: translateX(6rpx); }
+}
+
+.cw-tip {
+  display: block;
+  text-align: center;
+  font-size: 22rpx;
+  color: #8C7B61;
+  margin-bottom: 20rpx;
+}
+
+/* ── 候选字盘 ───────────────────────────── */
+.cw-cand-wrap {
+  width: 696rpx;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.cw-cand {
+  width: 104rpx;
+  height: 104rpx;
+  margin: 6rpx;
+  border-radius: 14rpx;
+  background: linear-gradient(160deg, #FFFBF0, #FFF3DC);
+  border: 1rpx solid #E8D5A3;
+  box-shadow: 0 3rpx 10rpx rgba(139, 37, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cw-cand-hover {
+  transform: scale(0.96);
+}
+
+.cw-cand-used {
+  opacity: 0.28;
+}
+
+.cw-cand-ch {
+  font-size: 46rpx;
+  font-weight: 700;
+  color: #8B2500;
+}
+
+.cw-fix-tip {
+  display: block;
+  text-align: center;
+  font-size: 22rpx;
+  color: #D0021B;
+  margin: 18rpx 0 0;
+}
+
+/* ── 操作按钮 ───────────────────────────── */
+.cw-actions {
+  margin: 24rpx 24rpx 0;
+  display: flex;
+  gap: 16rpx;
+}
+
+.cw-btn {
+  flex: 1;
+  text-align: center;
+  padding: 18rpx 0;
+  border-radius: 40rpx;
+  font-size: 26rpx;
+}
+
+.cw-btn.ghost {
+  background: #FFFBF0;
+  color: #8B2500;
+  border: 1rpx solid #E8D5A3;
+}
+
+.cw-btn.primary {
+  background: linear-gradient(135deg, #C4882E, #8B2500);
+  color: #FDF6E3;
+  font-weight: 700;
+}
+
+.cw-btn.small {
+  flex: none;
+  padding: 14rpx 40rpx;
+}
+
+.cw-btn:active {
+  opacity: 0.85;
+}
+
+/* ── 结算浮层 ───────────────────────────── */
+.cw-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(44, 24, 16, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.cw-result {
+  width: 580rpx;
+  background: #FFFBF0;
+  border: 2rpx solid #C4882E;
+  border-radius: 24rpx;
+  padding: 44rpx 40rpx 36rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: slideUp 0.3s ease-out;
+}
+
+.cw-result-title {
+  font-size: 38rpx;
+  font-weight: 800;
+  color: #8B2500;
+  letter-spacing: 4rpx;
+}
+
+.cw-result-stars {
+  display: flex;
+  gap: 16rpx;
+  margin: 20rpx 0 12rpx;
+}
+
+.cw-star {
+  font-size: 56rpx;
+  color: #E4D2A8;
+  line-height: 1;
+}
+
+.cw-star.on {
+  color: #FFC02E;
+}
+
+.cw-result-comment {
+  font-size: 28rpx;
+  color: #C4882E;
+  font-weight: 700;
+}
+
+.cw-result-row {
+  font-size: 24rpx;
+  color: #8C7B61;
+  margin-top: 12rpx;
+}
+
+.cw-result-from {
+  font-size: 22rpx;
+  color: #8C7B61;
+  margin-top: 6rpx;
+  text-align: center;
+}
+
+.cw-result-btns {
+  width: 100%;
+  margin-top: 32rpx;
+  display: flex;
+  gap: 16rpx;
+}
+
+.cw-result-btns .cw-btn.share {
+  font-size: 26rpx;
+  line-height: 1.4;
+  padding: 18rpx 0;
+  background: #FFFBF0;
+  color: #8B2500;
+  border: 1rpx solid #E8D5A3;
+}
+
+.cw-result-btns .cw-btn.share::after {
+  border: none;
+}

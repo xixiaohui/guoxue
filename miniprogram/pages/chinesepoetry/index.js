@@ -3,6 +3,7 @@ const poetry = require('../../utils/poetryApi');
 const poemCache = require('../../utils/poemCache');
 const settings = require('../../utils/settings');
 const seo = require('../../utils/seo');
+const crossword = require('../../utils/crossword');
 
 Page({
   data: {
@@ -40,7 +41,9 @@ Page({
     totalAuthors: 0,
     totalAuthorsText: '0',
     // 整页加载
-    loading: true
+    loading: true,
+    // 诗词填字进度（本地读写，入口卡片展示）
+    crosswordCleared: 0
   },
 
   onLoad() {
@@ -55,14 +58,20 @@ Page({
       navTitle: '诗词天地',
       keywords: seo.buildKeywords([
         '诗词天地', '诗词学习', '诗词鉴赏', '诗词朗诵', '古诗词', '古诗词大全',
-        '古诗', '唐诗', '宋词', '元曲', '超然古诗词', '国学', '诗词'
+        '古诗', '唐诗', '宋词', '元曲', '超然古诗词', '国学', '诗词',
+        '诗词填字', '填字游戏', '诗词游戏', '中秋诗词', '端午诗词', '除夕诗词', '清明诗词'
       ]),
-      description: '诗词天地——每日一句、诗词精选、诗人风采，唐诗宋词元曲、古诗词大全，一键鉴赏学习。'
+      description: '诗词天地——每日一句、诗词精选、诗人风采、诗词填字游戏，唐诗宋词元曲、古诗词大全，一键鉴赏学习。'
     });
   },
 
   onShow() {
     settings.applyToPage(this);
+    // 从填字页返回/再次进入时刷新进度角标
+    const p = crossword.readProgress();
+    if (p.cleared !== this.data.crosswordCleared) {
+      this.setData({ crosswordCleared: p.cleared });
+    }
   },
 
   onPullDownRefresh() {
@@ -342,6 +351,26 @@ Page({
   goFeihua() {
     wx.navigateTo({ url: '/pages/feihua/index' });
   },
+
+  // ── 诗词填字（纵横填诗）────────────────────
+  goCrossword() {
+    wx.navigateTo({ url: '/pages/crossword_puzzle/index' });
+  },
+
+  // ── 节日诗词专题（中秋/端午/除夕/清明）───
+  goFestival(e) {
+    const type = e.currentTarget.dataset.type;
+    if (type === 'dragon_boat') {
+      wx.navigateTo({ url: '/pages/dragon_boat_festival/index' });
+    } else if (type === 'new_year') {
+      wx.navigateTo({ url: '/pages/new_year/index' });
+    } else if (type === 'qingming') {
+      wx.navigateTo({ url: '/pages/qingming_festival/index' });
+    } else {
+      wx.navigateTo({ url: '/pages/mid_autumn/index' });
+    }
+  },
+
 
   // ── 跳转详情 ──────────────────────────────
   goDetail(e) {

@@ -1,0 +1,192 @@
+/* pages/new_year/index.wxss - 除夕诗词专题（中国红配色） */
+.page {
+  background: #F5EDD6;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  padding-bottom: 60rpx;
+}
+
+/* ── 页头（中国红） ─────────────────────── */
+.page-header {
+  background: linear-gradient(160deg, #7A1818 0%, #A62828 55%, #C4882E 160%);
+  padding: 40rpx 30rpx 44rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+}
+
+.header-badge {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: rgba(255, 248, 231, 0.14);
+  border: 2rpx solid rgba(255, 248, 231, 0.5);
+  color: #FFF8E7;
+  font-size: 44rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 24rpx;
+}
+
+.header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.header-title {
+  display: block;
+  font-size: 42rpx;
+  font-weight: 700;
+  color: #FFF8E7;
+  letter-spacing: 6rpx;
+}
+
+.header-sub {
+  display: block;
+  font-size: 24rpx;
+  color: rgba(255, 248, 231, 0.65);
+  margin-top: 8rpx;
+  letter-spacing: 4rpx;
+}
+
+/* ── 专题简介 ─────────────────────────── */
+.intro-card {
+  margin: 24rpx 24rpx 0;
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-left: 8rpx solid #C0392B;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+}
+
+.intro-text {
+  display: block;
+  font-size: 24rpx;
+  color: #6B5B45;
+  line-height: 1.7;
+}
+
+.intro-count {
+  display: block;
+  font-size: 20rpx;
+  color: #C0392B;
+  margin-top: 8rpx;
+  letter-spacing: 2rpx;
+}
+
+/* ── 列表 ─────────────────────────────── */
+.list {
+  margin: 24rpx 24rpx 0;
+}
+
+.card {
+  background: #FFFBF0;
+  border: 1rpx solid #E8D5A3;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(139, 37, 0, 0.05);
+}
+
+.card-hover {
+  background: #F8EFD9 !important;
+  transform: translateY(2rpx);
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #4A2E18;
+  flex: 1;
+  min-width: 0;
+  letter-spacing: 2rpx;
+}
+
+.card-type {
+  flex-shrink: 0;
+  font-size: 20rpx;
+  color: #8B1E1E;
+  background: #F8EFD9;
+  border: 1rpx solid #E0C890;
+  border-radius: 18rpx;
+  padding: 2rpx 14rpx;
+  margin-left: 12rpx;
+}
+
+.card-author {
+  display: block;
+  font-size: 24rpx;
+  color: #C0392B;
+  margin-top: 8rpx;
+}
+
+/* ── 正文 ─────────────────────────────── */
+.card-body {
+  margin-top: 16rpx;
+  border-top: 1rpx dashed #E8D5A3;
+  padding-top: 14rpx;
+}
+
+.card-line {
+  display: block;
+  font-size: 28rpx;
+  color: #4A2E18;
+  line-height: 1.9;
+  letter-spacing: 2rpx;
+}
+
+/* ── 赏析 ─────────────────────────────── */
+.card-appreciation {
+  margin-top: 16rpx;
+  background: #F8EFD9;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+}
+
+.card-ap-label {
+  display: block;
+  font-size: 20rpx;
+  color: #8B1E1E;
+  font-weight: 700;
+  margin-bottom: 8rpx;
+  letter-spacing: 4rpx;
+}
+
+.card-ap-text {
+  display: block;
+  font-size: 24rpx;
+  color: #6B5B45;
+  line-height: 1.7;
+}
+
+/* ── 底部链接 ─────────────────────────── */
+.card-go {
+  display: block;
+  font-size: 22rpx;
+  color: #8B1E1E;
+  margin-top: 16rpx;
+  letter-spacing: 2rpx;
+}
+
+/* ── 页脚 ─────────────────────────────── */
+.footer {
+  text-align: center;
+  font-size: 20rpx;
+  color: #A08C6B;
+  padding: 36rpx 0 24rpx;
+  letter-spacing: 2rpx;
+}

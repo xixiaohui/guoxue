@@ -1,0 +1,106 @@
+<!--pages/crossword_puzzle/index.wxml - 诗词填字（纵横交叉）-->
+<view class="page {{fontFamilyClass}}">
+
+  <!-- 顶部：关卡 / 用时 / 提示 / 累计星数 -->
+  <view class="cw-top">
+    <view class="cw-badge">第 {{level}} 关</view>
+    <view class="cw-meta">
+      <text class="cw-meta-item">空 {{blankCount}} 格</text>
+      <text class="cw-meta-item">⏱ {{durationText}}</text>
+      <text class="cw-meta-item">💡 {{hintCount}}</text>
+      <text class="cw-meta-item" wx:if="{{progress.totalStars > 0}}">★ {{progress.totalStars}}</text>
+    </view>
+    <text class="cw-src" wx:if="{{source === 'offline'}}">离线题库</text>
+  </view>
+
+  <!-- 出题中 -->
+  <view class="cw-loading" wx:if="{{loading}}">
+    <view class="loading-dots">
+      <view class="dot"></view>
+      <view class="dot"></view>
+      <view class="dot"></view>
+    </view>
+    <text class="cw-loading-text">正在出题…</text>
+  </view>
+
+  <!-- 出错 -->
+  <view class="cw-error" wx:elif="{{error}}">
+    <text class="cw-error-text">{{error}}</text>
+    <view class="cw-btn small" bindtap="changeOne">重新出题</view>
+  </view>
+
+  <block wx:else>
+    <!-- 题面条 -->
+    <view class="cw-clues">
+      <view class="cw-clue {{dir === 'h' ? 'cw-clue-active' : ''}}" bindtap="focusDir" data-dir="h" hover-class="cw-clue-hover" hover-stay-time="80">
+        <text class="cw-clue-dir">横 1</text>
+        <view class="cw-clue-body">
+          <text class="cw-clue-text">{{clues.h.text}}</text>
+          <text class="cw-clue-from">《{{clues.h.title}}》{{clues.h.author}}{{clues.h.dynasty ? ' · ' + clues.h.dynasty : ''}}</text>
+        </view>
+      </view>
+      <view class="cw-clue {{dir === 'v' ? 'cw-clue-active' : ''}}" bindtap="focusDir" data-dir="v" hover-class="cw-clue-hover" hover-stay-time="80">
+        <text class="cw-clue-dir">竖 2</text>
+        <view class="cw-clue-body">
+          <text class="cw-clue-text">{{clues.v.text}}</text>
+          <text class="cw-clue-from">《{{clues.v.title}}》{{clues.v.author}}{{clues.v.dynasty ? ' · ' + clues.v.dynasty : ''}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 网格 -->
+    <view class="cw-grid-wrap {{shake ? 'cw-shake' : ''}}">
+      <view class="cw-grid" style="width:{{gridWidth}}rpx">
+        <view class="cw-row" wx:for="{{grid}}" wx:for-item="row" wx:key="rk">
+          <view class="cw-cell {{cell.cls}}" wx:for="{{row.items}}" wx:for-item="cell" wx:key="i" bindtap="tapCell" data-i="{{cell.i}}">
+            <text class="cw-tag" wx:if="{{cell.tag}}">{{cell.tag}}</text>
+            <text class="cw-ch">{{cell.show}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 规则提示 -->
+    <text class="cw-tip">两句共享「{{word}}」字 · 点格子选中，点候选字填入</text>
+
+    <!-- 候选字盘 -->
+    <view class="cw-cand-wrap">
+      <view class="cw-cand {{item.used ? 'cw-cand-used' : ''}}" wx:for="{{candidates}}" wx:key="k" bindtap="pickChar" data-k="{{item.k}}" hover-class="cw-cand-hover" hover-stay-time="60">
+        <text class="cw-cand-ch">{{item.ch}}</text>
+      </view>
+    </view>
+
+    <!-- 操作区 -->
+    <view class="cw-actions">
+      <view class="cw-btn ghost" bindtap="useHint">提示一字</view>
+      <view class="cw-btn ghost" bindtap="erase">擦除</view>
+      <view class="cw-btn ghost" bindtap="resetFills">重填</view>
+      <view class="cw-btn ghost" bindtap="changeOne">换一题</view>
+    </view>
+
+    <text class="cw-fix-tip" wx:if="{{wrongCount > 0 && !solved}}">红色格子填错了，点「擦除」重新填</text>
+  </block>
+
+  <!-- 结算浮层 -->
+  <view class="cw-mask" wx:if="{{solved}}">
+    <view class="cw-result">
+      <text class="cw-result-title">闯关成功</text>
+      <view class="cw-result-stars">
+        <text class="cw-star {{result.stars >= 1 ? 'on' : ''}}">★</text>
+        <text class="cw-star {{result.stars >= 2 ? 'on' : ''}}">★</text>
+        <text class="cw-star {{result.stars >= 3 ? 'on' : ''}}">★</text>
+      </view>
+      <text class="cw-result-comment">{{result.comment}}</text>
+      <text class="cw-result-row">用时 {{result.durationText}} · 提示 {{result.hintCount}} 次</text>
+      <text class="cw-result-from">横 1《{{clues.h.title}}》{{clues.h.author}}</text>
+      <text class="cw-result-from">竖 2《{{clues.v.title}}》{{clues.v.author}}</text>
+      <view class="cw-result-btns">
+        <view class="cw-btn primary" bindtap="nextLevel">下一关</view>
+        <view class="cw-btn ghost" bindtap="replayLevel">重玩本关</view>
+        <button class="cw-btn ghost share" open-type="share" wx:if="{{!isSinglePage}}">分享战绩</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

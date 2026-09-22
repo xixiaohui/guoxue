@@ -4,6 +4,7 @@
 const poetry = require('../../utils/poetryApi');
 const poemCache = require('../../utils/poemCache');
 const settings = require('../../utils/settings');
+const seo = require('../../utils/seo');
 
 // 兜底榜单：精选传世名篇（count 为模拟本周阅读量，仅作展示排序）
 const WEEK_HOT_FALLBACK = [
@@ -41,6 +42,12 @@ Page({
   },
 
   onLoad() {
+    // 搜一搜优化：榜单页上报标题/关键词/摘要（优质内容页，利于收录与展示）
+    seo.reportPageInfo({
+      title: '本周最热门诗词榜 · 超然古诗词',
+      keywords: seo.buildKeywords(['热门诗词', '诗词排行榜', '本周热门', '唐诗', '宋词', '名句', '古诗词', '超然古诗词']),
+      description: '本周最热门诗词排行榜：静夜思、水调歌头、将进酒等传世名篇人气榜单，实时更新。'
+    });
     this._load();
   },
 

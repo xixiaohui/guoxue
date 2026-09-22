@@ -58,8 +58,32 @@
       "page": "pages/setting/index"
     },
     {
-      "action": "disallow",
+      "action": "allow",
       "page": "pages/week_hot/index"
+    },
+    {
+      "action": "allow",
+      "page": "pages/feihua/index"
+    },
+    {
+      "action": "allow",
+      "page": "pages/crossword_puzzle/index"
+    },
+    {
+      "action": "allow",
+      "page": "pages/mid_autumn/index"
+    },
+    {
+      "action": "allow",
+      "page": "pages/dragon_boat_festival/index"
+    },
+    {
+      "action": "allow",
+      "page": "pages/new_year/index"
+    },
+    {
+      "action": "allow",
+      "page": "pages/qingming_festival/index"
     },
     {
       "action": "disallow",
