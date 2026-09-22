@@ -342,9 +342,10 @@ function _drawText(ctx, a, content, stacks) {
 function _relocateSlogan(cmd) {
   const text = _unescape(cmd.content || '').trim();
   if (text.indexOf('每日一诗') < 0 && text.indexOf('静水流深') < 0) return;
-  cmd.a.x = '1075';        // 右对齐，右边界留 5px
-  cmd.a.y = '32';          // 顶部留 5px（字号 27，基线约 5 + 27）
+  cmd.a.x = '1044';        // 右对齐，与来源标记右边界一致（1080 - 36）
+  cmd.a.y = '37';          // 顶部留 10px（字号 17，基线约 10 + 27）
   cmd.a['text-anchor'] = 'end';
+  cmd.a['font-size'] = '17';
 }
 
 /**
