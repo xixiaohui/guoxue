@@ -49,6 +49,12 @@
         "selectedIconPath": "images/tab_poetry_active.png"
       },
       {
+        "pagePath": "pages/chinesepoetry_search/index",
+        "text": "搜索",
+        "iconPath": "images/tab_poetry.png",
+        "selectedIconPath": "images/tab_poetry_active.png"
+      },
+      {
         "pagePath": "pages/setting/index",
         "text": "设置",
         "iconPath": "images/tab_setting.png",
