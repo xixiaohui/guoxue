@@ -66,6 +66,14 @@ Page({
 
   onShow() {
     settings.applyToPage(this);
+    // 首页搜索框带入的关键词：读取后立即搜索（switchTab 无法带 query）
+    const app = getApp();
+    const pending = app && app.globalData ? app.globalData.pendingSearch : '';
+    if (pending) {
+      app.globalData.pendingSearch = '';
+      this.setData({ keyword: pending, mode: 'search' });
+      this._search(true);
+    }
   },
 
   onPullDownRefresh() {

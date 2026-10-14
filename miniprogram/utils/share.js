@@ -95,7 +95,7 @@ function svgFontStacks(fontKey) {
 function buildShareMsg(opts = {}) {
   return {
     title: opts.title || '超然古诗词 · 传承千年智慧',
-    path: opts.path || '/pages/home/index',
+    path: opts.path || '/pages/chinesepoetry/index',
     imageUrl: opts.imageUrl || '/images/share-cover.png',
   };
 }

@@ -4,18 +4,33 @@
   <!-- 页头 -->
   <view class="page-header">
     <view class="header-inner">
-      <text class="header-title">诗词天地</text>
+      <text class="header-title">超然古诗词</text>
       <text class="header-sub">唐宋元明清 · 千年诗韵</text>
     </view>
   </view>
 
-  <!-- 搜索栏 → 独立搜索页 -->
-  <view class="search-bar" bindtap="goSearch" hover-class="search-bar-hover" hover-stay-time="80">
-    <view class="search-inner">
-      <text class="search-icon">🔍</text>
-      <text class="search-input-placeholder">搜索诗词名句、作者…</text>
-      <view class="search-btn">
-        <text class="search-btn-text">搜索</text>
+  <!-- 搜索栏 → 独立搜索页（突出展示 + 数量强调 + 直接输入） -->
+  <view class="search-wrap">
+    <view class="search-bar">
+      <view class="search-inner">
+        <text class="search-icon">🔍</text>
+        <view class="search-input-area">
+          <input
+            class="search-input"
+            value="{{searchKeyword}}"
+            bindinput="onSearchInput"
+            bindconfirm="onSearchConfirm"
+            confirm-type="search"
+            placeholder="搜索诗词名句、作者…"
+            placeholder-class="search-input-placeholder"
+            maxlength="30"
+          />
+          <text class="search-count">{{totalPoemsText}} 首诗词</text>
+        </view>
+        <view class="search-clear" wx:if="{{searchKeyword}}" bindtap="onSearchClear" hover-class="link-hover" hover-stay-time="80">✕</view>
+        <view class="search-btn" bindtap="goSearch" hover-class="search-btn-hover" hover-stay-time="80">
+          <text class="search-btn-text">搜索</text>
+        </view>
       </view>
     </view>
   </view>
@@ -40,106 +55,25 @@
     </view>
   </view>
 
-  <!-- 飞花令入口 -->
-  <view class="feihua-entry" bindtap="goFeihua" hover-class="entry-hover" hover-stay-time="80">
-    <view class="feihua-entry-left">
-      <text class="feihua-entry-char">令</text>
-      <view class="feihua-entry-info">
-        <text class="feihua-entry-title">飞花令 · 以诗会友</text>
-        <text class="feihua-entry-sub">主题字出题 · 品读千古名句</text>
+  <!-- 诗词海报横幅入口（首页突出展示） -->
+  <view class="poster-banner" bindtap="goPosterFromQuote" hover-class="poster-banner-hover" hover-stay-time="80">
+    <view class="poster-banner-new">新</view>
+    <view class="poster-banner-left">
+      <view class="poster-banner-seal">诗</view>
+      <view class="poster-banner-info">
+        <text class="poster-banner-title">诗词海报</text>
+        <text class="poster-banner-sub">一键生成 · 收藏分享美图</text>
       </view>
     </view>
-    <text class="feihua-entry-go">去对诗 ›</text>
-  </view>
-
-  <!-- 诗词填字入口（纵横交叉游戏） -->
-  <view class="crossword-entry" bindtap="goCrossword" hover-class="entry-hover" hover-stay-time="80">
-    <view class="crossword-entry-left">
-      <view class="crossword-entry-char">填</view>
-      <view class="crossword-entry-info">
-        <text class="crossword-entry-title">诗词填字 · 纵横填诗</text>
-        <text class="crossword-entry-sub">两诗共享一字交叉，补全千古名句</text>
-      </view>
-    </view>
-    <view class="crossword-entry-right">
-      <text class="crossword-entry-progress" wx:if="{{crosswordCleared > 0}}">已闯 {{crosswordCleared}} 关</text>
-      <text class="crossword-entry-go">去填诗 ›</text>
+    <view class="poster-banner-btn">
+      <text>立即生成</text>
+      <text class="poster-banner-arrow">›</text>
     </view>
   </view>
 
-  <!-- 节日诗词入口（中秋 / 端午 双卡横排） -->
-  <view class="festival-entry">
-    <view class="festival-card festival-mid" bindtap="goFestival" data-type="mid_autumn" hover-class="entry-hover" hover-stay-time="80">
-      <view class="festival-char">月</view>
-      <view class="festival-info">
-        <text class="festival-title">中秋诗词</text>
-        <text class="festival-sub">但愿人长久</text>
-      </view>
-      <text class="festival-go">›</text>
-    </view>
-    <view class="festival-card festival-duanwu" bindtap="goFestival" data-type="dragon_boat" hover-class="entry-hover" hover-stay-time="80">
-      <view class="festival-char">舟</view>
-      <view class="festival-info">
-        <text class="festival-title">端午诗词</text>
-        <text class="festival-sub">路漫漫其修远兮</text>
-      </view>
-      <text class="festival-go">›</text>
-    </view>
-  </view>
+  
 
-  <!-- 节日诗词入口（除夕 / 清明 双卡横排） -->
-  <view class="festival-entry">
-    <view class="festival-card festival-newyear" bindtap="goFestival" data-type="new_year" hover-class="entry-hover" hover-stay-time="80">
-      <view class="festival-char">岁</view>
-      <view class="festival-info">
-        <text class="festival-title">除夕诗词</text>
-        <text class="festival-sub">爆竹声中一岁除</text>
-      </view>
-      <text class="festival-go">›</text>
-    </view>
-    <view class="festival-card festival-qingming" bindtap="goFestival" data-type="qingming" hover-class="entry-hover" hover-stay-time="80">
-      <view class="festival-char">青</view>
-      <view class="festival-info">
-        <text class="festival-title">清明诗词</text>
-        <text class="festival-sub">清明时节雨纷纷</text>
-      </view>
-      <text class="festival-go">›</text>
-    </view>
-  </view>
-
-  <!-- 模块二：节气推荐 /solar-term -->
-  <view class="solar-card" wx:if="{{solarLoading && !solar.termName}}">
-    <view class="solar-left">
-      <view class="skeleton skeleton-circle"></view>
-      <view class="skeleton skeleton-line skeleton-w60 skeleton-mt"></view>
-    </view>
-    <view class="solar-right">
-      <view class="skeleton skeleton-line skeleton-w90"></view>
-      <view class="skeleton skeleton-line skeleton-w60 skeleton-mt"></view>
-      <view class="skeleton skeleton-line skeleton-w90 skeleton-mt"></view>
-      <view class="skeleton skeleton-block-solar skeleton-mt"></view>
-    </view>
-  </view>
-  <view class="solar-card" wx:elif="{{solar.termName}}">
-    <view class="solar-left">
-      <text class="solar-term">{{solar.termName}}</text>
-      <text class="solar-label">节气 · 诗词</text>
-    </view>
-    <view class="solar-right">
-      <text class="solar-desc">{{solar.termDescription}}</text>
-      <view class="solar-poem" wx:if="{{solar.poem}}" bindtap="goDetail" data-poem="{{solar.poem}}" hover-class="card-hover" hover-stay-time="80">
-        <text class="solar-poem-title">{{solar.poem.title ? '《' + solar.poem.title + '》' : '无名篇'}} {{solar.poem.dynasty}} · {{solar.poem.author || '佚名'}}</text>
-        <text class="solar-poem-preview">{{solar.poem.preview}}</text>
-        <view class="solar-go">
-          <text>{{solar.reason || '查看全诗'}}</text>
-          <text class="solar-go-arrow">›</text>
-        </view>
-      </view>
-      <view class="solar-poem" wx:else>
-        <text class="solar-poem-preview">{{solar.reason}}</text>
-      </view>
-    </view>
-  </view>
+  
 
   <!-- 模块三：分类浏览 /categories + /poems/random -->
   <view class="section">
@@ -210,7 +144,7 @@
   </view>
 
   <!-- 模块四：为你推荐 /recommend -->
-  <view class="section">
+  <!-- <view class="section">
     <view class="section-head">
       <view class="label-bar"></view>
       <text class="section-label">为你推荐</text>
@@ -240,10 +174,10 @@
         <text>{{recommendLoading ? '加载中…' : '再来一批 ›'}}</text>
       </view>
     </block>
-  </view>
+  </view> -->
 
   <!-- 模块五：诗词精选 /poems -->
-  <view class="section">
+  <!-- <view class="section">
     <view class="section-head">
       <view class="label-bar"></view>
       <text class="section-label">诗词精选</text>
@@ -266,10 +200,10 @@
         <text class="poem-preview">{{item.preview}}</text>
       </view>
     </block>
-  </view>
+  </view> -->
 
   <!-- 模块六：诗人风采 /authors -->
-  <view class="section">
+  <!-- <view class="section">
     <view class="section-head">
       <view class="label-bar"></view>
       <text class="section-label">诗人风采</text>
@@ -296,14 +230,14 @@
         </view>
       </scroll-view>
     </block>
-  </view>
+  </view> -->
 
   <!-- 全部内容（诗词/诗人/朝代/体裁 列表入口）→ 点击进入对应全部列表页 -->
   <view class="section">
     <view class="section-head">
       <view class="label-bar"></view>
       <text class="section-label">全部内容</text>
-      <text class="section-sub">全库一览 · 四大分类</text>
+      <text class="section-sub">全库一览 · 六大分类</text>
     </view>
 
     <view class="entry-grid">
@@ -325,6 +259,56 @@
             <text class="entry-tag" wx:if="{{index < 4}}">{{item.name}}</text>
           </block>
           <text class="entry-tag-more" wx:if="{{dynasties.length > 4}}">…</text>
+        </view>
+        <view class="entry-foot">
+          <text>浏览全部</text>
+          <text class="entry-arrow">›</text>
+        </view>
+      </view>
+
+      <!-- 唐诗大全入口 -->
+      <view class="entry-card entry-dynasties" bindtap="goStatList" data-kind="tang_poems" hover-class="entry-hover" hover-stay-time="80">
+        <view class="entry-card-top">
+          <view class="entry-seal seal-dynasties">唐</view>
+          <view class="entry-card-main">
+            <text class="entry-title">唐诗大全</text>
+            <text class="entry-subtitle">唐诗三百首 · 李杜名篇</text>
+          </view>
+        </view>
+        <view class="entry-card-num">
+          <text class="entry-num {{dynasties.length ? '' : 'entry-num-skeleton'}}">{{dynasties.length ? tangPoemsText : '·'}}</text>
+          <text class="entry-label">首唐代诗词</text>
+        </view>
+        <view class="entry-tags">
+          <text class="entry-tag">李白</text>
+          <text class="entry-tag">杜甫</text>
+          <text class="entry-tag">王维</text>
+          <text class="entry-tag">白居易</text>
+        </view>
+        <view class="entry-foot">
+          <text>浏览全部</text>
+          <text class="entry-arrow">›</text>
+        </view>
+      </view>
+
+      <!-- 宋词大全入口 -->
+      <view class="entry-card entry-types" bindtap="goStatList" data-kind="song_ci" hover-class="entry-hover" hover-stay-time="80">
+        <view class="entry-card-top">
+          <view class="entry-seal seal-types">宋</view>
+          <view class="entry-card-main">
+            <text class="entry-title">宋词大全</text>
+            <text class="entry-subtitle">宋词三百首 · 苏辛绝词</text>
+          </view>
+        </view>
+        <view class="entry-card-num">
+          <text class="entry-num {{dynasties.length ? '' : 'entry-num-skeleton'}}">{{dynasties.length ? songCiText : '·'}}</text>
+          <text class="entry-label">首经典词作</text>
+        </view>
+        <view class="entry-tags">
+          <text class="entry-tag">苏轼</text>
+          <text class="entry-tag">李清照</text>
+          <text class="entry-tag">辛弃疾</text>
+          <text class="entry-tag">柳永</text>
         </view>
         <view class="entry-foot">
           <text>浏览全部</text>
@@ -405,6 +389,108 @@
           <text>浏览全部</text>
           <text class="entry-arrow">›</text>
         </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 飞花令入口 -->
+  <view class="feihua-entry" bindtap="goFeihua" hover-class="entry-hover" hover-stay-time="80">
+    <view class="feihua-entry-left">
+      <text class="feihua-entry-char">令</text>
+      <view class="feihua-entry-info">
+        <text class="feihua-entry-title">飞花令 · 以诗会友</text>
+        <text class="feihua-entry-sub">主题字出题 · 品读千古名句</text>
+      </view>
+    </view>
+    <text class="feihua-entry-go">去对诗 ›</text>
+  </view>
+
+  <!-- 诗词填字入口（纵横交叉游戏） -->
+  <view class="crossword-entry" bindtap="goCrossword" hover-class="entry-hover" hover-stay-time="80">
+    <view class="crossword-entry-left">
+      <view class="crossword-entry-char">填</view>
+      <view class="crossword-entry-info">
+        <text class="crossword-entry-title">诗词填字 · 纵横填诗</text>
+        <text class="crossword-entry-sub">两诗共享一字交叉，补全千古名句</text>
+      </view>
+    </view>
+    <view class="crossword-entry-right">
+      <text class="crossword-entry-progress" wx:if="{{crosswordCleared > 0}}">已闯 {{crosswordCleared}} 关</text>
+      <text class="crossword-entry-go">去填诗 ›</text>
+    </view>
+  </view>
+
+  <!-- 节日诗词入口（中秋 / 端午 双卡横排） -->
+  <view class="festival-entry">
+    <view class="festival-card festival-mid" bindtap="goFestival" data-type="mid_autumn" hover-class="entry-hover" hover-stay-time="80">
+      <view class="festival-char">月</view>
+      <view class="festival-info">
+        <text class="festival-title">中秋诗词</text>
+        <text class="festival-sub">但愿人长久</text>
+      </view>
+      <text class="festival-go">›</text>
+    </view>
+    <view class="festival-card festival-duanwu" bindtap="goFestival" data-type="dragon_boat" hover-class="entry-hover" hover-stay-time="80">
+      <view class="festival-char">舟</view>
+      <view class="festival-info">
+        <text class="festival-title">端午诗词</text>
+        <text class="festival-sub">路漫漫其修远兮</text>
+      </view>
+      <text class="festival-go">›</text>
+    </view>
+  </view>
+
+  <!-- 节日诗词入口（除夕 / 清明 双卡横排） -->
+  <view class="festival-entry">
+    <view class="festival-card festival-newyear" bindtap="goFestival" data-type="new_year" hover-class="entry-hover" hover-stay-time="80">
+      <view class="festival-char">岁</view>
+      <view class="festival-info">
+        <text class="festival-title">除夕诗词</text>
+        <text class="festival-sub">爆竹声中一岁除</text>
+      </view>
+      <text class="festival-go">›</text>
+    </view>
+    <view class="festival-card festival-qingming" bindtap="goFestival" data-type="qingming" hover-class="entry-hover" hover-stay-time="80">
+      <view class="festival-char">青</view>
+      <view class="festival-info">
+        <text class="festival-title">清明诗词</text>
+        <text class="festival-sub">清明时节雨纷纷</text>
+      </view>
+      <text class="festival-go">›</text>
+    </view>
+  </view>
+
+
+  <!-- 模块二：节气推荐 /solar-term -->
+  <view class="solar-card" wx:if="{{solarLoading && !solar.termName}}">
+    <view class="solar-left">
+      <view class="skeleton skeleton-circle"></view>
+      <view class="skeleton skeleton-line skeleton-w60 skeleton-mt"></view>
+    </view>
+    <view class="solar-right">
+      <view class="skeleton skeleton-line skeleton-w90"></view>
+      <view class="skeleton skeleton-line skeleton-w60 skeleton-mt"></view>
+      <view class="skeleton skeleton-line skeleton-w90 skeleton-mt"></view>
+      <view class="skeleton skeleton-block-solar skeleton-mt"></view>
+    </view>
+  </view>
+  <view class="solar-card" wx:elif="{{solar.termName}}">
+    <view class="solar-left">
+      <text class="solar-term">{{solar.termName}}</text>
+      <text class="solar-label">节气 · 诗词</text>
+    </view>
+    <view class="solar-right">
+      <text class="solar-desc">{{solar.termDescription}}</text>
+      <view class="solar-poem" wx:if="{{solar.poem}}" bindtap="goDetail" data-poem="{{solar.poem}}" hover-class="card-hover" hover-stay-time="80">
+        <text class="solar-poem-title">{{solar.poem.title ? '《' + solar.poem.title + '》' : '无名篇'}} {{solar.poem.dynasty}} · {{solar.poem.author || '佚名'}}</text>
+        <text class="solar-poem-preview">{{solar.poem.preview}}</text>
+        <view class="solar-go">
+          <text>{{solar.reason || '查看全诗'}}</text>
+          <text class="solar-go-arrow">›</text>
+        </view>
+      </view>
+      <view class="solar-poem" wx:else>
+        <text class="solar-poem-preview">{{solar.reason}}</text>
       </view>
     </view>
   </view>

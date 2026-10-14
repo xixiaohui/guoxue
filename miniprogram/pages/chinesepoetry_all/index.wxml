@@ -20,8 +20,8 @@
   <!-- 内容列表 -->
   <view class="list" wx:elif="{{items.length > 0}}">
 
-    <!-- 全部诗词 -->
-    <block wx:if="{{kind === 'poems'}}">
+    <!-- 全部诗词 / 唐诗 / 宋词（均为诗词卡片列表） -->
+    <block wx:if="{{kind === 'poems' || kind === 'tang_poems' || kind === 'song_ci'}}">
       <view class="poem-card" wx:for="{{items}}" wx:key="id" bindtap="goPoem"
         data-poem="{{item}}" hover-class="card-hover" hover-stay-time="80">
         <view class="poem-card-top">

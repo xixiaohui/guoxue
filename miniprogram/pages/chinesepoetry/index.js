@@ -7,6 +7,8 @@ const crossword = require('../../utils/crossword');
 
 Page({
   data: {
+    // 顶部搜索（首页直接输入关键词，跳转搜索页）
+    searchKeyword: '',
     // 每日一句 /quote
     quote: { content: '', author: '', source: '', date: '' },
     quoteLoading: true,
@@ -40,6 +42,9 @@ Page({
     totalPoemsText: '0',
     totalAuthors: 0,
     totalAuthorsText: '0',
+    // 唐诗/宋词专页入口的收录量（由 /categories 的 唐/宋词 条目提取）
+    tangPoemsText: '33.8万',
+    songCiText: '2.1万',
     // 整页加载
     loading: true,
     // 诗词填字进度（本地读写，入口卡片展示）
@@ -51,17 +56,18 @@ Page({
     this._setupSeo();
   },
 
-  /** 搜一搜优化：诗词天地页上报栏目关键词 */
+  /** 搜一搜优化：诗词天地页上报栏目关键词（导航栏标题直接命中「唐诗宋词」核心词） */
   _setupSeo() {
     seo.reportPageInfo({
-      title: '诗词天地 · 古诗词大全',
-      navTitle: '诗词天地',
+      title: '唐诗宋词大全 · 诗词天地',
+      navTitle: '唐诗宋词大全',
       keywords: seo.buildKeywords([
-        '诗词天地', '诗词学习', '诗词鉴赏', '诗词朗诵', '古诗词', '古诗词大全',
-        '古诗', '唐诗', '宋词', '元曲', '超然古诗词', '国学', '诗词',
-        '诗词填字', '填字游戏', '诗词游戏', '中秋诗词', '端午诗词', '除夕诗词', '清明诗词'
+        '唐诗宋词大全', '唐诗三百首', '宋词三百首', '诗词天地', '诗词学习', '诗词鉴赏',
+        '诗词朗诵', '古诗词', '古诗词大全', '古诗', '唐诗', '宋词', '元曲',
+        '超然古诗词', '国学', '诗词', '诗词填字', '填字游戏', '诗词游戏',
+        '中秋诗词', '端午诗词', '除夕诗词', '清明诗词'
       ]),
-      description: '诗词天地——每日一句、诗词精选、诗人风采、诗词填字游戏，唐诗宋词元曲、古诗词大全，一键鉴赏学习。'
+      description: '唐诗宋词大全——每日一句、诗词精选、诗人风采、诗词填字游戏，唐诗宋词元曲、古诗词大全，一键鉴赏学习。'
     });
   },
 
@@ -132,20 +138,27 @@ Page({
       const c = await poetry.getCategories();
       const dynasties = c.dynasties || [];
       const types = c.types || [];
+      const tang = dynasties.find((d) => d.name === '唐');
+      const songCi = types.find((t) => t.name === '宋词');
+      const totalPoems = dynasties.reduce((s, d) => s + (d.poemCount || 0), 0);
       this.setData({
         dynasties,
         types,
-        totalPoems: dynasties.reduce((s, d) => s + (d.poemCount || 0), 0),
-        totalPoemsText: poetry.fmtCount(dynasties.reduce((s, d) => s + (d.poemCount || 0), 0)),
+        totalPoems,
+        totalPoemsText: poetry.fmtCount(totalPoems),
         totalAuthors: dynasties.reduce((s, d) => s + (d.authorCount || 0), 0),
-        totalAuthorsText: poetry.fmtCount(dynasties.reduce((s, d) => s + (d.authorCount || 0), 0))
+        totalAuthorsText: poetry.fmtCount(dynasties.reduce((s, d) => s + (d.authorCount || 0), 0)),
+        tangPoemsText: tang ? poetry.fmtCount(tang.poemCount) : '33.8万',
+        songCiText: songCi ? poetry.fmtCount(songCi.poemCount) : '2.1万'
       });
     } catch (e) {
       this.setData({
         dynasties: poetry.FALLBACK_DYNASTIES,
         types: poetry.FALLBACK_TYPES,
         totalPoemsText: '37.1万',
-        totalAuthorsText: '1.4万'
+        totalAuthorsText: '1.4万',
+        tangPoemsText: '33.8万',
+        songCiText: '2.1万'
       });
     }
   },
@@ -344,7 +357,27 @@ Page({
 
   // ── 搜索（跳转独立搜索页）────────────────────
   goSearch() {
-    wx.navigateTo({ url: '/pages/chinesepoetry_search/index' });
+    const q = (this.data.searchKeyword || '').trim();
+    // 搜索页是 tabBar 页面，switchTab 无法携带 query 参数；
+    // 通过 globalData 传递待搜索关键词，搜索页 onShow 读取后自动搜索。
+    const app = getApp();
+    if (app) app.globalData.pendingSearch = q;
+    wx.switchTab({ url: '/pages/chinesepoetry_search/index' });
+  },
+
+  /** 顶部搜索输入（实时同步 searchKeyword） */
+  onSearchInput(e) {
+    this.setData({ searchKeyword: e.detail.value });
+  },
+
+  /** 键盘「搜索」确认 → 直接搜索 */
+  onSearchConfirm() {
+    this.goSearch();
+  },
+
+  /** 清空搜索关键词 */
+  onSearchClear() {
+    this.setData({ searchKeyword: '' });
   },
 
   // ── 飞花令（以诗会友）──────────────────────
@@ -380,6 +413,27 @@ Page({
     // 缓存完整正文，避免详情页因 URL 长度限制展示截断内容
     poemCache.cachePoem(poem);
     wx.navigateTo({ url: this._buildPoemUrl(poem) });
+  },
+
+  /** 首页「每日一句」卡片 → 一键生成海报：跳转详情页并自动打开海报弹层 */
+  goPosterFromQuote() {
+    const q = this.data.quote;
+    if (!q || !q.content) return;
+    // quote 仅含 名句/作者/出处，无完整 poem 结构；组装为详情页可消费的 seed，
+    // source 同时作为标题兜底（诗词标题可能缺，详情页会按正文首句补全）
+    const poem = {
+      id: '',
+      title: q.source || '',
+      author: q.author || '',
+      dynasty: '',
+      type: '',
+      content: q.content,
+      preview: q.content
+    };
+    poemCache.cachePoem(poem);
+    // 复用 _buildPoemUrl 组装 seed 链接，末尾追加 autoPoster 触发自动生成
+    const base = this._buildPoemUrl(poem);
+    wx.navigateTo({ url: base + '&autoPoster=1' });
   },
 
   goAuthorDetail(e) {

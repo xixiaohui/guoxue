@@ -16,8 +16,8 @@ const STORAGE_KEYS = {
 
 // ─── Tab 页路径 ────────────────────────────────────
 const TAB_PAGES = [
-  '/pages/home/index',
   '/pages/chinesepoetry/index',
+  '/pages/chinesepoetry_search/index',
   '/pages/setting/index',
 ];
 

@@ -10,19 +10,25 @@ const PAGE_SIZE = 20;
 const AUTHOR_PAGE_SIZE = 100;
 // 朝代/体裁数据量小（11/17 条），本地分页切片
 const LOCAL_PAGE_SIZE = 10;
+// 唐诗/宋词专页：/poems/random 并发拉取构建列表（每批 10 首，筛选参数仅该端点生效）
+const RANDOM_BATCH = 10;
 
 const KIND_TITLES = {
   poems: '古诗词大全',
   authors: '全部诗人',
   dynasties: '全部朝代',
-  types: '全部体裁'
+  types: '全部体裁',
+  tang_poems: '唐诗大全',
+  song_ci: '宋词大全'
 };
 
 const KIND_SUBTITLES = {
   poems: '千年诗韵 · 唐诗宋词',
   authors: '千古风流 · 全部诗人',
   dynasties: '千年文脉 · 朝代一览',
-  types: '诗词体裁 · 分类一览'
+  types: '诗词体裁 · 分类一览',
+  tang_poems: '李杜诗篇 · 万口传诵',
+  song_ci: '苏辛词章 · 千古绝唱'
 };
 
 Page({
@@ -56,13 +62,17 @@ Page({
       poems: ['古诗词大全', '古诗词', '诗词大全', '唐诗', '宋词', '古诗', '诗词'],
       authors: ['古代诗人', '诗人列表', '李白', '杜甫', '苏轼', '诗人'],
       dynasties: ['古代朝代', '朝代', '唐诗', '宋词'],
-      types: ['诗词体裁', '五言绝句', '七言律诗', '词牌名']
+      types: ['诗词体裁', '五言绝句', '七言律诗', '词牌名'],
+      tang_poems: ['唐诗', '唐诗三百首', '唐诗大全', '古诗', '李白', '杜甫', '王维', '白居易'],
+      song_ci: ['宋词', '宋词三百首', '宋词大全', '苏轼', '李清照', '辛弃疾', '柳永', '词']
     };
     const descMap = {
       poems: '古诗词大全：唐诗宋词、历代诗词全文收录，支持按朝代、体裁、诗人浏览。',
       authors: '历代诗人名录，李白、杜甫、苏轼、李清照等诗人简介与代表作品。',
       dynasties: '按朝代浏览诗词：先秦、汉、魏晋、唐、宋、元、明、清历代诗篇。',
-      types: '按体裁浏览诗词：五言绝句、七言绝句、五言律诗、七言律诗、词牌。'
+      types: '按体裁浏览诗词：五言绝句、七言绝句、五言律诗、七言律诗、词牌。',
+      tang_poems: '唐诗三百首大全：李白、杜甫、王维、白居易等名家名作全文收录。',
+      song_ci: '宋词三百首大全：苏轼、李清照、辛弃疾、柳永等词人经典词作全文收录。'
     };
     seo.reportPageInfo({
       title: KIND_TITLES[kind] + ' · 超然古诗词',
@@ -97,7 +107,9 @@ Page({
 
   /**
    * 分页加载核心
-   * poems/authors 走服务端分页；dynasties/types 一次拉全量后本地切片
+   * poems/authors 走服务端分页；dynasties/types 一次拉全量后本地切片；
+   * tang_poems/song_ci 用 /poems/random 并发拉取（/poems 的筛选参数被服务端忽略，
+   * 该端点是唯一筛选真实生效的诗词端点，每次 1 首，批量并发去重构建列表）
    */
   async _load(reset) {
     const kind = this.data.kind;
@@ -114,6 +126,22 @@ Page({
         const r = await poetry.getPoems({ page: nextPage, pageSize: PAGE_SIZE });
         const items = reset ? r.poems : this._dedupe(this.data.items.concat(r.poems));
         this.setData({ items, page: nextPage, hasMore: r.hasMore });
+      } else if (kind === 'tang_poems' || kind === 'song_ci') {
+        // 「唐诗」映射 dynasty=唐；「宋词」映射 type=宋词（api.md 实测可用筛选值）
+        const filters = kind === 'tang_poems' ? { dynasty: '唐' } : { type: '宋词' };
+        const tasks = [];
+        for (let i = 0; i < RANDOM_BATCH; i++) {
+          tasks.push(poetry.getRandomPoem(filters).catch(() => null));
+        }
+        const results = await Promise.all(tasks);
+        const got = results.filter(Boolean);
+        const merged = this._dedupe((reset ? [] : this.data.items).concat(got));
+        const addedCount = merged.length - (reset ? 0 : this.data.items.length);
+        this.setData({
+          items: merged,
+          page: reset ? 1 : this.data.page + 1,
+          hasMore: got.length > 0 && addedCount > 0
+        });
       } else if (kind === 'authors') {
         const nextPage = reset ? 1 : this.data.page + 1;
         const r = await poetry.getAuthors({ page: nextPage, pageSize: AUTHOR_PAGE_SIZE });

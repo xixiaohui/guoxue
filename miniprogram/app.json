@@ -1,12 +1,11 @@
 {
   "pages": [
-    "pages/home/index",
+    "pages/chinesepoetry/index",
     "pages/classics/index",
     "pages/idiom/index",
     "pages/history/index",
     "pages/philosophers/index",
     "pages/guoxuedownload/index",
-    "pages/chinesepoetry/index",
     "pages/chinesepoetry_detail/index",
     "pages/chinesepoetry_search/index",
     "pages/chinesepoetry_all/index",
@@ -37,16 +36,10 @@
     "borderStyle": "black",
     "list": [
       {
-        "pagePath": "pages/home/index",
+        "pagePath": "pages/chinesepoetry/index",
         "text": "首页",
         "iconPath": "images/tab_home.png",
         "selectedIconPath": "images/tab_home_active.png"
-      },
-      {
-        "pagePath": "pages/chinesepoetry/index",
-        "text": "诗词",
-        "iconPath": "images/tab_poetry.png",
-        "selectedIconPath": "images/tab_poetry_active.png"
       },
       {
         "pagePath": "pages/chinesepoetry_search/index",
@@ -55,10 +48,16 @@
         "selectedIconPath": "images/tab_poetry_active.png"
       },
       {
+        "pagePath": "pages/favorite/index",
+        "text": "收藏",
+        "iconPath": "images/tab_history.png",
+        "selectedIconPath": "images/tab_history_active.png"
+      },
+      {
         "pagePath": "pages/setting/index",
         "text": "设置",
-        "iconPath": "images/tab_setting.png",
-        "selectedIconPath": "images/tab_setting_active.png"
+        "iconPath": "images/tab_philosophers.png",
+        "selectedIconPath": "images/tab_philosophers_active.png"
       }
     ]
   },

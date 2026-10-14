@@ -194,7 +194,7 @@ Page({
 
   // ── 关于 ──────────────────────────────
   goFavorite() {
-    wx.navigateTo({ url: '/pages/favorite/index' });
+    wx.switchTab({ url: '/pages/favorite/index' });
   },
 
   /** 我的阅读历史 */
@@ -217,7 +217,7 @@ Page({
   onShareAppMessage() {
     return {
       title: '超然古诗词 · 诗词典籍 · 成语典故 · 历史人物',
-      path: '/pages/home/index'
+      path: '/pages/chinesepoetry/index'
     };
   },
 

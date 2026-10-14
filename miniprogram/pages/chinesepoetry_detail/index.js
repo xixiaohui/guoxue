@@ -134,6 +134,23 @@ Page({
 
     // 进入页面即应用阅读设置（onShow 兜底，避免首次进入时字号/字体未生效）
     settings.applyToPage(this);
+
+    // 首页「生成海报」入口：带 autoPoster=1 进入，且非单页模式、非诗人页时，
+    // 等增强数据（朝代/体裁/全文）就绪后自动打开海报样式选择（内部会处理未登录引导）
+    if (o.autoPoster === '1' && kind === 'poem' && !single) {
+      this._autoPosterTimer = setTimeout(() => {
+        if (this.data.content || this.data.title) {
+          this.createPoster();
+        }
+      }, 600);
+    }
+  },
+
+  onUnload() {
+    if (this._autoPosterTimer) {
+      clearTimeout(this._autoPosterTimer);
+      this._autoPosterTimer = null;
+    }
   },
 
   /** 每次进入页面时应用阅读主题、字号与正文字体设置，并同步登录态 */
@@ -799,7 +816,7 @@ Page({
     if (pages.length > 1) {
       wx.navigateBack({ delta: 1 });
     } else {
-      wx.switchTab({ url: '/pages/home/index' });
+      wx.switchTab({ url: '/pages/chinesepoetry/index' });
     }
   },
 
