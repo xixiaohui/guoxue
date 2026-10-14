@@ -45,7 +45,7 @@
     "disableSWC": true
   },
   "appid": "wx88a288204975c720",
-  "projectname": "quickstart-wx-cloud",
+  "projectname": "chaoran-gushici",
   "libVersion": "3.15.1",
   "cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
   "condition": {
